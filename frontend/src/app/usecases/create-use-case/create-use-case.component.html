@@ -1,0 +1,79 @@
+<app-header></app-header>
+
+<app-titlebanner title="Adicionar Use Case" image="./assets/bannercover.jpg"></app-titlebanner>
+
+<form class="grid grid-cols-2 gap-12 px-32 pt-12" [formGroup]="createUseCaseForm" (ngSubmit)="createUseCase()">
+    <div class="space-y-4 col-span-2 md:col-span-1">
+        <label for="title" class="block text-sm font-medium leading-6 text-gray-900">Título</label>
+        <input id="title" required name="title" placeholder="Título do Use Case" type="text" autocomplete="title" formControlName="title" class="block w-full rounded-md border-0 px-2 py-2.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6">
+        <div *ngIf="createUseCaseForm.get('title')?.touched && createUseCaseForm.get('title')?.invalid" class="text-red-600 text-sm">
+            Título é obrigatório.
+        </div>
+
+    </div>
+
+    <div class="space-y-4 col-span-2 md:col-span-1">
+        <label for="mitreTechniques" class="block text-sm font-medium leading-6 text-gray-900">Técnicas Mitre Associadas</label>
+        <tag-input theme='minimal' [secondaryPlaceholder]="'+ Nova Técnica'" [placeholder]="''" formControlName="mitreTechniques" class="block w-full rounded-md border-0 px-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"></tag-input>
+        <div *ngIf="createUseCaseForm.get('mitreTechniques')?.touched && createUseCaseForm.get('mitreTechniques')?.invalid" class="text-red-600 text-sm">
+            Técnicas Mitre são obrigatórias.
+        </div>
+    </div>
+
+    <div class="space-y-4 col-span-2 md:col-span-1">
+        <label for="cncsClass" class="block text-sm font-medium leading-6 text-gray-900">Classe CNCS</label>
+        <select id="cncsClass" formControlName="cncsClass" (change)="updateCNCSValues()" class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+            <option *ngFor="let option of chavesTaxonomia" [value]="option">{{ option }}</option>
+        </select>
+        <div *ngIf="createUseCaseForm.get('cncsClass')?.touched && createUseCaseForm.get('cncsClass')?.invalid" class="text-red-600 text-sm">
+            Classe CNCS é obrigatória.
+        </div>
+    </div>
+
+    <div class="space-y-4 col-span-2 md:col-span-1">
+        <label for="cncsType" class="block text-sm font-medium leading-6 text-gray-900">Tipo CNCS</label>
+        <select id="cncsType" formControlName="cncsType" class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+            <option *ngFor="let subcategory of selectedCategoryValues" [value]="subcategory">{{ subcategory }}</option>
+        </select>
+        <div *ngIf="createUseCaseForm.get('cncsType')?.touched && createUseCaseForm.get('cncsType')?.invalid" class="text-red-600 text-sm">
+            Tipo CNCS é obrigatório.
+        </div>
+    </div>
+
+    <div class="space-y-4 col-span-2 md:col-span-1">
+        <label for="attackVectors" class="block text-sm font-medium leading-6 text-gray-900">Vetores de Ataque</label>
+        <tag-input theme='minimal' [secondaryPlaceholder]="'+ Novo Vetor'" [placeholder]="''" formControlName="attackVectors" class="block w-full rounded-md border-0 px-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"></tag-input>
+        <div *ngIf="createUseCaseForm.get('attackVectors')?.touched && createUseCaseForm.get('attackVectors')?.invalid" class="text-red-600 text-sm">
+            Vetores de Ataque são obrigatórios.
+        </div>
+    </div>
+
+    <div class="space-y-4 col-span-2 md:col-span-1">
+        <label for="playbook" class="block text-sm font-medium leading-6 text-gray-900">Playbook</label>
+        <input id="playbook" type="file" (change)="onFileSelected($event)" class="block w-full">
+        <div *ngIf="createUseCaseForm.get('playbook')?.touched && createUseCaseForm.get('playbook')?.invalid" class="text-red-600 text-sm">
+            Playbook é obrigatório.
+        </div>
+    </div>
+
+
+    <div class="space-y-4 col-span-4 md:col-span-2">
+        <label for="description" class="block text-sm font-medium leading-6 text-gray-900">Descrição</label>
+        <textarea id="description" placeholder="Descrição do Use Case. Neste parágrafo poderão ser descritos propósito, objetivos, entre outros." name="description" formControlName="description" class="block w-full rounded-md border-0 px-2 py-2 h-32 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"></textarea>
+        <div *ngIf="createUseCaseForm.get('description')?.touched && createUseCaseForm.get('description')?.invalid" class="text-red-600 text-sm">
+            Descrição é obrigatória.
+        </div>
+    </div>
+
+    <div class="space-y-4 col-span-4 md:col-span-2">
+        <label for="mitigation" class="block text-sm font-medium leading-6 text-gray-900">Mitigação</label>
+        <textarea id="mitigation" placeholder="Neste parágrafo, poderão ser descritas as estratégias de mitigação" name="mitigation" formControlName="mitigation" class="block w-full rounded-md border-0 px-2 py-2 h-32 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"></textarea>
+        <div *ngIf="createUseCaseForm.get('mitigation')?.touched && createUseCaseForm.get('mitigation')?.invalid" class="text-red-600 text-sm">
+            Mitigação é obrigatória.
+        </div>
+    </div>
+
+    <div class="space-y-6 col-span-2">
+        <button type="submit" [disabled]="!createUseCaseForm.valid" class="w-full disabled:opacity-55 md:w-[25rem] py-2.5 px-5 text-white font-semibold bg-redshift-red rounded-md hover:bg-redshift-red-dark">Registar</button>
+    </div>
+</form>

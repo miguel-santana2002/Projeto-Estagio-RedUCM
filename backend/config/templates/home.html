@@ -1,0 +1,22 @@
+{% load static %}
+
+<!doctype html>
+<html lang="en" data-critters-container>
+
+<head>
+    <meta charset="utf-8">
+    <title>django-angular</title>
+    <base href="/">
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" type="image/x-icon" href="{% static 'browser/favicon.ico' %}">
+    <link rel="stylesheet" href="{% static 'browser/styles.css' %}">
+</head>
+
+<body>
+    <app-root></app-root>
+    <script type="module" src="{% static 'browser/polyfills.js' %}"></script>
+    <script type="module" src="{% static 'browser/main.js' %}"></script>
+</body>
+
+</html>

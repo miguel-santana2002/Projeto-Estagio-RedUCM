@@ -1,0 +1,158 @@
+<app-header></app-header>
+
+<app-titlebanner title="Gestão de Use Cases"  image="./assets/bannercover.jpg" > </app-titlebanner>
+
+<head>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-..." crossorigin="anonymous" />
+  
+  </head>
+  
+  <div class="container mx-auto px-4 sm:px-8">
+    <div class="py-8">
+      <div class="-mx-4 sm:-mx-8 px-4 sm:px-8 py-4 overflow-x-auto">
+        <div class="inline-block min-w-full shadow-md p-5 rounded-lg overflow-hidden">
+    
+          <div class="mb-4 relative">
+  
+            <label for="nameSearch" class="sr-only">Procurar por nome</label>
+            <div class="flex items-center">
+              <i class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
+                <span class="fas fa-search"></span>
+              </i>
+
+
+
+              <input type="text" id="nameSearch" [(ngModel)]="nameSearch" placeholder="Procurar por nome" class="pl-10 px-4 py-2 border rounded w-full">
+            
+     
+              
+             
+                <div class="text-center">
+                  <button class="ml-5 w-28 h-10 bg-redshift-red text-white rounded hover:bg-redshift-hover shadow-md" type="button" data-drawer-target="drawer-navigation" data-drawer-show="drawer-navigation" aria-controls="drawer-navigation">
+                <span>  <i class="fas fa-filter"></i> Avançados</span>
+                  </button>
+                </div>
+
+            </div>
+            
+          </div>
+  
+          <table class="min-w-full leading-normal">
+            <thead>
+              <tr>
+                <th (click)="sortTable('id')" class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                  Red ID
+                  <span [class]="sortType === 'id' ? (sortReverse ? 'fas fa-caret-up' : 'fas fa-caret-down') : ''"></span>
+                </th>
+                <th (click)="sortTable('username')" class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                  Técnicas Mitre Associadas
+                  <span [class]="sortType === 'username' ? (sortReverse ? 'fas fa-caret-up' : 'fas fa-caret-down') : ''"></span>
+                </th>
+                <th (click)="sortTable('company')" class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                  Nome
+                  <span [class]="sortType === 'company' ? (sortReverse ? 'fas fa-caret-up' : 'fas fa-caret-down') : ''"></span>
+                </th>
+                <th (click)="sortTable('date')" class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                  Classe CNCS
+                  <span [class]="sortType === 'date' ? (sortReverse ? 'fas fa-caret-up' : 'fas fa-caret-down') : ''"></span>
+                </th>
+             
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let u of filteredUseCases"
+                  [class]="(useCases.indexOf(u) % 2 === 0 ? 'bg-white' : 'bg-gray-100')
+                  
+                  "
+                  [routerLink]="'/usecaseDetails/' + u.id" class="hover:drop-shadow-md transition duration-100">
+                <td class="px-5 py-5 text-left cursor-pointer">RedUC<b>{{ u.id | number: '2.0' }}</b></td>
+                <td  class="px-5 py-5  text-left cursor-pointer">
+                  <div class="flex">
+                  <div  *ngFor="let technique of u.mitreTechniques.slice(0,5) " class="bg-[#0d2f52] text-white text-center text-[12px] rounded-md px-1 w-12 mr-1 my-1 ">
+                    {{ technique }}
+                  </div>         
+                </div>
+                </td>
+                <td  class="px-5 py-5 text-left cursor-pointer">{{ u.title }}</td>
+                <td class="px-5 py-5 text-left cursor-pointer">{{ u.cncsClass }}</td>
+  
+                
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="deleteModal" tabindex="-1" aria-hidden="true" class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-modal md:h-full"
+  #modal>
+    <div class="relative p-4 w-full max-w-md h-full md:h-auto">
+        <!-- Modal content -->
+        <div class="relative p-4 text-center bg-white rounded-lg shadow dark:bg-gray-800 sm:p-5">
+            <button type="button" (click)="closeModal()" class="text-gray-400 absolute top-2.5 right-2.5 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center dark:hover:bg-gray-600 dark:hover:text-white" >
+                <svg aria-hidden="true" class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
+                <span class="sr-only">Fechar</span>
+            </button>
+            <svg class="text-gray-400 dark:text-gray-500 w-11 h-11 mb-3.5 mx-auto" aria-hidden="true" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"></path></svg>
+            <p class="mb-4 text-gray-500 dark:text-gray-300">Tem a certeza que quer eliminar o Use Case #{{ selectDelete }}</p>
+            <div class="flex justify-center items-center space-x-4">
+                <button (click)="closeModal()" type="button" class="py-2 px-3 text-sm font-medium text-gray-500 bg-white rounded-lg border border-gray-200 hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-primary-300 hover:text-gray-900 focus:z-10 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-600">
+                    Não, cancelar
+                </button>
+                <button (click)="deleteUseCase(); closeModal()" data-modal-target="deleteModal"   class="py-2 px-3 text-sm font-medium text-center text-white bg-red-600 rounded-lg hover:bg-red-700 focus:ring-4 focus:outline-none focus:ring-red-300 dark:bg-red-500 dark:hover:bg-red-600 dark:focus:ring-red-900">
+                    Sim, tenho a certeza
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- drawer component -->
+<div id="drawer-navigation" class="fixed top-0 left-0 z-40 w-96 h-screen p-4 overflow-y-auto transition-transform -translate-x-full bg-white dark:bg-gray-800" tabindex="-1" aria-labelledby="drawer-navigation-label">
+   
+  
+  <h5 id="drawer-navigation-label" class="text-base font-semibold text-gray-500 uppercase dark:text-gray-400"><i class="fas fa-filter"> </i> Filtros</h5>
+   <button type="button" data-drawer-hide="drawer-navigation" aria-controls="drawer-navigation" class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 absolute top-2.5 end-2.5 inline-flex items-center dark:hover:bg-gray-600 dark:hover:text-white" >
+       <svg aria-hidden="true" class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
+       <span class="sr-only">Close menu</span>
+   </button>
+ <div class="py-4 overflow-y-auto">
+     <ul class="space-y-2 font-medium">
+        <li>
+          
+        
+        <div class="flex items-center p-2 text-gray-600 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
+          <i class="fas fa-font"></i>
+          <span class="ms-3">Técnicas Mitre</span>
+          <button (click)="clearMitreTechniques()" class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 inline-flex items-center dark:hover:bg-gray-600 dark:hover:text-white">
+            <i class="fas fa-x"></i>
+            <span class="sr-only">Clear filter</span>
+          </button>
+        </div>
+        <select id="sintax" name="sintax" [(ngModel)]="selectedMitreTechniques"  required multiple class="block w-full rounded-md border-0 px-2 py-2.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6">
+          <option *ngFor="let technique of uniqueMitreTechniques" [ngValue]="technique">{{ technique }}</option>
+      </select>
+    </li>
+
+    <li>
+          
+        
+      <div class="flex items-center p-2 text-gray-600 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
+        <i class="fas fa-rectangle-list"></i>
+        <span class="ms-3">Classes CNCS</span>
+        <button (click)="clearCNCSClass()" class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 inline-flex items-center dark:hover:bg-gray-600 dark:hover:text-white">
+          <i class="fas fa-x"></i>
+          <span class="sr-only">Clear filter</span>
+        </button>
+      </div>
+      <select id="class" name="class" [(ngModel)]="selectedCNCSClass"  required multiple class="block w-full rounded-md border-0 px-2 py-2.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6">
+        <option *ngFor="let class of uniqueCNCSClasses" [ngValue]="class">{{ class }}</option>
+    </select>
+  </li>
+
+ 
+       
+     </ul>
+  </div>
+</div>

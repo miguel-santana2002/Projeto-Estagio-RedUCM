@@ -1,0 +1,24 @@
+# Env / secrets
+.env
+
+# Python
+__pycache__/
+*.pyc
+backend/venvProjeto/
+backend/config/staticfiles/
+backend/config/static/browser
+
+# Node / Angular
+frontend/node_modules/
+frontend/dist/
+frontend/build/
+frontend/.angular/
+
+# Uploaded media (kept out of version control, folder itself is tracked)
+mediafiles/images/*
+!mediafiles/images/.gitkeep
+
+# OS / editors
+.DS_Store
+.idea/
+.vscode/

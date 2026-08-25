@@ -1,0 +1,8 @@
+#apexcharts2fmuzuyjl .apexcharts-legend {
+    display: none !important;
+  }
+  
+  /* Esconde um ícone específico */
+  #apexcharts2fmuzuyjl .icon-class {
+    display: none !important;
+  }

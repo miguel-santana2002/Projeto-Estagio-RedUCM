@@ -1,0 +1,28 @@
+# Dockerfile.angular
+FROM node:20.14.0
+
+RUN mkdir -p /backend && chmod -R 777 /backend
+
+
+WORKDIR /app
+
+COPY package*.json ./
+
+RUN npm install
+
+COPY . .
+
+ENV PATH ./node_modules/.bin:$PATH
+
+RUN chmod -R 755 /app && chown -R node:node /app
+
+RUN mkdir -p /backend && chmod -R 777 /backend
+
+
+USER node
+
+RUN npm run build
+
+EXPOSE 4200
+
+CMD ["npm", "start"]

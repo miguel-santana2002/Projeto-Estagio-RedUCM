@@ -1,0 +1,67 @@
+<section class="bg-gray-50 dark:bg-gray-900">
+  <div class="flex flex-col items-center justify-center px-6 py-8 mx-auto md:h-screen lg:py-0">
+    <a href="#" class="flex items-center mb-3 text-2xl font-semibold text-gray-900 dark:text-white">
+      <img class="w-18 h-8 mr-2" src="./assets/logo.png" alt="logo">
+    </a>
+    <h1 class="text-xl font-bold mb-5 text-gray-600">Use Case Manager</h1>
+    <div class="w-full bg-white rounded-lg shadow dark:border md:mt-0 sm:max-w-md xl:p-0 dark:bg-gray-800 dark:border-gray-700">
+      <div class="p-6 space-y-4 md:space-y-6 sm:p-8">
+        <h1 class="text-xl font-bold leading-tight tracking-tight text-gray-900 md:text-2xl dark:text-white">
+          Efetue login na sua conta
+        </h1>
+        <!-- Formulário de login -->
+        <form class="example-form" *ngIf="!showOtpForm" [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+          <div class="mb-7">
+            <label for="email" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Email</label>
+            <input type="email" name="email" id="email" formControlName="email" class="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="nome@email.com" required>
+          </div>
+          <div>
+            <label for="password" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Password</label>
+            <input type="password" name="password" id="password" formControlName="password" placeholder="••••••••" class="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" required>
+          </div>
+          <button type="submit" [disabled]="!loginForm.valid" class="w-full my-5 text-white bg-[#E72230] hover:bg-[#c13e47] focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800">Login</button>
+        </form>
+
+        <div *ngIf="errorMessage" class="text-center text-redshift-red">
+          {{ errorMessage }}
+        </div>
+    
+
+        <!-- Formulário de OTP -->
+        <form class="example-form" *ngIf="showOtpForm" [formGroup]="otpForm" (ngSubmit)="onVerifyOtp()">
+          <div class="mb-7">
+            <p *ngIf="otpMethod==='email'" class="text-gray-600 dark:text-white">Enviamos um código de verificação para o seu email. Por favor insira o código abaixo.</p>
+            <p *ngIf="otpMethod==='totp'" class="text-gray-600 dark:text-white">Aceda à sua aplicação de autenticador e insira o código abaixo.</p>
+
+            <label for="otp" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white my-5">Código de Verificação</label>
+            <input type="text" name="otp" id="otp" formControlName="otp" class="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="Insira o Código de Verificação" required>
+          </div>
+          <button type="submit" [disabled]="!otpForm.valid" class="w-full my-5 text-white bg-[#E72230] hover:bg-[#c13e47] focus:ring-4 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800">Verificar</button>
+        </form>
+      </div>
+
+      
+    </div>
+  </div>
+
+  <div *ngIf="qrCodeUrl" class="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-75 z-50">
+    <div class="bg-white rounded-lg shadow-lg p-6 text-center">
+      <h2 class="text-2xl font-semibold text-gray-900">Bem-Vindo ao RedUCM</h2>
+      <p class="mt-4 text-gray-600">Configure uma aplicação de autenticação para prosseguir com a configuração do TOTP.</p>
+      <div class="flex justify-center my-4">
+        <img [src]="qrCodeUrl" alt="QR Code para configurar TOTP">
+      </div>
+      <button (click)="qrCodeUrl=''" class="mt-4 bg-[#E72230] text-white px-4 py-2 rounded-lg hover:bg-[#c13e47]">Concluído</button>
+    </div>
+  </div>
+  
+
+
+  <ng-template #errorDialog>
+    <h2 matDialogTitle>Acesso não concedido</h2>
+    <p matDialogContent><em>Verifique o email e password e tente novamente...</em></p>
+    <mat-dialog-actions align="end">
+      <button mat-button matDialogClose>Fechar</button>
+    </mat-dialog-actions>
+  </ng-template>
+</section>
