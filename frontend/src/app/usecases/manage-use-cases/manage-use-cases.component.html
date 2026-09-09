@@ -94,17 +94,16 @@
               <td class="px-5 py-5 text-left cursor-pointer">{{ u.cncsClass }}</td>
 
               <td class="px-5 py-5 space-x-3">
-                <button (click)="updateSelectDelete($event, u.id); openModal()" data-modal-target="deleteModal"
-                  class="bg-red-500 text-white px-3 py-1 rounded-md">
-                  <i class="fas fa-trash-alt"></i>
-                </button>
+
                 <button [routerLink]="'/usecaseDetails/' + u.id" data-modal-target="deleteModal"
                   class="bg-gray-400 text-white  px-3 py-1 rounded-md">
                   <i class="fas fa-right-to-bracket"></i>
                 </button>
 
-
-
+                <button (click)="updateSelectDelete($event, u.id); openModal()" data-modal-target="deleteModal"
+                  class="bg-red-500 text-white px-3 py-1 rounded-md">
+                  <i class="fas fa-trash-alt"></i>
+                </button>
               </td>
             </tr>
           </tbody>
