@@ -99,14 +99,24 @@ def getCompanies(request):
 @api_view(['POST'])
 def createCompany(request):
     if request.method == 'POST':
+        name = request.data.get('name', '').strip()
+        logsources = request.data.get('logsources', [])
 
-        name = request.data['name']
-        logsources = request.data['logsources']
-        company = Company(name=name, logsources=logsources)
-        company.save()
-        return JsonResponse({'success': 'Company created successfully'})
+        if not name or not logsources:
+            return JsonResponse({'error': 'O Nome e as LogSources são de preenchimento obrigatório.'}, status=400)
+
+        if Company.objects.filter(name__iexact=name).exists():
+            return JsonResponse({'error': 'Já existe um cliente com este nome.'}, status=400)
+        
+        try:
+            company = Company(name=name, logsources=logsources)
+            company.save()
+            return JsonResponse({'success': 'Company created successfully'}, status=201)
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=400)
     else:
-        return JsonResponse({'error': 'Invalid request method'})
+        # Alterado para status 405 (Method Not Allowed) para maior rigor semântico
+        return JsonResponse({'error': 'Invalid request method'}, status=405)
     
 @extend_schema(description=' Endpoint to delete a user based on the user ID.',
                responses={
