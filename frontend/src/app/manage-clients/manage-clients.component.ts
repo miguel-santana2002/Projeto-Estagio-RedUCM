@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ViewChild, ElementRef } from '@angular/core';
 import { HeaderComponent } from "../layout/header/header.component";
 import { TitlebannerComponent } from "../layout/titlebanner/titlebanner.component";
 import { FormControl, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
@@ -8,27 +8,28 @@ import { AuthService } from '../services/auth.service';
 import { TagInputModule } from 'ngx-chips';
 import { RulesService } from '../services/rules.service';
 
-
 @Component({
-    selector: 'app-manage-clients',
-    standalone: true,
-    templateUrl: './manage-clients.component.html',
-    styleUrl: './manage-clients.component.css',
-    imports: [TitlebannerComponent, HeaderComponent, FormsModule, CommonModule, RouterModule, ReactiveFormsModule, TagInputModule]
+  selector: 'app-manage-clients',
+  standalone: true,
+  templateUrl: './manage-clients.component.html',
+  styleUrl: './manage-clients.component.css',
+  imports: [TitlebannerComponent, HeaderComponent, FormsModule, CommonModule, RouterModule, ReactiveFormsModule, TagInputModule]
 })
 export class ManageClientsComponent {
-  
+
+  @ViewChild('modal') modal!: ElementRef;
+
   sortType = 'name';
   sortReverse = false;
   nameSearch: string = '';
   selectDelete: number = 9999999;
 
-  clients : any = [ ]
+  clients: any = []
 
 
-constructor(private authService : AuthService, private rulesService : RulesService) { }
+  constructor(private authService: AuthService, private rulesService: RulesService) { }
 
-registeredLogsources : any = [];
+  registeredLogsources: any = [];
 
   ngOnInit() {
     this.authService.getClients().subscribe((data: any) => {
@@ -36,83 +37,81 @@ registeredLogsources : any = [];
 
       console.log(data)
 
-        this.rulesService.getRegisteredLogSources().subscribe((data : any) => {
-          console.log(data);
-          this.registeredLogsources = data.map((logsource: any) => logsource.name);
-    
-        })
-      
-    
+      this.rulesService.getRegisteredLogSources().subscribe((data: any) => {
+        console.log(data);
+        this.registeredLogsources = data.map((logsource: any) => logsource.name);
+
+      })
+
     });
 
-    
+  }
 
+  openModal() {
+    this.modal.nativeElement.classList.remove('hidden');
+    this.modal.nativeElement.classList.add('flex');
+  }
+
+  closeModal() {
+    this.modal.nativeElement.classList.add('hidden');
+    this.modal.nativeElement.classList.remove('flex');
   }
 
   deleteClient() {
-    this.authService.deleteCompany(this.selectDelete).subscribe((response) => {
-      console.log(response);
-
-      this.authService.getClients().subscribe((data: any) => {
-        this.clients = data
-      });
+    this.authService.deleteCompany(this.selectDelete).subscribe({
+      next: (response) => {
+        console.log('Cliente apagado:', response);
+        // Atualiza a tabela
+        this.authService.getClients().subscribe((data: any) => {
+          this.clients = data;
+        });
+      },
+      error: (err) => {
+        console.error('Erro ao apagar o cliente no backend:', err);
+        alert('Erro ao apagar. Vê a consola (F12) para mais detalhes.');
+      }
     });
-
-
   }
 
-  
   updateSelectDelete(id: number) {
     this.selectDelete = id;
   }
 
-
-  client :any = {
+  client: any = {
     name: ""
   }
 
   createClientForm = new FormGroup({
     name: new FormControl(""),
     logsources: new FormControl(null)
-   })
+  })
 
-   get name() {
+  get name() {
     return this.createClientForm.get('name');
-}
-
-
-
-
-
-
-createClient() {
-  
-
-  var logsourcesArray :any = this.createClientForm.get('logsources')?.value;
-
-  var logsources = logsourcesArray?.map((logsource: any) => logsource.value);
-
-const clientData = {
-    name: this.name!.value!,
-    logsources: logsources
   }
 
-console.log(clientData);
+  createClient() {
 
-this.authService.createClient(clientData).subscribe((response) => {
-  console.log(response);
-  this.authService.getClients().subscribe((data: any) => { this.clients = data; });
-  this.createClientForm.reset();
+    var logsourcesArray: any = this.createClientForm.get('logsources')?.value;
+    var logsources = logsourcesArray?.map((logsource: any) => logsource.value);
 
-  
+    const clientData = {
+      name: this.name!.value!,
+      logsources: logsources
+    }
 
-//sucess modal
+    console.log(clientData);
 
-});
+    this.authService.createClient(clientData).subscribe((response) => {
+      console.log(response);
+      this.authService.getClients().subscribe((data: any) => { this.clients = data; });
+      this.createClientForm.reset();
+      //sucess modal
 
-}
+    });
 
-  
+  }
+
   sortTable(column: string): void {
     if (this.sortType === column) {
 
@@ -122,7 +121,6 @@ this.authService.createClient(clientData).subscribe((response) => {
       this.sortType = column;
       this.sortReverse = false;
     }
-
 
     this.clients.sort((a: any, b: any) => {
       const valueA = a[column];
@@ -144,16 +142,7 @@ this.authService.createClient(clientData).subscribe((response) => {
     return (a - b) * (this.sortReverse ? -1 : 1);
   }
 
-
   get filteredClients() {
-   return this.clients.filter((u: any) => u.name.toLowerCase().includes(this.nameSearch.toLowerCase()));
+    return this.clients.filter((u: any) => u.name.toLowerCase().includes(this.nameSearch.toLowerCase()));
   }
-
- 
-
-  
-  
-
 }
-
-
