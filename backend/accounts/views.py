@@ -13,6 +13,9 @@ from rest_framework import status
 from drf_spectacular.utils import OpenApiResponse
 from django.urls import reverse
 from rest_framework.views import APIView
+from django.core.mail import send_mail
+from django.conf import settings
+
 
 # Create your views here.
 User = get_user_model()
