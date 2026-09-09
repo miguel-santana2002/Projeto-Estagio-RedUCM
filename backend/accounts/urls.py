@@ -34,9 +34,7 @@ class CustomTokenObtainPairSerializer(serializers.Serializer):
         if user is None or not user.is_active:
             raise serializers.ValidationError('Invalid credentials')
         
-        otpSent = False
-
-        # CASO 1: Autenticação por Email
+        # 1. Se o método for Email, envia a mensagem com o código OTP
         if user.otpMethod == 'email':
             user.generate_otp()
             user.save()
@@ -50,20 +48,16 @@ class CustomTokenObtainPairSerializer(serializers.Serializer):
             msg = EmailMultiAlternatives(subject, message, email_from, recipient_list)
             msg.attach_alternative(html_content, "text/html")
             msg.send()
-            
-            otpSent = True
 
-        # CASO 2: Autenticação por App / QR Code (TOTP)
-        else:
-            # O TOTP não envia código por mail; a validação é feita pela app (Google Authenticator)
-            otpSent = False
+        # 2. Define otpSent como True em ambos os métodos para desbloquear o Guard/Navegação do Angular
+        otpSent = True
 
         return {
             'user': user, 
             'email': user.email, 
             'otpSent': otpSent, 
             'otpMethod': user.otpMethod,
-            'showTotp': user.showTotp  # Indica ao Frontend se deve mostrar o QR Code pela primeira vez
+            'showTotp': user.showTotp
         }
 
 class VerifyOTPSerializer(serializers.Serializer):
@@ -77,21 +71,33 @@ class VerifyOTPView(APIView):
         serializer.is_valid(raise_exception=True)
         email = serializer.validated_data['email']
         otp = serializer.validated_data['otp']
+        
         try:
             user = User.objects.get(email=email)
+            
+            # Validação via Email
             if user.otpMethod == 'email':
-                if timezone.now() > user.otp_time + timedelta(minutes=5):
-                    raise serializers.ValidationError('OTP expired')
+                if not user.otp_time or timezone.now() > user.otp_time + timedelta(minutes=5):
+                    return Response({'detail': 'OTP expired'}, status=status.HTTP_400_BAD_REQUEST)
                 if user.otp != otp:
-                    raise serializers.ValidationError('Invalid OTP')
+                    return Response({'detail': 'Invalid OTP'}, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Validação via TOTP / App
             else:
-                if not user.verify_totp(otp):
-                    raise serializers.ValidationError('Invalid TOTP')
-                
+                # Verifica se o utilizador tem o método verify_totp ou secret definido
+                if not hasattr(user, 'verify_totp') or not user.verify_totp(otp):
+                    return Response({'detail': 'Invalid TOTP code'}, status=status.HTTP_400_BAD_REQUEST)
+
+            # Emite os novos tokens após verificação de 2FA com sucesso
             refresh = RefreshToken.for_user(user)
-            return Response({'refresh': str(refresh), 'access': str(refresh.access_token), 'otpSent': 'OTP verified successfully'})
+            return Response({
+                'refresh': str(refresh),
+                'access': str(refresh.access_token),
+                'message': 'OTP verified successfully'
+            }, status=status.HTTP_200_OK)
+
         except User.DoesNotExist:
-            return Response({'detail': 'Invalid OTP'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'detail': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
 
 class GenerateTOTPView(APIView):
     # Permite acesso ao ecrã do QR code durante o fluxo de login
