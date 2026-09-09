@@ -1,13 +1,23 @@
 import { Component } from '@angular/core';
 import { RulesService } from '../../services/rules.service';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { HeaderComponent } from "../../layout/header/header.component";
-import { TitlebannerComponent } from "../../layout/titlebanner/titlebanner.component";
+import { HeaderComponent } from '../../layout/header/header.component';
+import { TitlebannerComponent } from '../../layout/titlebanner/titlebanner.component';
 import { UsecasesService } from '../../services/usecases.service';
-import { CodeEditorComponent, CodeEditorModule, CodeModel, CodeModelChangedEvent } from '@ngstack/code-editor';
+import {
+  CodeEditorComponent,
+  CodeEditorModule,
+  CodeModel,
+  CodeModelChangedEvent,
+} from '@ngstack/code-editor';
 import { Clipboard } from '@angular/cdk/clipboard';
 import { CommonModule } from '@angular/common';
-import { FormControl, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import {
+  FormControl,
+  FormGroup,
+  FormsModule,
+  ReactiveFormsModule,
+} from '@angular/forms';
 import { AuthService } from '../../services/auth.service';
 import { SigmaConversionsService } from '../../services/sigma-conversions.service';
 
@@ -16,58 +26,70 @@ import { SigmaConversionsService } from '../../services/sigma-conversions.servic
   standalone: true,
   templateUrl: './rule-model-details.component.html',
   styleUrl: './rule-model-details.component.css',
-  imports: [HeaderComponent, TitlebannerComponent, CodeEditorModule, CommonModule, RouterModule, FormsModule, ReactiveFormsModule]
+  imports: [
+    HeaderComponent,
+    TitlebannerComponent,
+    CodeEditorModule,
+    CommonModule,
+    RouterModule,
+    FormsModule,
+    ReactiveFormsModule,
+  ],
 })
 export class RuleModelDetailsComponent {
   selectLogsources: any;
 
   registeredLogsources: any = [];
-  constructor(private sigmaConversionsService: SigmaConversionsService, private authService: AuthService, private route: ActivatedRoute, private rulesService: RulesService, private useCaseService: UsecasesService, private clipboard: Clipboard, private router: Router) { }
+  constructor(
+    private sigmaConversionsService: SigmaConversionsService,
+    private authService: AuthService,
+    private route: ActivatedRoute,
+    private rulesService: RulesService,
+    private useCaseService: UsecasesService,
+    private clipboard: Clipboard,
+    private router: Router,
+  ) {}
 
-  code: any = "";
+  code: any = '';
 
   clients: any = [];
 
   selectClient: any;
 
-  ruleInstances: any = []
+  ruleInstances: any = [];
 
   user: any = {
-    companies: []
-
-  }
+    companies: [],
+  };
 
   usercompanynames: any = [];
 
-
   ruleModel: any = {
-    title: "",
-    useCaseId: "",
-    type: "",
-    ruleCode: "empty"
-  }
+    title: '',
+    useCaseId: '',
+    type: '',
+    ruleCode: 'empty',
+  };
   usecase: any = {
-    title: "",
-    description: "",
+    title: '',
+    description: '',
     mitreTechniques: [],
-  }
-
+  };
 
   selectedModel: CodeModel = {
     value: this.ruleModel.ruleCode,
     language: 'YAML',
-    uri: ''
-  }
+    uri: '',
+  };
 
   selectedModelModal: CodeModel = {
     value: 'teste',
     language: 'YAML',
-    uri: ''
-  }
+    uri: '',
+  };
 
-  theme = 'vs'
-  themeModal = 'vs'
-
+  theme = 'vs';
+  themeModal = 'vs';
 
   options = {
     language: 'YAML',
@@ -77,9 +99,7 @@ export class RuleModelDetailsComponent {
     },
     automaticLayout: true,
     dragAndDrop: true,
-
-
-  }
+  };
 
   optionsModal = {
     language: 'YAML',
@@ -89,10 +109,7 @@ export class RuleModelDetailsComponent {
     },
     automaticLayout: true,
     dragAndDrop: true,
-
-
-  }
-
+  };
 
   onEditorLoaded(editor: CodeEditorComponent) {
     console.log('loaded', editor);
@@ -111,98 +128,85 @@ export class RuleModelDetailsComponent {
   }
 
   ngOnInit() {
-
-    var id = this.route.snapshot.params['id']
-
+    var id = this.route.snapshot.params['id'];
 
     this.rulesService.getRuleModelById(id).subscribe((data: any) => {
       this.ruleModel = data;
       console.log(this.ruleModel);
 
       // Define a sintaxe padrão com base no tipo
-      const defaultSyntax = this.ruleModel.type === 'SIEM' ? 'Sigma Rule' : 'Yara Rule';
+      const defaultSyntax =
+        this.ruleModel.type === 'SIEM' ? 'Sigma Rule' : 'Yara Rule';
 
       // Atualiza o formulário com o código e a sintaxe pré-selecionada
       this.createRuleForm.patchValue({
         modalCode: this.ruleModel.ruleCode,
-        syntax: defaultSyntax
+        syntax: defaultSyntax,
       });
-
 
       var newModel = {
         value: this.ruleModel.ruleCode,
         language: '',
-        uri: ''
-      }
+        uri: '',
+      };
 
       this.selectedModel = JSON.parse(JSON.stringify(newModel));
 
+      this.useCaseService
+        .getUseCaseById(this.ruleModel.useCaseId)
+        .subscribe((data: any) => {
+          this.usecase = data;
+          console.log(this.usecase);
 
+          this.authService.getClients().subscribe((data: any) => {
+            this.clients = data;
 
+            this.rulesService.getRules().subscribe((data: any) => {
+              const filteredRules = data.filter(
+                (rule: any) => rule.ruleModel.id == this.ruleModel.id,
+              );
 
-
-      this.useCaseService.getUseCaseById(this.ruleModel.useCaseId).subscribe((data: any) => {
-        this.usecase = data;
-        console.log(this.usecase);
-
-        this.authService.getClients().subscribe((data: any) => {
-          this.clients = data
-
-
-
-
-          this.rulesService.getRules().subscribe((data: any) => {
-            const filteredRules = data.filter((rule: any) => rule.ruleModel.id == this.ruleModel.id);
-
-            this.ruleInstances = filteredRules;
-            console.log(this.ruleInstances);
-
-            this.authService.loggedInInfo().subscribe((value) => {
-              this.user = value;
-              if (this.user.companies === null) {
-                this.user.companies = [];
-              }
-              console.log("USER")
-              console.log(this.user);
-
-
-              if (this.user.companies?.length > 0) {
-                this.clients = this.clients.filter((client: any) => this.user.companies?.includes(client.name));
-              }
+              this.ruleInstances = filteredRules;
               console.log(this.ruleInstances);
 
+              this.authService.loggedInInfo().subscribe((value) => {
+                this.user = value;
+                if (this.user.companies === null) {
+                  this.user.companies = [];
+                }
+                console.log('USER');
+                console.log(this.user);
 
-
-
-
+                if (this.user.companies?.length > 0) {
+                  this.clients = this.clients.filter((client: any) =>
+                    this.user.companies?.includes(client.name),
+                  );
+                }
+                console.log(this.ruleInstances);
+              });
             });
           });
         });
-      });
-
     });
-
   }
 
   copyToClipboard() {
-
     this.clipboard.copy(this.code);
-
-
   }
 
-  message: string = "";
+  message: string = '';
   updateRuleModelCode() {
-    this.rulesService.updateRuleModelCode(this.selectedModel.value, this.ruleModel.id).subscribe((data: any) => {
-      console.log(this.message);
-      this.message = data.message;
+    this.rulesService
+      .updateRuleModelCode(this.selectedModel.value, this.ruleModel.id)
+      .subscribe((data: any) => {
+        console.log(this.message);
+        this.message = data.message;
 
-      setTimeout(() => {
-        this.message = "";
-      }, 4000);
-    });
+        setTimeout(() => {
+          this.message = '';
+        }, 4000);
+      });
   }
-
 
   async createRule() {
     var rule = {
@@ -210,13 +214,13 @@ export class RuleModelDetailsComponent {
       ruleCode: this.createRuleForm.get('modalCode')?.value,
       logsources: this.createRuleForm.get('logsources')?.value,
       client: this.createRuleForm.get('client')?.value,
-      syntax: this.createRuleForm.get('syntax')?.value
+      syntax: this.createRuleForm.get('syntax')?.value,
     };
 
     console.log(rule);
 
     if (typeof rule.client === 'string') {
-      console.log("entrou aqui");
+      console.log('entrou aqui');
       console.log(this.clients);
 
       const client = this.clients.find((c: any) => c.name === rule.client);
@@ -246,8 +250,8 @@ export class RuleModelDetailsComponent {
     modalCode: new FormControl(this.ruleModel.ruleCode),
     logsources: new FormControl(null),
     client: new FormControl(''),
-    syntax: new FormControl('')
-  })
+    syntax: new FormControl(''),
+  });
 
   onSyntaxChange() {
     const selectedSyntax = this.createRuleForm.get('syntax')?.value;
@@ -270,7 +274,8 @@ export class RuleModelDetailsComponent {
         request$ = this.sigmaConversionsService.convertSigmaToQRadar(baseCode);
         break;
       case 'Elastic Rule':
-        request$ = this.sigmaConversionsService.convertSigmaToElasticLucena(baseCode);
+        request$ =
+          this.sigmaConversionsService.convertSigmaToElasticLucena(baseCode);
         break;
       default:
         console.error('Sintaxe não suportada para conversão:', selectedSyntax);
@@ -291,21 +296,34 @@ export class RuleModelDetailsComponent {
       },
       error: (err: any) => {
         console.error('Erro na conversão:', err);
-        this.createRuleForm.patchValue({ modalCode: '# Erro de comunicação com a API de conversão.' });
-      }
+
+        // Extrai a mensagem de erro específica enviada pelo Django
+        const errorMessage =
+          err.error?.error ||
+          err.statusText ||
+          'Erro desconhecido na API de conversão.';
+
+        this.createRuleForm.patchValue({
+          modalCode: `Falha na conversão: ${errorMessage}`,
+        });
+      },
     });
   }
 
-  soarSintaxes = ['Yara Rule']
-  siemSintaxes = ['Sigma Rule', 'Splunk Rule', 'QRadar Rule', 'Elastic Rule']
-
+  soarSintaxes = ['Yara Rule'];
+  siemSintaxes = ['Sigma Rule', 'Splunk Rule', 'QRadar Rule', 'Elastic Rule'];
 
   convertedCode: any;
 
   convertRuleToBackend(selectedSyntax: any, ruleCode: any): Promise<any> {
     return new Promise((resolve, reject) => {
       // Non-Sigma syntaxes: store as-is without conversion
-      if (selectedSyntax === 'Yara Rule' || selectedSyntax === 'Splunk Rule' || selectedSyntax === 'QRadar Rule' || selectedSyntax === 'Elastic Rule') {
+      if (
+        selectedSyntax === 'Yara Rule' ||
+        selectedSyntax === 'Splunk Rule' ||
+        selectedSyntax === 'QRadar Rule' ||
+        selectedSyntax === 'Elastic Rule'
+      ) {
         resolve(ruleCode);
       } else if (selectedSyntax === 'Sigma Rule') {
         // Sigma rules are stored as-is
@@ -313,6 +331,25 @@ export class RuleModelDetailsComponent {
       } else {
         reject(new Error('Unknown syntax: ' + selectedSyntax));
       }
+    });
+  }
+
+  openAssignModal() {
+    // 1. Capta o código atualizado diretamente do editor principal
+    const currentCode = this.selectedModel.value;
+
+    // 2. Atualiza a variável base. Isto garante que se o utilizador trocar a sintaxe no modal,
+    // a conversão (na função onSyntaxChange) usa o código modificado e não o original da BD.
+    this.ruleModel.ruleCode = currentCode;
+
+    // 3. Define a sintaxe padrão
+    const defaultSyntax =
+      this.ruleModel.type === 'SIEM' ? 'Sigma Rule' : 'Yara Rule';
+
+    // 4. Injeta o código e a sintaxe no formulário
+    this.createRuleForm.patchValue({
+      modalCode: currentCode,
+      syntax: defaultSyntax,
     });
   }
 }

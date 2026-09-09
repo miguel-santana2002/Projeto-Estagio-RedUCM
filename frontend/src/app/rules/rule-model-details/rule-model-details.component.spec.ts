@@ -10,10 +10,13 @@ describe('RuleModelDetailsComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [RuleModelDetailsComponent, HttpClientTestingModule, RouterTestingModule]
-    })
-    .compileComponents();
-    
+      imports: [
+        RuleModelDetailsComponent,
+        HttpClientTestingModule,
+        RouterTestingModule,
+      ],
+    }).compileComponents();
+
     fixture = TestBed.createComponent(RuleModelDetailsComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
