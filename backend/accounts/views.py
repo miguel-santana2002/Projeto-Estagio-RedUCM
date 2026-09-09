@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login
+from django.db import IntegrityError
 from django.http import JsonResponse
 from accounts.models import Company, User  # Alterado para importar User de accounts.models
 from accounts.serializer import ChangePasswordSerializer, CompanySerializer, UserSerializer
@@ -96,14 +97,22 @@ def getCompanies(request):
 @api_view(['POST'])
 def createCompany(request):
     if request.method == 'POST':
+        name = request.data.get('name', '').strip()
+        logsources = request.data.get('logsources', [])
 
-        name = request.data['name']
-        logsources = request.data['logsources']
-        company = Company(name=name, logsources=logsources)
-        company.save()
-        return JsonResponse({'success': 'Company created successfully'})
+        if not name or not logsources:
+            return JsonResponse({'error': 'O Nome e as LogSources são de preenchimento obrigatório.'}, status=400)
+        
+        try:
+            company = Company(name=name, logsources=logsources)
+            company.save()
+            return JsonResponse({'success': 'Company created successfully'}, status=201)
+        except IntegrityError:
+            # Bloqueia a falha 500 e devolve um erro 400 interpretável pelo Angular
+            return JsonResponse({'error': 'Já existe um cliente com este nome.'}, status=400)
     else:
-        return JsonResponse({'error': 'Invalid request method'})
+        # Alterado para status 405 (Method Not Allowed) para maior rigor semântico
+        return JsonResponse({'error': 'Invalid request method'}, status=405)
     
 @extend_schema(description=' Endpoint to delete a user based on the user ID.',
                responses={
