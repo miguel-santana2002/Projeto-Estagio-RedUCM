@@ -46,7 +46,7 @@ class CustomTokenObtainPairSerializer(serializers.Serializer):
             msg.attach_alternative(html_content, "text/html")
             msg.send()
             
-        otpSent = True
+            otpSent = True
         return {'user': user, 'email': user.email, 'otpSent': otpSent, 'otpMethod': user.otpMethod}
 
 class VerifyOTPSerializer(serializers.Serializer):

@@ -69,7 +69,7 @@ class User(AbstractBaseUser):
     otp = models.CharField(max_length=6, default="000000")
     otp_time = models.DateTimeField(auto_now_add=True, null=True)
     totp_secret = models.CharField(max_length=32, default=pyotp.random_base32, blank=True)
-    otpMethod = models.CharField(max_length=10, choices=[('email', 'Email'), ('totp', 'TOTP')], default='totp')
+    otpMethod = models.CharField(max_length=10, choices=[('email', 'Email'), ('totp', 'TOTP')], default='email')
     showTotp = models.BooleanField(default=True)
 
 
