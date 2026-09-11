@@ -9,22 +9,21 @@ const USER_TOKEN = 'user-token';
 @Injectable({
   providedIn: 'root',
 })
-
-
-
 export class AuthService {
-
   private accessToken: string = '';
   constructor(private http: HttpClient) {}
 
-  login(email: string, password: string): Observable<{ otpSent: boolean; otpMethod?: string }> {
+  login(
+    email: string,
+    password: string,
+  ): Observable<{ otpSent: boolean; otpMethod?: string }> {
     localStorage.removeItem(USER_TOKEN);
     return this.http.post(AUTH_URL + 'login', { email, password }).pipe(
       map((response: any) => {
-        console.log("aqui");
+        console.log('aqui');
         console.log(response);
         this.accessToken = response.access;
-        
+
         if (response.otpSent) {
           return { otpSent: true, otpMethod: response.otpMethod };
         }
@@ -32,11 +31,11 @@ export class AuthService {
       }),
       catchError((e) => {
         console.error(e.message);
-        return throwError(() => new Error("Invalid Credentials"));
-      })
+        return throwError(() => new Error('Invalid Credentials'));
+      }),
     );
   }
-  
+
   verifyOTP(email: string, otp: string) {
     return this.http.post(AUTH_URL + 'verify-otp', { email, otp }).pipe(
       map((response: any) => {
@@ -45,8 +44,8 @@ export class AuthService {
       }),
       catchError((e) => {
         console.error(e.message);
-        return throwError(() => new Error("Invalid OTP"));
-      })
+        return throwError(() => new Error('Invalid OTP'));
+      }),
     );
   }
 
@@ -62,26 +61,25 @@ export class AuthService {
       catchError((e) => {
         console.error(e.message);
         return of(null);
-      })
+      }),
     );
   }
-  
 
   deleteUser(id: any) {
-    const headers = new HttpHeaders({'Content-Type': 'application/json'});
+    const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
     return this.http.post<any>(`${AUTH_URL}deleteUser/${id}`, { headers });
   }
 
   deleteCompany(id: any) {
-    const headers = new HttpHeaders({'Content-Type': 'application/json'});
+    const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
     return this.http.post<any>(`${AUTH_URL}deleteCompany/${id}`, { headers });
   }
 
   loggedInInfo() {
     const headers = new HttpHeaders({
-      'Authorization': `Bearer ${this.getAccessToken()}`
+      Authorization: `Bearer ${this.getAccessToken()}`,
     });
-  
+
     return this.http.get(AUTH_URL + 'loggedInInfo', { headers }).pipe(
       tap((value) => {
         console.log(value);
@@ -89,7 +87,7 @@ export class AuthService {
       catchError((e) => {
         console.error(e.message);
         return of(false);
-      })
+      }),
     );
   }
 
@@ -112,7 +110,7 @@ export class AuthService {
           console.log(e);
           this.logout();
           return of(false);
-        })
+        }),
       );
   }
 
@@ -138,58 +136,74 @@ export class AuthService {
 
   logout() {
     localStorage.removeItem(USER_TOKEN);
-
   }
 
-
   createUser(userData: any): Observable<any> {
-    
-    const headers = new HttpHeaders({'Content-Type': 'application/json'});
+    const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
     return this.http.post<any>(`${AUTH_URL}createUser`, userData, { headers });
   }
 
   createClient(clientData: any): Observable<any> {
-    const headers = new HttpHeaders({'Content-Type': 'application/json'});
-    return this.http.post<any>(`${AUTH_URL}createCompany`, clientData, { headers });
+    const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
+    return this.http.post<any>(`${AUTH_URL}createCompany`, clientData, {
+      headers,
+    });
   }
 
   getUsers(): Observable<any> {
-    const headers = new HttpHeaders({'Content-Type': 'application/json'});
+    const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
     return this.http.get<any>(`${AUTH_URL}getUsers`, { headers });
   }
 
   getClients(): Observable<any> {
-    const headers = new HttpHeaders({'Content-Type': 'application/json'});
+    const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
     return this.http.get<any>(`${AUTH_URL}getCompanies`, { headers });
   }
 
   getLogsourcesByClient(clientName: any): Observable<any> {
-    const headers = new HttpHeaders({'Content-Type': 'application/json'});
-    return this.http.get<any>(`${AUTH_URL}getLogsourcesByClient/${clientName}`, { headers });
+    const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
+    return this.http.get<any>(
+      `${AUTH_URL}getLogsourcesByClient/${clientName}`,
+      { headers },
+    );
   }
 
-  updateUserInfo(userData: any, id : any): Observable<any> {
-    const headers = new HttpHeaders({'Content-Type': 'application/json'});
-    return this.http.post<any>(`${AUTH_URL}updateUserInfo/`+id, userData, { headers });
+  updateUserInfo(userData: any, id: any): Observable<any> {
+    const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
+    return this.http.post<any>(`${AUTH_URL}updateUserInfo/` + id, userData, {
+      headers,
+    });
   }
 
   changePassword(userId: string, password: string): Observable<any> {
     const headers = new HttpHeaders({
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${this.getAccessToken()}`
+      Authorization: `Bearer ${this.getAccessToken()}`,
     });
     const body = { password: password };
-    return this.http.post(`${AUTH_URL}change-password/${userId}/`, body, { headers }).pipe(
-      catchError((e) => {
-        console.error(e.message);
-        return throwError(() => new Error("Failed to change password"));
-      })
-    );
+    return this.http
+      .post(`${AUTH_URL}change-password/${userId}/`, body, { headers })
+      .pipe(
+        catchError((e) => {
+          console.error(e.message);
+          return throwError(() => new Error('Failed to change password'));
+        }),
+      );
   }
-  
-  
 
+  // Obter detalhes de uma empresa específica por ID
+  getClientById(id: any): Observable<any> {
+    const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
+    return this.http.get<any>(`${AUTH_URL}getCompany/${id}`, { headers });
+  }
 
+  // Atualizar dados da empresa (nome e logsources)
+  updateCompany(id: any, companyData: any): Observable<any> {
+    const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
+    return this.http.post<any>(`${AUTH_URL}updateCompany/${id}`, companyData, {
+      headers,
+    });
+  }
 }
 
 export class User {

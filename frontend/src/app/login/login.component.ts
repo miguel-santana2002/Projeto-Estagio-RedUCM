@@ -32,7 +32,7 @@ import { CommonModule } from '@angular/common';
     MatFormFieldModule,
     MatInputModule,
     MatDialogModule,
-    CommonModule
+    CommonModule,
   ],
   templateUrl: './login.component.html',
   styleUrl: './login.component.css',
@@ -46,69 +46,78 @@ export class LoginComponent {
   otpMethod: string = '';
   qrCodeUrl: string = '';
 
-  constructor(private authService: AuthService, private router: Router, public dialog: MatDialog) {
+  constructor(
+    private authService: AuthService,
+    private router: Router,
+    public dialog: MatDialog,
+  ) {
     this.loginForm = new FormGroup({
       email: new FormControl('', [Validators.required, Validators.email]),
       password: new FormControl('', Validators.required),
     });
 
     this.otpForm = new FormGroup({
-      otp: new FormControl('', [Validators.required, Validators.minLength(6), Validators.maxLength(6)]),
+      otp: new FormControl('', [
+        Validators.required,
+        Validators.minLength(6),
+        Validators.maxLength(6),
+      ]),
     });
   }
 
-errorMessage = '';
-
+  errorMessage = '';
 
   onSubmit() {
     if (this.loginForm.valid) {
       const { email, password } = this.loginForm.value;
-      this.authService.login(email, password).subscribe((response) => {
-        console.log(response);
-        this.errorMessage = '';  
-        if (response.otpSent) {
-          this.otpMethod = response.otpMethod!;
-          this.showOtpForm = true;
+      this.authService.login(email, password).subscribe(
+        (response) => {
+          console.log(response);
+          this.errorMessage = '';
+          if (response.otpSent) {
+            this.otpMethod = response.otpMethod!;
+            this.showOtpForm = true;
 
-          if (this.otpMethod === 'totp'){
-            this.onGenerateTOTP();
+            if (this.otpMethod === 'totp') {
+              this.onGenerateTOTP();
+            }
+          } else {
+            console.log('OTP not sent');
+            this.router.navigate(['/home']);
           }
-        } else {
-          console.log('OTP not sent');
-          this.router.navigate(['/home']);
-        }
-      },
-      (error) => {
-       this.errorMessage = 'Credenciais inválidas para início de sessão';  // Add this line
-        
-      });
+        },
+        (error) => {
+          this.errorMessage = 'Credenciais inválidas para início de sessão'; // Add this line
+        },
+      );
     }
   }
-  
 
   onVerifyOtp() {
     if (this.otpForm.valid) {
       const otp = this.otpForm.value.otp;
       const email = this.loginForm.value.email;
-      this.authService.verifyOTP(email, otp).subscribe((success) => {
-        if (success) {
-          this.dialog.closeAll();
-          this.router.navigate(['/home']);
-        } 
-      },
-      (error) => {
-        this.errorMessage = 'Código de Verificação Inválido';  // Add this line
-      });
+      this.authService.verifyOTP(email, otp).subscribe(
+        (success) => {
+          if (success) {
+            this.dialog.closeAll();
+            this.router.navigate(['/home']);
+          }
+        },
+        (error) => {
+          this.errorMessage = 'Código de Verificação Inválido'; // Add this line
+        },
+      );
     }
   }
   onGenerateTOTP() {
     this.authService.generateTOTP().subscribe((response) => {
       console.log(response);
-        if (response ) {
-            this.qrCodeUrl = 'https://api.qrserver.com/v1/create-qr-code/?data=' + encodeURIComponent(response);
-
-        }
+      if (response) {
+        this.qrCodeUrl =
+          'https://api.qrserver.com/v1/create-qr-code/?data=' +
+          encodeURIComponent(response);
+      }
     });
-}
-
+  }
 }

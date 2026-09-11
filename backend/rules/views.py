@@ -22,13 +22,19 @@ from rest_framework import status
                })
 @api_view(['POST'])
 def createRuleModel(request):
-    if request.method == 'POST':
-        data = request.data
-        new_rule = RuleModel(title=data['title'], useCaseId=data['useCaseId'], logsources=data['logsources'], type=data['type'], ruleCode=data['ruleCode'])
-        new_rule.save()
-        return JsonResponse(data, safe=False)
-    else:
-        return JsonResponse({'error': 'Invalid request method'})
+    data = request.data
+    new_rule = RuleModel(
+        title=data.get('title'),
+        useCaseId=data.get('useCaseId'),
+        logsources=data.get('logsources', []),
+        type=data.get('type'),
+        syntax=data.get('syntax'),
+        ruleCode=data.get('ruleCode', '')
+    )
+    new_rule.save()
+    
+    serializer = RuleModelSerializer(new_rule)
+    return JsonResponse(serializer.data, safe=False, status=status.HTTP_201_CREATED)
     
 
 @extend_schema(request=RuleModelSerializer,

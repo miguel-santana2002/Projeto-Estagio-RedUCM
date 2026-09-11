@@ -2,26 +2,21 @@
 
 <app-titlebanner title="RedModel{{ ruleModel.id }}" image="./assets/bannercover.jpg"></app-titlebanner>
 
+<!-- Toast de Sucesso -->
 <div *ngIf="message" id="toast-success"
-  class="fixed top-4 right-4 flex items-center w-full max-w-xs p-4 text-gray-500 bg-white rounded-lg shadow dark:text-gray-400 dark:bg-gray-800"
+  class="fixed top-4 right-4 flex items-center w-full max-w-xs p-4 text-gray-500 bg-white rounded-lg shadow dark:text-gray-400 dark:bg-gray-800 z-50"
   role="alert">
   <div
     class="inline-flex items-center justify-center flex-shrink-0 w-8 h-8 text-green-500 bg-green-100 rounded-lg dark:bg-green-800 dark:text-green-200">
-    <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
-      <path
-        d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5Zm3.707 8.207-4 4a1 1 0 0 1-1.414 0l-2-2a1 1 0 0 1 1.414-1.414L9 10.586l3.293-3.293a1 1 0 0 1 1.414 1.414Z" />
-    </svg>
-    <span class="sr-only">Check icon</span>
+    <i class="fas fa-check"></i>
+    <span class="sr-only">Sucesso</span>
   </div>
   <div class="ms-3 text-sm font-normal">{{ message }}</div>
   <button type="button" (click)="message = ''"
     class="ms-auto -mx-1.5 -my-1.5 bg-white text-gray-400 hover:text-gray-900 rounded-lg focus:ring-2 focus:ring-gray-300 p-1.5 hover:bg-gray-100 inline-flex items-center justify-center h-8 w-8 dark:text-gray-500 dark:hover:text-white dark:bg-gray-800 dark:hover:bg-gray-700"
-    data-dismiss-target="#toast-success" aria-label="Close">
-    <span class="sr-only">Close</span>
-    <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
-      <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-        d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6" />
-    </svg>
+    aria-label="Close">
+    <i class="fas fa-times"></i>
+    <span class="sr-only">Fechar</span>
   </button>
 </div>
 
@@ -30,53 +25,75 @@
     {{ ruleModel.title }}
   </h1>
 
-  <div class="flex ml-4">
+  <!-- Metadados da Regra -->
+  <div class="flex flex-wrap items-center gap-8 ml-4">
+
+    <!-- Use Case -->
     <div class="flex items-center">
       <img src="./assets/tag.png" class="rounded-lg size-10 hover:drop-shadow-md transition duration-300" />
       <div class="ml-4">
         <h1 class="font-inter font-semibold text-xl text-gray-600">
           RedUC{{ ruleModel.useCaseId }}
         </h1>
-        <p class="text-gray-500">Use Case Associado</p>
+        <p class="text-gray-500 text-sm">Use Case Associado</p>
       </div>
     </div>
 
-    <div class="flex items-center ml-12">
+    <!-- Técnicas MITRE -->
+    <div class="flex items-center">
       <img src="./assets/mitrelogo.png" class="rounded-lg size-10 hover:drop-shadow-md transition duration-300" />
       <div class="ml-4">
         <div class="flex flex-wrap">
-          <div [routerLink]="'/techniqueDetails/' + technique" *ngFor="let technique of usecase.mitreTechniques"
+          <div [routerLink]="'/techniqueDetails/' + technique" *ngFor="let technique of usecase?.mitreTechniques"
             class="bg-[#0d2f52] cursor-pointer text-white text-sm rounded-md px-1 max-w-12 mr-1 my-1">
             {{ technique }}
           </div>
         </div>
-        <p class="text-gray-500">Técnicas Mitre Associadas</p>
+        <p class="text-gray-500 text-sm">Técnicas Mitre Associadas</p>
       </div>
     </div>
 
-    <div class="flex items-center ml-12">
+    <!-- Tipo -->
+    <div class="flex items-center">
       <img src="./assets/category.png" class="rounded-lg size-10 hover:drop-shadow-md transition duration-300" />
       <div class="ml-4">
         <h1 class="font-inter font-semibold text-xl text-gray-600">
           {{ ruleModel.type }}
         </h1>
-        <p class="text-gray-500">Tipo</p>
+        <p class="text-gray-500 text-sm">Tipo</p>
       </div>
     </div>
 
-    <div class="flex items-center ml-12">
+    <!-- Sintaxe Adicionada -->
+    <div class="flex items-center">
+      <div
+        class="flex items-center justify-center size-10 rounded-lg bg-gray-100 border border-gray-200 text-redshift-red text-xl shadow-sm">
+        <i class="fas fa-code"></i>
+      </div>
+      <div class="ml-4">
+        <h1 class="font-inter font-semibold text-xl text-gray-600">
+          {{ ruleModel.syntax || 'N/D' }}
+        </h1>
+        <p class="text-gray-500 text-sm">Sintaxe</p>
+      </div>
+    </div>
+
+    <!-- LogSources -->
+    <div class="flex items-center">
       <img src="./assets/source.png" class="rounded-lg size-10 hover:drop-shadow-md transition duration-300" />
       <div class="ml-4">
         <h1 class="font-inter font-semibold text-xl text-gray-600">
           {{ ruleModel.logsources }}
         </h1>
-        <p class="text-gray-500">LogSources</p>
+        <p class="text-gray-500 text-sm">LogSources</p>
       </div>
     </div>
+
   </div>
 
+  <!-- Monaco Editor e Ações -->
   <div class="flex my-12">
-    <div class="h-full border border-gray-300 mx-auto w-[80%] mr-12">
+    <div class="h-full border border-gray-300 mx-auto w-[80%] mr-12 rounded-lg overflow-hidden">
       <ngs-code-editor class="h-[33rem]" [codeModel]="selectedModel" [theme]="theme" [options]="options"
         (valueChanged)="onCodeChanged($event)" (loaded)="onEditorLoaded($event)"
         (codeModelChanged)="onCodeModelChanged($event)">
@@ -88,27 +105,27 @@
         Ações
       </h1>
 
-      <button (click)="copyToClipboard()" type="Primary Block"
-        class="hover:drop-shadow-md transition duration-300 flex flex-row items-center content-center justify-start gap-1 h-sm w-full py-2 my-4 px-2 border border-gray-300 drop-shadow-lg rounded-xl text-gray-700 bg-white active:text-gray-100 active:bg-redshift-hover active:ring-0 focus:ring-offset-2 focus:ring">
+      <button (click)="copyToClipboard()" type="button"
+        class="hover:drop-shadow-md transition duration-300 flex flex-row items-center content-center justify-start gap-1 h-sm w-full py-2 my-4 px-2 border border-gray-300 drop-shadow-lg rounded-xl text-gray-700 bg-white active:text-gray-100 active:bg-redshift-hover">
         <div class="fas fa-copy"></div>
         <p class="ml-2">Copiar para Clipboard</p>
       </button>
 
-      <button (click)="openAssignModal()" data-modal-target="crud-modal" data-modal-toggle="crud-modal"
-        type="Primary Block"
-        class="hover:drop-shadow-md transition duration-300 flex flex-row items-center content-center justify-start gap-1 h-sm w-full py-2 my-4 px-2 border border-gray-300 drop-shadow-lg rounded-xl text-gray-700 bg-white active:text-gray-100 active:bg-redshift-hover active:ring-0 focus:ring-offset-2 focus:ring">
+      <button (click)="openAssignModal()" data-modal-target="crud-modal" data-modal-toggle="crud-modal" type="button"
+        class="hover:drop-shadow-md transition duration-300 flex flex-row items-center content-center justify-start gap-1 h-sm w-full py-2 my-4 px-2 border border-gray-300 drop-shadow-lg rounded-xl text-gray-700 bg-white active:text-gray-100 active:bg-redshift-hover">
         <div class="fas fa-user-plus"></div>
         <p class="ml-2">Atribuir a clientes</p>
       </button>
 
-      <button *ngIf="user.companies?.length === 0" (click)="updateRuleModelCode()" type="Primary Block"
-        class="hover:drop-shadow-md transition duration-300 flex flex-row items-center content-center justify-start gap-1 h-sm w-full py-2 my-4 px-2 border border-gray-300 drop-shadow-lg rounded-xl text-gray-700 bg-white active:text-gray-100 active:bg-redshift-hover active:ring-0 focus:ring-offset-2 focus:ring">
+      <button *ngIf="user.companies?.length === 0" (click)="updateRuleModelCode()" type="button"
+        class="hover:drop-shadow-md transition duration-300 flex flex-row items-center content-center justify-start gap-1 h-sm w-full py-2 my-4 px-2 border border-gray-300 drop-shadow-lg rounded-xl text-gray-700 bg-white active:text-gray-100 active:bg-redshift-hover">
         <div class="fas fa-save"></div>
         <p class="ml-2">Guardar Regra</p>
       </button>
     </div>
   </div>
 
+  <!-- Instâncias da Regra -->
   <h1 class="font-inter font-semibold text-2xl text-gray-700 mb-4">
     Regras baseadas neste Modelo
   </h1>
@@ -118,19 +135,19 @@
       <div class="bg-white p-4 rounded-lg shadow-md cursor-pointer hover:drop-shadow-xl transition duration-300"
         [routerLink]="'/ruleDetails/' + rule.id">
         <h1 class="font-inter font-semibold text-xl text-gray-600">
-          {{ rule.client.name }}
+          {{ rule.client?.name }}
         </h1>
         <p class="text-gray-500 text-sm">{{ rule.logsources }}</p>
       </div>
     </div>
   </div>
 
+  <!-- Modal Atribuir Regra -->
   <div id="crud-modal" tabindex="-1" aria-hidden="true"
     class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full">
     <div class="relative p-4 w-10/12 min-w-96 max-h-full">
-      <!-- Modal content -->
       <div class="relative bg-white rounded-lg shadow dark:bg-gray-700">
-        <!-- Modal header -->
+
         <div class="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-600">
           <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
             Copiar regra para cliente
@@ -138,52 +155,51 @@
           <button type="button"
             class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white"
             data-modal-toggle="crud-modal">
-            <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
-              <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6" />
-            </svg>
+            <i class="fas fa-times text-base"></i>
             <span class="sr-only">Close modal</span>
           </button>
         </div>
-        <!-- Modal body -->
+
         <form class="p-4 md:p-5" [formGroup]="createRuleForm">
           <div class="grid gap-4 mb-4 grid-cols-2 grid-rows-2">
-            <div class="col-span-1 row-span-1">
-              <label for="Copiar" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Seleção de
-                cliente</label>
 
-              <select *ngIf="user.companies?.length === 0" id="client" name="client" formControlName="client" required
-                class="block w-full rounded-md border-0 px-2 py-2.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6">
+            <!-- Seleção de Cliente -->
+            <div class="col-span-1 row-span-1">
+              <label for="client" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Seleção de
+                cliente</label>
+              <select *ngIf="user.companies?.length === 0" id="client" formControlName="client" required
+                class="block w-full rounded-md border-0 px-2 py-2.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm">
                 <option *ngFor="let client of clients" [ngValue]="client.pk">
                   {{ client.name }}
                 </option>
               </select>
 
-              <select *ngIf="user.companies?.length > 0" id="client" name="client" formControlName="client" required
-                class="block w-full rounded-md border-0 px-2 py-2.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6">
+              <select *ngIf="user.companies?.length > 0" id="client" formControlName="client" required
+                class="block w-full rounded-md border-0 px-2 py-2.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm">
                 <option *ngFor="let client of user.companies ?? []" [ngValue]="client">
                   {{ client }}
                 </option>
               </select>
             </div>
 
+            <!-- LogSources -->
             <div class="col-span-1 row-span-2">
               <label for="logsources"
                 class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Logsources</label>
-              <select id="logsources" name="logsources" formControlName="logsources" required multiple
-                class="block w-full rounded-md border-0 h-32 px-2 py-2.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6">
+              <select id="logsources" formControlName="logsources" required multiple
+                class="block w-full rounded-md border-0 h-32 px-2 py-2.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm">
                 <option *ngFor="let logsource of ruleModel.logsources" [ngValue]="logsource">
                   {{ logsource }}
                 </option>
               </select>
             </div>
 
+            <!-- Sintaxe Pré-selecionada -->
             <div class="col-span-1 row-span-1">
-              <label for="Copiar" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Seleção de
-                Sintaxe</label>
-
-              <select id="syntax" name="syntax" formControlName="syntax" (change)="onSyntaxChange()" required
-                class="block w-full rounded-md border-0 px-2 py-2.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6">
+              <label for="syntax" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Sintaxe da
+                Regra</label>
+              <select id="syntax" formControlName="syntax" (change)="onSyntaxChange()" required
+                class="block w-full rounded-md border-0 px-2 py-2.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm">
                 <ng-container *ngIf="ruleModel.type === 'SOAR'">
                   <option *ngFor="let sintax of soarSintaxes" [ngValue]="sintax">
                     {{ sintax }}
@@ -197,15 +213,15 @@
               </select>
             </div>
 
-            <label for="Personalização"
-              class="block mb-0 text-sm font-medium text-gray-900 dark:text-white">Personalização da Regra</label>
-
+            <!-- Editor / Pré-visualização -->
+            <label class="block mb-0 text-sm font-medium text-gray-900 dark:text-white">Personalização da Regra</label>
             <textarea rows="20" formControlName="modalCode"
-              class="col-span-2 row-span-2 w-full border border-gray-300 rounded-lg p-2 text-[14px]">{{ ruleModel.ruleCode }}
+              class="col-span-2 row-span-2 w-full border border-gray-300 rounded-lg p-2 text-[14px]">
             </textarea>
           </div>
+
           <button type="submit" (click)="createRule()" data-modal-toggle="crud-modal"
-            class="text-white inline-flex items-center bg-redshift-red hover:bg-redshift-hover focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
+            class="text-white inline-flex items-center bg-redshift-red hover:bg-redshift-hover focus:ring-4 focus:outline-none font-medium rounded-lg text-sm px-5 py-2.5 text-center">
             <i class="fas fa-save mr-2"></i>
             Guardar
           </button>
