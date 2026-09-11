@@ -67,7 +67,7 @@ opcional) estão no `.env` — ver comentários em `.env.example`. Por omissão 
 emails de OTP são apenas impressos na consola do container `django`
 (`docker compose logs django`); para usar SMTP real, muda `EMAIL_BACKEND` e
 preenche `EMAIL_HOST_USER`/`EMAIL_HOST_PASSWORD` no `.env`.
-
+\
 ## Como executar (sem Docker)
 
 ```bash

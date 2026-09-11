@@ -2,89 +2,57 @@
 <app-titlebanner title="Adicionar Modelo de Regra" image="./assets/bannercover.jpg"></app-titlebanner>
 
 <form class="grid grid-cols-2 gap-12 px-32 pt-12" (ngSubmit)="createRuleModel()" [formGroup]="createRuleModelForm">
-
-    <!-- Título -->
     <div class="space-y-4 col-span-2 md:col-span-1">
         <label for="title" class="block text-sm font-medium leading-6 text-gray-900">Título da Regra</label>
         <div class="flex flex-col">
-            <input id="title" type="text" formControlName="title" required
-                class="block w-full rounded-md border-0 px-2 py-2.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6">
-            <div *ngIf="createRuleModelForm.get('title')?.touched && createRuleModelForm.get('title')?.invalid"
-                class="text-red-600 text-sm mt-1">
+            <input id="title" name="title" [(ngModel)]="ruleModel.title" type="title" autocomplete="title" formControlName="title" required class="block w-full rounded-md border-0 px-2 py-2.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6">
+            <div *ngIf="createRuleModelForm.get('title')?.touched && createRuleModelForm.get('title')?.invalid" class="text-red-600 text-sm">
                 O título da regra é obrigatório.
             </div>
         </div>
     </div>
 
-    <!-- Use Case Associado -->
     <div class="space-y-4 col-span-2 md:col-span-1">
-        <label for="selectedUseCase" class="block text-sm font-medium leading-6 text-gray-900">Use Case
-            Associado</label>
-        <select id="selectedUseCase" formControlName="selectedUseCase" [(ngModel)]="selectedUseCase"
-            class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
-            <option value="" disabled selected>Selecione um Use Case</option>
-            <option *ngFor="let option of usecases" [value]="option.id">RedUC{{ option.id }} - {{ option.title }}
-            </option>
+        <label for="selectedUseCase" class="block text-sm font-medium leading-6 text-gray-900">Use Case Associado</label>
+        <select id="selectedUseCase" formControlName="selectedUseCase" name="selectedUseCase" [(ngModel)]="selectedUseCase" class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+            <option *ngFor="let option of usecases" [value]="option.id">RedUC{{option.id}} - {{ option.title }}</option>
         </select>
-        <div *ngIf="createRuleModelForm.get('selectedUseCase')?.touched && createRuleModelForm.get('selectedUseCase')?.invalid"
-            class="text-red-600 text-sm mt-1">
+        <div *ngIf="createRuleModelForm.get('selectedUseCase')?.touched && createRuleModelForm.get('selectedUseCase')?.invalid" class="text-red-600 text-sm">
             O Use Case Associado é obrigatório.
         </div>
     </div>
 
-    <!-- Tipo (SIEM / SOAR / EDR) -->
     <div class="space-y-4 col-span-2 md:col-span-1">
         <label for="selectedType" class="block text-sm font-medium leading-6 text-gray-900">Tipo</label>
-        <select id="selectedType" formControlName="selectedType" [(ngModel)]="selectedType" (change)="onTypeChange()"
-            class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
-            <option *ngFor="let option of typeKeys()" [value]="option">{{ option }}</option>
+        <select id="selectedType" name="selectedType" formControlName="selectedType" [(ngModel)]="selectedType" class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+            <option *ngFor="let option of typeKeys()" [value]="option">{{option}}</option>
         </select>
-    </div>
-
-    <!-- Sintaxe -->
-    <div class="space-y-4 col-span-2 md:col-span-1">
-        <label for="syntax" class="block text-sm font-medium leading-6 text-gray-900">Sintaxe</label>
-        <select id="syntax" formControlName="syntax" [(ngModel)]="selectedSyntax" (change)="onSyntaxChange()"
-            class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
-            <option *ngFor="let option of getAvailableSyntaxes()" [value]="option">{{ option }}</option>
-        </select>
-        <div *ngIf="createRuleModelForm.get('syntax')?.touched && createRuleModelForm.get('syntax')?.invalid"
-            class="text-red-600 text-sm mt-1">
-            A Sintaxe é obrigatória.
+        <div *ngIf="createRuleModelForm.get('selectedType')?.touched && createRuleModelForm.get('selectedType')?.invalid" class="text-red-600 text-sm">
+            O Tipo é obrigatório.
         </div>
     </div>
 
-    <!-- LogSources -->
-    <div class="space-y-4 col-span-2">
+    
+
+    <div class="space-y-4 col-span-2 md:col-span-1">
         <label for="logsources" class="block text-sm font-medium leading-6 text-gray-900">LogSources Associadas</label>
-        <tag-input [onlyFromAutocomplete]="true" theme='minimal' [secondaryPlaceholder]="'+ Nova Log Source'"
-            [placeholder]="''" formControlName="logsources"
-            class="block w-full rounded-md border-0 px-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6">
+        <tag-input [onlyFromAutocomplete]="true"   theme='minimal' [secondaryPlaceholder]="'+ Nova Log Source'" [placeholder]="''" formControlName="logsources" class="block w-full rounded-md border-0 px-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6">
             <tag-input-dropdown [showDropdownIfEmpty]="true" [autocompleteItems]="registeredLogsources">
             </tag-input-dropdown>
         </tag-input>
-        <div *ngIf="createRuleModelForm.get('logsources')?.touched && createRuleModelForm.get('logsources')?.invalid"
-            class="text-red-600 text-sm mt-1">
+        <div *ngIf="createRuleModelForm.get('logsources')?.touched && createRuleModelForm.get('logsources')?.invalid" class="text-red-600 text-sm">
             Pelo menos uma LogSource é obrigatória.
         </div>
     </div>
 
-    <!-- Editor de Código -->
-    <div class="space-y-4 col-span-2">
-        <label class="block text-sm font-medium leading-6 text-gray-900">Regra ({{ selectedSyntax }})</label>
-        <div class="w-full border border-gray-300 mx-auto rounded-md overflow-hidden">
-            <ngs-code-editor [codeModel]="selectedModel" [theme]="theme" [options]="options"
-                (valueChanged)="onCodeChanged($event)" (loaded)="onEditorLoaded($event)"
-                (codeModelChanged)="onCodeModelChanged($event)">
-            </ngs-code-editor>
+    <div class="space-y-4 col-span-2 md:col-span-2">
+        <label for="tactics" class="block text-sm font-medium leading-6 text-gray-900">Regra</label>
+        <div class="w-full border border-gray-300 mx-auto">
+            <ngs-code-editor [codeModel]="selectedModel" [theme]="theme" [options]="options" (valueChanged)="onCodeChanged($event)" (loaded)="onEditorLoaded($event)" (codeModelChanged)="onCodeModelChanged($event)"></ngs-code-editor>
         </div>
     </div>
 
-    <!-- Botão Submit -->
     <div class="space-y-6 col-span-2">
-        <button type="submit" [disabled]="!createRuleModelForm.valid"
-            class="disabled:opacity-60 w-full md:w-[25rem] py-2.5 px-5 text-white font-semibold bg-redshift-red rounded-md hover:bg-redshift-hover transition duration-150">
-            Registar
-        </button>
+        <button type="submit" [disabled]="!createRuleModelForm.valid" class="disabled:opacity-60 w-full md:w-[25rem] py-2.5 px-5 text-white font-semibold bg-redshift-red rounded-md hover:bg-redshift-red-dark">Registar</button>
     </div>
 </form>

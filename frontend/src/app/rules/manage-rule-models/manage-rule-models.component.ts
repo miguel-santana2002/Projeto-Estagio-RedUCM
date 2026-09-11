@@ -1,209 +1,192 @@
 import { CommonModule, DatePipe } from '@angular/common';
-import {
-  Component,
-  ElementRef,
-  ViewChild,
-  OnInit,
-  AfterViewInit,
-} from '@angular/core';
-import { RouterModule } from '@angular/router';
-import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { Component, ElementRef, ViewChild } from '@angular/core';
 import { Modal } from 'flowbite';
-
-import { HeaderComponent } from '../../layout/header/header.component';
 import { TitlebannerComponent } from '../../layout/titlebanner/titlebanner.component';
+import { RouteConfigLoadStart, RouterModule } from '@angular/router';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { HeaderComponent } from '../../layout/header/header.component';
 import { AuthService } from '../../services/auth.service';
 import { RulesService } from '../../services/rules.service';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatSelectModule } from '@angular/material/select';
+import { MatIconModule } from '@angular/material/icon';
 
 @Component({
   selector: 'app-manage-rule-models',
   standalone: true,
-  imports: [
-    HeaderComponent,
-    TitlebannerComponent,
-    CommonModule,
-    DatePipe,
-    RouterModule,
-    FormsModule,
-    ReactiveFormsModule,
-  ],
+  imports: [HeaderComponent, FormsModule, CommonModule, DatePipe, TitlebannerComponent, RouterModule, MatFormFieldModule, MatSelectModule, MatIconModule, ReactiveFormsModule],
   templateUrl: './manage-rule-models.component.html',
-  styleUrl: './manage-rule-models.component.css',
+  styleUrl: './manage-rule-models.component.css'
 })
-export class ManageRuleModelsComponent implements OnInit, AfterViewInit {
-  @ViewChild('modal') modal!: ElementRef<HTMLElement>;
-  modalFlowbite!: Modal;
+export class ManageRuleModelsComponent {
 
-  sortType = 'id';
+  constructor(private authService : AuthService, private rulesService : RulesService) { }
+
+  
+  sortType = 'name';
   sortReverse = false;
   nameSearch: string = '';
-  selectDelete: number = 999999;
+  selectDelete:  number = 999999;
 
-  ruleModels: any[] = [];
+  updateSelectDelete(event: Event, id: number) {
+    event.stopPropagation();
+    console.log('updateSelectDelete', id);
+    this.selectDelete = id;
 
-  // Filtros selecionados
-  selectedSintaxes: string[] = [];
-  selectedTypes: string[] = [];
-  selectedLogSources: string[] = [];
-
-  // Opções únicas para as dropdowns do Drawer
-  uniqueSintaxes: string[] = [];
-  uniqueTypes: string[] = [];
-  uniqueLogSources: string[] = [];
-
-  constructor(
-    private authService: AuthService,
-    private rulesService: RulesService,
-  ) {}
-
-  ngOnInit(): void {
-    this.loadRuleModels();
   }
 
-  ngAfterViewInit(): void {
-    if (this.modal?.nativeElement) {
-      this.modalFlowbite = new Modal(this.modal.nativeElement);
-    }
-  }
+  types = ['SIEM', 'SOAR'];
+  sintaxes = ['Sigma Rule', 'Splunk Rule', 'QRadar Rule'];
 
-  loadRuleModels(): void {
-    this.rulesService.getRuleModels().subscribe({
-      next: (data: any) => {
-        this.ruleModels = Array.isArray(data) ? data : [];
-        this.startFilters();
-      },
-      error: (err) => console.error('Erro ao carregar modelos de regra:', err),
+selectedSintaxes : string[] = []
+selectedTypes : string[] = []
+selectedLogSources : string[] = []
+
+updateSelectedTypes() {
+  
+  console.log('updateSelectedTypes', this.selectedTypes);
+
+}
+
+
+
+ruleModels: any = [];  
+
+  ngOnInit() {
+    console.log('Manage Users Component');
+    this.rulesService.getRuleModels().subscribe((data: any) => {
+      this.ruleModels = data
+
+      console.log(data)
+      this.startFilters()
+    
     });
-  }
+    }
+  
 
-  startFilters(): void {
-    // Extrai valores únicos ignorando nulos/vazios
-    this.uniqueSintaxes = [
-      ...new Set(
-        this.ruleModels
-          .map((item: any) => item.syntax)
-          .filter((s): s is string => Boolean(s)),
-      ),
-    ];
 
-    this.uniqueTypes = [
-      ...new Set(
-        this.ruleModels
-          .map((item: any) => item.type)
-          .filter((t): t is string => Boolean(t)),
-      ),
-    ];
 
-    this.uniqueLogSources = Array.from(
-      new Set(
-        this.ruleModels
-          .flatMap((item: any) => item.logsources || [])
-          .filter((l): l is string => Boolean(l)),
-      ),
-    );
-  }
-
-  // Ordenação com suporte para Strings, Números, Arrays e Valores Nulos
   sortTable(column: string): void {
     if (this.sortType === column) {
+
       this.sortReverse = !this.sortReverse;
     } else {
+
       this.sortType = column;
       this.sortReverse = false;
     }
 
+
     this.ruleModels.sort((a: any, b: any) => {
-      const valA = a[column];
-      const valB = b[column];
+      const valueA = a[column];
+      const valueB = b[column];
 
-      // 1. Trata campos vazios/nulos
-      if (!valA && valB) return this.sortReverse ? -1 : 1;
-      if (valA && !valB) return this.sortReverse ? 1 : -1;
-      if (!valA && !valB) return 0;
-
-      // 2. Trata arrays (Logsources) ordenando pela quantidade
-      if (Array.isArray(valA) && Array.isArray(valB)) {
-        return (valA.length - valB.length) * (this.sortReverse ? -1 : 1);
+      if (typeof valueA === 'string') {
+        return this.sortString(valueA, valueB);
+      } else {
+        return this.sortNumeric(valueA, valueB);
       }
-
-      // 3. Trata strings
-      if (typeof valA === 'string') {
-        return valA.localeCompare(valB) * (this.sortReverse ? -1 : 1);
-      }
-
-      // 4. Trata números (IDs)
-      return (Number(valA) - Number(valB)) * (this.sortReverse ? -1 : 1);
     });
   }
 
-  get filteredRuleModels(): any[] {
-    return this.ruleModels.filter((rule: any) => {
-      // 1. Filtro por nome
-      const matchesName = (rule.title || '')
-        .toLowerCase()
-        .includes(this.nameSearch.toLowerCase());
+  deleteRuleModel() {
 
-      // 2. Filtro por Sintaxe
-      const matchesSyntax =
-        this.selectedSintaxes.length === 0 ||
-        this.selectedSintaxes.includes(rule.syntax);
+this.rulesService.deleteRuleModelById(this.selectDelete).subscribe((data: any) => {
+  console.log(data)
+  this.rulesService.getRuleModels().subscribe((data: any) => {
+    this.ruleModels = data
 
-      // 3. Filtro por Tipo
-      const matchesType =
-        this.selectedTypes.length === 0 ||
-        this.selectedTypes.includes(rule.type);
+    console.log(data)
+  
+  
+  });
 
-      // 4. Filtro por Logsources
-      const matchesLogs =
-        this.selectedLogSources.length === 0 ||
-        (rule.logsources || []).some((log: string) =>
-          this.selectedLogSources.includes(log),
-        );
+});
+    
 
-      return matchesName && matchesSyntax && matchesType && matchesLogs;
-    });
+}
+  
+
+  private sortString(a: string, b: string): number {
+    return a.localeCompare(b) * (this.sortReverse ? -1 : 1);
   }
 
-  // Gestão de Modal Eliminar
-  updateSelectDelete(event: Event, id: number): void {
-    event.stopPropagation();
-    this.selectDelete = id;
+  private sortNumeric(a: number, b: number): number {
+    return (a - b) * (this.sortReverse ? -1 : 1);
   }
 
-  openModal(): void {
-    this.modalFlowbite?.show();
+
+  get filteredRuleModels() {
+   var f1 = this.ruleModels.filter((u: any) => u.title.toLowerCase().includes(this.nameSearch.toLowerCase()));
+   var f2 = this.selectedSintaxes.length > 0 ? f1.filter((u: any) => this.selectedSintaxes.includes(u.syntax)) : f1;
+    var f3 = this.selectedTypes.length > 0 ? f2.filter((u: any) => this.selectedTypes.includes(u.type)) : f2;
+    var f4 = this.selectedLogSources.length > 0 ? f3.filter((u: any) => u.logsources.some((l: any) => this.selectedLogSources.includes(l))) : f3;
+    return f4;
+    
   }
 
-  closeModal(): void {
-    this.modalFlowbite?.hide();
+  clearFilters() {
+    this.selectedSintaxes = []
+    this.selectedTypes = []
+    this.selectedLogSources = []
+    this.nameSearch = ''
   }
 
-  deleteRuleModel(): void {
-    this.rulesService.deleteRuleModelById(this.selectDelete).subscribe({
-      next: () => {
-        this.loadRuleModels();
-      },
-      error: (err) => console.error('Erro ao eliminar modelo de regra:', err),
-    });
+ 
+
+  
+  @ViewChild('modal') modal!: ElementRef<HTMLElement>;
+  modalFlowbite!: Modal;
+
+  ngAfterViewInit() {
+    this.modalFlowbite = new Modal(this.modal.nativeElement);
   }
 
-  // Ações de Limpeza de Filtros
-  clearSelectedSyntax(): void {
-    this.selectedSintaxes = [];
+  openModal() {
+    this.modalFlowbite.show();
   }
 
-  clearSelectedTypes(): void {
-    this.selectedTypes = [];
+  closeModal() {
+    this.modalFlowbite.hide();
   }
 
-  clearSelectedLogSources(): void {
-    this.selectedLogSources = [];
+
+  uniqueSintaxes : any = []
+  uniqueTypes : any = []
+  uniqueLogSources : any = []
+  startFilters() {
+
+this.uniqueSintaxes = [...new Set(this.ruleModels.map((item: any) => item.syntax))]
+this.uniqueTypes = [...new Set(this.ruleModels.map((item: any) => item.type))]
+this.uniqueLogSources = Array.from(new Set(this.ruleModels.flatMap((item: any) => item.logsources)));
+
+
+
+
+console.log('uniqueSintaxes', this.uniqueSintaxes)
+console.log('uniqueTypes', this.uniqueTypes)
+console.log('uniqueLogSources', this.uniqueLogSources)
+
   }
 
-  clearFilters(): void {
-    this.selectedSintaxes = [];
-    this.selectedTypes = [];
-    this.selectedLogSources = [];
-    this.nameSearch = '';
-  }
+  updateSelectedSyntax(event: Event) {
+
+
+    console.log('selectedSyntax', this.selectedSintaxes);
+}
+
+clearSelectedSyntax() {
+  this.selectedSintaxes = []
+}
+
+clearSelectedTypes() {
+  this.selectedTypes = []
+}
+
+clearSelectedLogSources() {
+  this.selectedLogSources = []
+}
+
+
+
 }

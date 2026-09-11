@@ -158,6 +158,9 @@ def updateUserInfo(request, id):
     user.save()
     return JsonResponse({'success': 'User updated successfully'})
 
+
+
+
 class ChangePasswordView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -176,43 +179,3 @@ class ChangePasswordView(APIView):
         user.set_password(password)
         user.save()
         return JsonResponse({'success': 'Password changed successfully'}, status=status.HTTP_200_OK)
-
-# 1. GET: Retorna os dados da empresa para preencher o formulário inicial
-@api_view(['GET'])
-def getCompany(request, id):
-    try:
-        company = Company.objects.get(pk=id)
-        data = {
-            'pk': company.pk,
-            'name': company.name,
-            'logsources': company.logsources,
-            'date': company.date
-        }
-        return JsonResponse(data, status=status.HTTP_200_OK)
-    except Company.DoesNotExist:
-        return JsonResponse({'error': 'Empresa não encontrada.'}, status=status.HTTP_404_NOT_FOUND)
-
-
-# 2. POST: Atualiza os dados mantendo a validação de nomes duplicados
-@api_view(['POST'])
-def updateCompany(request, id):
-    try:
-        company = Company.objects.get(pk=id)
-    except Company.DoesNotExist:
-        return JsonResponse({'error': 'Empresa não encontrada.'}, status=status.HTTP_404_NOT_FOUND)
-
-    name = request.data.get('name', '').strip()
-    logsources = request.data.get('logsources', [])
-
-    if not name or not logsources:
-        return JsonResponse({'error': 'O Nome e as LogSources são obrigatórios.'}, status=status.HTTP_400_BAD_REQUEST)
-
-    # Valida duplicados excluindo a própria empresa que está a ser editada
-    if Company.objects.filter(name__iexact=name).exclude(pk=id).exists():
-        return JsonResponse({'error': 'Já existe outra empresa registada com este nome.'}, status=status.HTTP_400_BAD_REQUEST)
-
-    company.name = name
-    company.logsources = logsources
-    company.save()
-
-    return JsonResponse({'success': 'Empresa atualizada com sucesso.'}, status=status.HTTP_200_OK)

@@ -1,51 +1,43 @@
-import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { NavigationEnd, Router, RouterModule } from '@angular/router';
-import { filter } from 'rxjs/operators';
-import { initFlowbite } from 'flowbite';
-
+import { Component, Input } from '@angular/core';
 import { AuthService } from '../../services/auth.service';
+import { initFlowbite } from 'flowbite';
+import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-header',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule],
   templateUrl: './header.component.html',
-  styleUrl: './header.component.css',
+  styleUrl: './header.component.css'
 })
-export class HeaderComponent implements OnInit {
-  user: any = { username: '', companies: [] };
+export class HeaderComponent {
+  private authService: AuthService;
+  user : any = { username: "", companies: [] };
 
-  constructor(
-    public router: Router,
-    private authService: AuthService,
-  ) {}
 
-  ngOnInit(): void {
+  logout() {
+    this.authService.logout();
+    this.router.navigate(['/']);
+  }
+  
+  constructor(authService: AuthService, private router : Router) {
+    this.authService = authService;
+  }
+
+  
+  ngOnInit() {
+
+   
     initFlowbite();
-
-    this.router.events
-      .pipe(filter((event) => event instanceof NavigationEnd))
-      .subscribe(() => {
-        setTimeout(() => {
-          initFlowbite();
-        }, 50);
-      });
-
     this.authService.loggedInInfo().subscribe((value) => {
-      this.user = value || { username: '', companies: [] };
+      console.log(value);
+     this.user = value;
       if (this.user.companies == null) {
         this.user.companies = [];
       }
+
+      console.log(this.user);
     });
-  }
-
-  isRouteActive(routes: string[]): boolean {
-    return routes.some((route) => this.router.url.startsWith(route));
-  }
-
-  logout(): void {
-    this.authService.logout();
-    this.router.navigate(['/']);
   }
 }

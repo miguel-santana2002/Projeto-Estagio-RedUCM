@@ -1,7 +1,7 @@
 from email.mime.text import MIMEText
 from django.contrib import admin
 from django.urls import path
-from accounts.views import ChangePasswordView, LoggedInInfo, createCompany, createUser, deleteCompany, deleteUser, getCompanies, getLogsourcesByClient, getUsers, updateUserInfo, getCompany, updateCompany
+from accounts.views import ChangePasswordView, LoggedInInfo, createCompany, createUser, deleteCompany, deleteUser, getCompanies, getLogsourcesByClient, getUsers, updateUserInfo
 from accounts.mailtemplate import otpEmailMessage
 from config import settings
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
@@ -181,7 +181,5 @@ urlpatterns = [
     path('getLogsourcesByClient/<str:clientName>', getLogsourcesByClient, name='getLogsourcesByClient'),
     path('updateUserInfo/<str:id>', updateUserInfo, name='updateUserInfo'),
     path('change-password/<str:id>/', ChangePasswordView.as_view(), name='change_password'),
-    path('getCompany/<int:id>', getCompany, name='getCompany'),
-    path('updateCompany/<int:id>', updateCompany, name='updateCompany'),
 
 ]
