@@ -27,24 +27,24 @@
           <!-- Início -->
           <li>
             <a [routerLink]="['/home']" routerLinkActive="text-redshift-red font-semibold"
-              [routerLinkActiveOptions]="{exact: true}"
-              class="block py-2 pl-3 pr-4 text-gray-700 rounded lg:bg-transparent lg:p-0 dark:text-white hover:text-redshift-hover">
+              [routerLinkActiveOptions]="{ exact: true }"
+              class="block py-2 pl-3 pr-4 text-gray-700 rounded lg:bg-transparent lg:p-0 dark:text-white hover:text-redshift-hover transition-colors">
               Início
             </a>
           </li>
 
-          <!-- Utilizadores (Admin apenas) -->
+          <!-- Utilizadores -->
           <li *ngIf="user.companies?.length === 0">
             <a [routerLink]="['/manage-users']" routerLinkActive="text-redshift-red font-semibold"
-              class="block py-2 pl-3 pr-4 text-gray-700 rounded lg:p-0 dark:text-gray-400 lg:dark:hover:text-white hover:text-redshift-hover">
+              class="block py-2 pl-3 pr-4 text-gray-700 rounded lg:p-0 dark:text-gray-400 lg:dark:hover:text-white hover:text-redshift-hover transition-colors">
               Utilizadores
             </a>
           </li>
 
-          <!-- Clientes (Admin apenas) -->
+          <!-- Clientes -->
           <li *ngIf="user.companies?.length === 0">
             <a [routerLink]="['/manage-clients']" routerLinkActive="text-redshift-red font-semibold"
-              class="block py-2 pl-3 pr-4 text-gray-700 rounded lg:p-0 dark:text-gray-400 lg:dark:hover:text-white hover:text-redshift-hover">
+              class="block py-2 pl-3 pr-4 text-gray-700 rounded lg:p-0 dark:text-gray-400 lg:dark:hover:text-white hover:text-redshift-hover transition-colors">
               Clientes
             </a>
           </li>
@@ -53,23 +53,27 @@
           <li class="relative">
             <button id="dropdownUseCasesButton" data-dropdown-toggle="dropdownUseCases"
               data-dropdown-placement="bottom-start" type="button"
-              class="flex items-center justify-between w-full py-2 px-3 text-gray-700 rounded hover:bg-gray-100 md:hover:bg-transparent md:border-0 md:hover:text-redshift-hover md:p-0 md:w-auto dark:text-gray-400 dark:hover:text-white">
+              [class.text-redshift-red]="isRouteActive(['/manage-use-cases', '/create-usecase', '/usecase-details'])"
+              [class.font-semibold]="isRouteActive(['/manage-use-cases', '/create-usecase', '/usecase-details'])"
+              class="flex items-center justify-between w-full py-2 px-3 text-gray-700 rounded hover:bg-gray-100 md:hover:bg-transparent md:border-0 md:hover:text-redshift-hover md:p-0 md:w-auto dark:text-gray-400 dark:hover:text-white transition-colors">
               Use Cases
               <i class="fas fa-chevron-down text-xs ml-2"></i>
             </button>
 
             <div id="dropdownUseCases"
-              class="z-30 hidden font-normal bg-white divide-y divide-gray-100 rounded-lg shadow-lg w-48 border border-gray-100 dark:bg-gray-700 dark:divide-gray-600 dark:border-gray-600">
+              class="z-30 hidden font-normal bg-white divide-y divide-gray-100 rounded-lg shadow-lg w-52 border border-gray-100 dark:bg-gray-700 dark:divide-gray-600 dark:border-gray-600">
               <ul class="py-2 text-sm text-gray-700 dark:text-gray-200" aria-labelledby="dropdownUseCasesButton">
                 <li>
                   <a [routerLink]="['/manage-use-cases']"
-                    class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
+                    routerLinkActive="bg-gray-100 text-redshift-red font-semibold border-l-4 border-redshift-red dark:bg-gray-600 dark:text-white"
+                    class="block px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-600 dark:hover:text-white transition-colors">
                     Gerir Use Cases
                   </a>
                 </li>
                 <li *ngIf="user.companies?.length === 0">
                   <a [routerLink]="['/create-usecase']"
-                    class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
+                    routerLinkActive="bg-gray-100 text-redshift-red font-semibold border-l-4 border-redshift-red dark:bg-gray-600 dark:text-white"
+                    class="block px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-600 dark:hover:text-white transition-colors">
                     Criar Use Case
                   </a>
                 </li>
@@ -81,29 +85,37 @@
           <li class="relative">
             <button id="dropdownRulesButton" data-dropdown-toggle="dropdownRules" data-dropdown-placement="bottom-start"
               type="button"
-              class="flex items-center justify-between w-full py-2 px-3 text-gray-700 rounded hover:bg-gray-100 md:hover:bg-transparent md:border-0 md:hover:text-redshift-hover md:p-0 md:w-auto dark:text-gray-400 dark:hover:text-white">
+              [class.text-redshift-red]="isRouteActive(['/manage-rule-models', '/create-rule-model', '/read-rule-models', '/ruleModelDetails', '/manage-rules', '/ruleDetails', '/my-instance-rules', '/manage-logsources'])"
+              [class.font-semibold]="isRouteActive(['/manage-rule-models', '/create-rule-model', '/read-rule-models', '/ruleModelDetails', '/manage-rules', '/ruleDetails', '/my-instance-rules', '/manage-logsources'])"
+              class="flex items-center justify-between w-full py-2 px-3 text-gray-700 rounded hover:bg-gray-100 md:hover:bg-transparent md:border-0 md:hover:text-redshift-hover md:p-0 md:w-auto dark:text-gray-400 dark:hover:text-white transition-colors">
               Regras
               <i class="fas fa-chevron-down text-xs ml-2"></i>
             </button>
 
             <div id="dropdownRules"
-              class="z-30 hidden font-normal bg-white divide-y divide-gray-100 rounded-lg shadow-lg w-52 border border-gray-100 dark:bg-gray-700 dark:divide-gray-600 dark:border-gray-600">
+              class="z-30 hidden font-normal bg-white divide-y divide-gray-100 rounded-lg shadow-lg w-56 border border-gray-100 dark:bg-gray-700 dark:divide-gray-600 dark:border-gray-600">
               <ul class="py-2 text-sm text-gray-700 dark:text-gray-200" aria-labelledby="dropdownRulesButton">
+
                 <li *ngIf="user.companies?.length === 0">
                   <a [routerLink]="['/create-rule-model']"
-                    class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
+                    routerLinkActive="bg-gray-100 text-redshift-red font-semibold border-l-4 border-redshift-red dark:bg-gray-600 dark:text-white"
+                    class="block px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-600 dark:hover:text-white transition-colors">
                     Criar Modelo de Regra
                   </a>
                 </li>
+
                 <li *ngIf="user.companies?.length === 0">
                   <a [routerLink]="['/manage-rule-models']"
-                    class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
+                    routerLinkActive="bg-gray-100 text-redshift-red font-semibold border-l-4 border-redshift-red dark:bg-gray-600 dark:text-white"
+                    class="block px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-600 dark:hover:text-white transition-colors">
                     Gerir Modelos de Regra
                   </a>
                 </li>
+
                 <li *ngIf="user.companies?.length !== 0">
                   <a [routerLink]="['/read-rule-models']"
-                    class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
+                    routerLinkActive="bg-gray-100 text-redshift-red font-semibold border-l-4 border-redshift-red dark:bg-gray-600 dark:text-white"
+                    class="block px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-600 dark:hover:text-white transition-colors">
                     Listagem de Modelos de Regra
                   </a>
                 </li>
@@ -112,13 +124,16 @@
 
                 <li *ngIf="user.companies?.length === 0">
                   <a [routerLink]="['/manage-rules']"
-                    class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
+                    routerLinkActive="bg-gray-100 text-redshift-red font-semibold border-l-4 border-redshift-red dark:bg-gray-600 dark:text-white"
+                    class="block px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-600 dark:hover:text-white transition-colors">
                     Instâncias de Regra
                   </a>
                 </li>
+
                 <li *ngIf="user.companies?.length !== 0">
                   <a [routerLink]="['/my-instance-rules']"
-                    class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
+                    routerLinkActive="bg-gray-100 text-redshift-red font-semibold border-l-4 border-redshift-red dark:bg-gray-600 dark:text-white"
+                    class="block px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-600 dark:hover:text-white transition-colors">
                     Instâncias de Regra
                   </a>
                 </li>
@@ -127,7 +142,8 @@
 
                 <li *ngIf="user.companies?.length === 0">
                   <a [routerLink]="['/manage-logsources']"
-                    class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
+                    routerLinkActive="bg-gray-100 text-redshift-red font-semibold border-l-4 border-redshift-red dark:bg-gray-600 dark:text-white"
+                    class="block px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-600 dark:hover:text-white transition-colors">
                     Gerir Logsources
                   </a>
                 </li>
@@ -138,7 +154,7 @@
           <!-- Estatísticas -->
           <li>
             <a [routerLink]="['/statistics']" routerLinkActive="text-redshift-red font-semibold"
-              class="block py-2 pl-3 pr-4 text-gray-700 rounded lg:p-0 dark:text-gray-400 lg:dark:hover:text-white hover:text-redshift-hover">
+              class="block py-2 pl-3 pr-4 text-gray-700 rounded lg:p-0 dark:text-gray-400 lg:dark:hover:text-white hover:text-redshift-hover transition-colors">
               Estatísticas
             </a>
           </li>

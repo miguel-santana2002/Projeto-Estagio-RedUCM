@@ -17,15 +17,13 @@ export class HeaderComponent implements OnInit {
   user: any = { username: '', companies: [] };
 
   constructor(
+    public router: Router,
     private authService: AuthService,
-    private router: Router,
   ) {}
 
   ngOnInit(): void {
-    // 1. Inicializa o Flowbite no primeiro carregamento
     initFlowbite();
 
-    // 2. Reinicializa os listeners de dropdowns/drawers a cada transição de rota terminada
     this.router.events
       .pipe(filter((event) => event instanceof NavigationEnd))
       .subscribe(() => {
@@ -34,13 +32,16 @@ export class HeaderComponent implements OnInit {
         }, 50);
       });
 
-    // 3. Obtém informação do utilizador autenticado
     this.authService.loggedInInfo().subscribe((value) => {
       this.user = value || { username: '', companies: [] };
       if (this.user.companies == null) {
         this.user.companies = [];
       }
     });
+  }
+
+  isRouteActive(routes: string[]): boolean {
+    return routes.some((route) => this.router.url.startsWith(route));
   }
 
   logout(): void {

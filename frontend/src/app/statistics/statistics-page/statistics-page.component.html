@@ -4,84 +4,90 @@
 <div class="flex justify-end mt-3 mx-10">
 
 
-<button class="ml-5 w-28 h-10 bg-transparent text-black rounded shadow-md mb-3 " type="button" data-drawer-target="drawer-navigation" data-drawer-show="drawer-navigation" aria-controls="drawer-navigation">
-  <span>  <i class="fas fa-filter"></i> Filtros</span>
-    </button>
+  <button class="ml-5 w-28 h-10 bg-transparent text-black rounded shadow-md mb-3 " type="button"
+    data-drawer-target="drawer-navigation" data-drawer-show="drawer-navigation" aria-controls="drawer-navigation">
+    <span> <i class="fas fa-filter"></i> Filtros</span>
+  </button>
 
 
 
 
 
-  </div>
+</div>
 
 
-  
+
 <div class="flex space-x-10 justify-center mb-6 mx-6">
-<div class="flex items-center p-8 bg-white shadow-md rounded-lg hover:shadow-2xl transition duration-300 h-28 w-80">
-    <div class="inline-flex flex-shrink-0 items-center justify-center h-16 w-16 text-redshift-red bg-red-100 rounded-full mr-4">
+  <div class="flex items-center p-8 bg-white shadow-md rounded-lg hover:shadow-2xl transition duration-300 h-28 w-80">
+    <div
+      class="inline-flex flex-shrink-0 items-center justify-center h-16 w-16 text-redshift-red bg-red-100 rounded-full mr-4">
       <i class="fas fa-user "></i>
     </div>
-    <div >
+    <div>
       <span class="block text-xl font-bold">{{users?.length}}</span>
       <span class="block text-gray-500 text-sm ">Utilizadores Registados</span>
-    
+
     </div>
   </div>
 
   <div class="flex items-center p-8 bg-white shadow-md rounded-lg hover:shadow-2xl transition duration-300 h-28 w-80">
-    <div class="inline-flex flex-shrink-0 items-center justify-center h-16 w-16 text-redshift-red bg-red-100 rounded-full mr-4">
+    <div
+      class="inline-flex flex-shrink-0 items-center justify-center h-16 w-16 text-redshift-red bg-red-100 rounded-full mr-4">
       <i class="fas fa-building "></i>
     </div>
-    <div >
+    <div>
       <span class="block text-xl font-bold">{{clientsFromBd?.length}}</span>
       <span class="block text-gray-500 text-sm ">Clientes Registados</span>
-    
+
     </div>
   </div>
 
   <div class="flex items-center p-8 bg-white shadow-md rounded-lg hover:shadow-2xl transition duration-300 h-28 w-80">
-    <div class="inline-flex flex-shrink-0 items-center justify-center h-16 w-16 text-redshift-red bg-red-100 rounded-full mr-4">
+    <div
+      class="inline-flex flex-shrink-0 items-center justify-center h-16 w-16 text-redshift-red bg-red-100 rounded-full mr-4">
       <i class="fas fa-file "></i>
     </div>
-    <div >
+    <div>
       <span class="block text-xl font-bold">{{useCases?.length}}</span>
       <span class="block text-gray-500 text-sm ">Use Cases Registados</span>
-    
+
     </div>
   </div>
 
- <div class="flex items-center p-8 bg-white shadow-md rounded-lg hover:shadow-2xl transition duration-300 h-28 w-80">
-    <div class="inline-flex flex-shrink-0 items-center justify-center h-16 w-16 text-redshift-red bg-red-100 rounded-full mr-4">
+  <div class="flex items-center p-8 bg-white shadow-md rounded-lg hover:shadow-2xl transition duration-300 h-28 w-80">
+    <div
+      class="inline-flex flex-shrink-0 items-center justify-center h-16 w-16 text-redshift-red bg-red-100 rounded-full mr-4">
       <i class="fas fa-list-ul "></i>
     </div>
     <div>
       <span class="block text-xl font-bold">{{ruleModels?.length}}</span>
       <span class="block text-gray-500 text-sm">Modelos de Regra Disponíveis</span>
-    
+
     </div>
   </div>
 
-   <div class="flex items-center p-8 bg-white shadow-md rounded-lg hover:shadow-2xl transition duration-300 h-28 w-80">
-    <div class="inline-flex flex-shrink-0 items-center justify-center h-16 w-16 text-redshift-red bg-red-100 rounded-full mr-4">
+  <div class="flex items-center p-8 bg-white shadow-md rounded-lg hover:shadow-2xl transition duration-300 h-28 w-80">
+    <div
+      class="inline-flex flex-shrink-0 items-center justify-center h-16 w-16 text-redshift-red bg-red-100 rounded-full mr-4">
       <i class="fas fa-handshake "></i>
     </div>
     <div>
       <span class="block text-xl font-bold">{{filteredRules.length}}</span>
       <span class="block text-gray-500 text-sm">Regras Atribuídas</span>
-    
+
     </div>
   </div>
 </div>
 
 
 
-<div class="flex justify-center space-x-36 my-16"> 
-<app-rules-per-syntax [rules]="filteredRules"></app-rules-per-syntax>
+<div class="flex justify-center space-x-36 my-16">
+  <app-rules-per-syntax [rules]="filteredRules"></app-rules-per-syntax>
 
 
-<app-rules-per-logsource [rules]="filteredRules"></app-rules-per-logsource>
+  <app-rules-per-logsource [rules]="filteredRules"></app-rules-per-logsource>
 
-<app-rules-per-type [rules]="filteredRules"></app-rules-per-type>
+  <app-rules-per-type [rules]="filteredRules"></app-rules-per-type>
 
 </div>
 
@@ -103,79 +109,85 @@
       </table>
     </div>
 
-      
+
   </div>
-  
-
-
-
-<div class="max-w-sm w-full bg-white rounded-lg shadow dark:bg-gray-800 p-4 md:p-6 ">
-  <h5 class="text-xl font-bold leading-none text-gray-900 dark:text-white me-1 ">Regras por Cliente</h5>
-<hr class="mb-4 mt-6">
-<table class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
-  <tbody>
-    
-    <tr *ngFor="let client of clients; let i = index">
-      <td class="  p-2 font-bold">{{ client }}</td>
-      <td class="  p-2">{{ clientsCount[i] }}</td>
-    </tr>
-  </tbody>
-</table>
-
-</div>
-
-
-<div class="max-w-sm w-full bg-white rounded-lg shadow dark:bg-gray-800 p-4 md:p-6 ">
-  <h5 class="text-xl font-bold leading-none text-gray-900 dark:text-white me-1 ">Táticas por UseCases</h5>
-<hr class="mb-0 mt-6">
-<app-radar-tactics class="mt-0 pt-0 max-h-96 "></app-radar-tactics>
-
-
-</div>
 
 
 
 
+  <div class="max-w-sm w-full bg-white rounded-lg shadow dark:bg-gray-800 p-4 md:p-6 ">
+    <h5 class="text-xl font-bold leading-none text-gray-900 dark:text-white me-1 ">Regras por Cliente</h5>
+    <hr class="mb-4 mt-6">
+    <table class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
+      <tbody>
+
+        <tr *ngFor="let client of clients; let i = index">
+          <td class="  p-2 font-bold">{{ client }}</td>
+          <td class="  p-2">{{ clientsCount[i] }}</td>
+        </tr>
+      </tbody>
+    </table>
+
+  </div>
+
+
+  <div class="max-w-sm w-full bg-white rounded-lg shadow dark:bg-gray-800 p-4 md:p-6 ">
+    <h5 class="text-xl font-bold leading-none text-gray-900 dark:text-white me-1 ">Táticas por UseCases</h5>
+    <hr class="mb-0 mt-6">
+    <app-radar-tactics class="mt-0 pt-0 max-h-96 "></app-radar-tactics>
 
 
   </div>
 
-  
+
+
+
+
+
+</div>
+
+
 <!-- drawer component -->
-<div id="drawer-navigation" class="fixed top-0 left-0 z-40 w-96 h-screen p-4 overflow-y-auto transition-transform -translate-x-full bg-white dark:bg-gray-800" tabindex="-1" aria-labelledby="drawer-navigation-label">
-   
-  
-  <h5 id="drawer-navigation-label" class="text-base font-semibold text-gray-500 uppercase dark:text-gray-400"><i class="fas fa-filter"> </i> Filtros</h5>
-   <button type="button" data-drawer-hide="drawer-navigation" aria-controls="drawer-navigation" class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 absolute top-2.5 end-2.5 inline-flex items-center dark:hover:bg-gray-600 dark:hover:text-white" >
-       <svg aria-hidden="true" class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
-       <span class="sr-only">Close menu</span>
-   </button>
- <div class="py-4 overflow-y-auto">
-     <ul class="space-y-2 font-medium">
-        <li>
-          
-        
-        <div class="flex items-center p-2 text-gray-600 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
+<div id="drawer-navigation"
+  class="fixed top-0 left-0 z-40 w-96 h-screen p-4 overflow-y-auto transition-transform -translate-x-full bg-white dark:bg-gray-800"
+  tabindex="-1" aria-labelledby="drawer-navigation-label">
+
+
+  <h5 id="drawer-navigation-label" class="text-base font-semibold text-gray-500 uppercase dark:text-gray-400"><i
+      class="fas fa-filter"> </i> Filtros</h5>
+  <button type="button" data-drawer-hide="drawer-navigation" aria-controls="drawer-navigation"
+    class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 absolute top-2.5 end-2.5 inline-flex items-center dark:hover:bg-gray-600 dark:hover:text-white">
+    <i class="fas fa-times text-base w-5 h-5 flex items-center justify-center" aria-hidden="true"></i>
+    <span class="sr-only">Close menu</span>
+  </button>
+  <div class="py-4 overflow-y-auto">
+    <ul class="space-y-2 font-medium">
+      <li>
+
+
+        <div
+          class="flex items-center p-2 text-gray-600 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
           <i class="fas fa-font"></i>
           <span class="ms-3">Por Clientes</span>
-          <button (click)="clearSelectedClients()" class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 inline-flex items-center dark:hover:bg-gray-600 dark:hover:text-white">
-            <i class="fas fa-x"></i>
-            <span class="">X</span>
+          <button (click)="clearSelectedClients()"
+            class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 inline-flex items-center dark:hover:bg-gray-600 dark:hover:text-white">
+            <i class="fas fa-times"></i>
           </button>
 
 
         </div>
-        <select id="sintax" name="sintax" (change)="applyFilters()" [(ngModel)]="selectedClients"  required multiple class="block w-full rounded-md border-0 px-2 py-2.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6">
-          <option   *ngFor="let client of uniqueClientsName" [ngValue]="client">{{ client }}</option>
-      </select>
-    </li>
+        <select id="sintax" name="sintax" (change)="applyFilters()" [(ngModel)]="selectedClients" required multiple
+          class="block w-full rounded-md border-0 px-2 py-2.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6">
+          <option *ngFor="let client of uniqueClientsName" [ngValue]="client">{{ client }}</option>
+        </select>
+      </li>
 
 
-        
-    
 
- 
-       
-     </ul>
+
+
+
+
+    </ul>
   </div>
 </div>
