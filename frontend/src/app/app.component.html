@@ -1,27 +1,27 @@
-<!-- 
-<mat-toolbar color="primary">
-  <button mat-icon-button aria-label="Apri menu" (click)="openMenu()" *ngIf="this.isLogged">
-    <mat-icon>menu</mat-icon>
-  </button>
-  <span>{{ title }}</span>
-  <span class="toolbar-spacer"></span>
-  <button mat-icon-button aria-label="Esci" (click)="logout()">
-    <mat-icon>logout</mat-icon>
-  </button>
-</mat-toolbar>
+<div class="flex flex-col min-h-screen bg-gray-50 dark:bg-gray-900">
+  <main class="flex-grow flex flex-col">
+    <router-outlet></router-outlet>
+  </main>
 
-<mat-sidenav-container class="side-container">
-  <mat-sidenav #sidenav mode="side" class="side-menu">
-  </mat-sidenav>
-
-  <mat-sidenav-content>
-    
-  </mat-sidenav-content>
-</mat-sidenav-container>
--->
-<app-spinner></app-spinner>
-
-<router-outlet></router-outlet>
-
-
-
+  <!-- Só renderiza o footer quando o utilizador está autenticado -->
+  <footer *ngIf="!isLoginPage" class="mt-20 border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
+    <div class="mx-auto w-full max-w-screen-xl px-6 py-8 sm:flex sm:items-center sm:justify-between">
+      <span class="text-sm text-gray-500 sm:text-center dark:text-gray-400">
+        © 2024 - {{ currentYear }} <a href="https://redshift-consulting.com.pt/" target="_blank"
+          rel="noopener noreferrer" class="hover:underline">RedShift</a>
+      </span>
+      <div class="flex mt-4 sm:justify-center sm:mt-0 space-x-6">
+        <a href="https://www.facebook.com/redshiftglobal/?locale=pt_BR" target="_blank" rel="noopener noreferrer"
+          class="text-gray-500 hover:text-gray-900 dark:hover:text-white transition">
+          <i class="fab fa-facebook-f text-base"></i>
+          <span class="sr-only">Facebook page</span>
+        </a>
+        <a href="https://pt.linkedin.com/company/redshiftglobal" target="_blank" rel="noopener noreferrer"
+          class="text-gray-500 hover:text-gray-900 dark:hover:text-white transition">
+          <i class="fab fa-linkedin-in text-base"></i>
+          <span class="sr-only">LinkedIn</span>
+        </a>
+      </div>
+    </div>
+  </footer>
+</div>

@@ -203,14 +203,22 @@ def deleteLogSourceById(request, id):
     
 
 @api_view(['POST'])
-def updateRuleModelCode(request,id):
-    if request.method == 'POST':
+def updateRuleModelCode(request, id):
+    try:
         rule = RuleModel.objects.get(id=id)
-        rule.ruleCode = request.data['ruleCode']
+        
+        if 'ruleCode' in request.data:
+            rule.ruleCode = request.data.get('ruleCode')
+            
+        if 'syntax' in request.data:
+            rule.syntax = request.data.get('syntax')
+            
         rule.save()
         return JsonResponse({'message': 'Regra Atualizada com Sucesso'})
-    else:
-        return JsonResponse({'error': 'Invalid request method'})
+    except RuleModel.DoesNotExist:
+        return JsonResponse({'error': 'Regra não encontrada'}, status=404)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=400)
     
 
 @api_view(['POST'])

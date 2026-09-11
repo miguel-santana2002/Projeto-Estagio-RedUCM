@@ -91,38 +91,53 @@
 
   </div>
 
-  <!-- Monaco Editor e Ações -->
-  <div class="flex my-12">
-    <div class="h-full border border-gray-300 mx-auto w-[80%] mr-12 rounded-lg overflow-hidden">
-      <ngs-code-editor class="h-[33rem]" [codeModel]="selectedModel" [theme]="theme" [options]="options"
-        (valueChanged)="onCodeChanged($event)" (loaded)="onEditorLoaded($event)"
-        (codeModelChanged)="onCodeModelChanged($event)">
-      </ngs-code-editor>
+  <!-- Adicionada margem superior mt-8 para afastar dos metadados -->
+  <div class="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start w-full mt-8">
+
+    <!-- Coluna do Editor -->
+    <div class="xl:col-span-10 w-full min-w-0">
+      <div class="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden shadow-sm">
+        <ngs-code-editor [theme]="theme" [codeModel]="selectedModel" [options]="options"
+          (loaded)="onEditorLoaded($event)" (valueChanged)="onCodeChanged($event)" class="block w-full h-[550px]">
+        </ngs-code-editor>
+      </div>
     </div>
 
-    <div class="md:w-[20%] h-60 bg-gray-100 p-4 rounded-xl drop-shadow-lg">
-      <h1 class="font-inter font-semibold text-xl text-gray-600 mx-auto">
-        Ações
-      </h1>
+    <!-- Coluna de Ações -->
+    <div class="xl:col-span-2 w-full flex flex-col space-y-4">
+      <div
+        class="bg-gray-50 dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col space-y-3">
+        <h3 class="text-base font-semibold text-gray-700 dark:text-gray-200 mb-1">
+          Ações
+        </h3>
 
-      <button (click)="copyToClipboard()" type="button"
-        class="hover:drop-shadow-md transition duration-300 flex flex-row items-center content-center justify-start gap-1 h-sm w-full py-2 my-4 px-2 border border-gray-300 drop-shadow-lg rounded-xl text-gray-700 bg-white active:text-gray-100 active:bg-redshift-hover">
-        <div class="fas fa-copy"></div>
-        <p class="ml-2">Copiar para Clipboard</p>
-      </button>
+        <button (click)="copyToClipboard()" type="button"
+          class="flex items-center w-full px-4 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 hover:text-redshift-red shadow-sm transition dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600">
+          <i class="fas fa-copy mr-2 text-gray-500 dark:text-gray-400"></i>
+          Copiar para Clipboard
+        </button>
 
-      <button (click)="openAssignModal()" data-modal-target="crud-modal" data-modal-toggle="crud-modal" type="button"
-        class="hover:drop-shadow-md transition duration-300 flex flex-row items-center content-center justify-start gap-1 h-sm w-full py-2 my-4 px-2 border border-gray-300 drop-shadow-lg rounded-xl text-gray-700 bg-white active:text-gray-100 active:bg-redshift-hover">
-        <div class="fas fa-user-plus"></div>
-        <p class="ml-2">Atribuir a clientes</p>
-      </button>
+        <button (click)="openConvertModal()" type="button"
+          class="flex items-center w-full px-4 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 hover:text-redshift-red shadow-sm transition dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600">
+          <i class="fas fa-exchange-alt mr-2 text-gray-500 dark:text-gray-400"></i>
+          Converter Regra
+        </button>
 
-      <button *ngIf="user.companies?.length === 0" (click)="updateRuleModelCode()" type="button"
-        class="hover:drop-shadow-md transition duration-300 flex flex-row items-center content-center justify-start gap-1 h-sm w-full py-2 my-4 px-2 border border-gray-300 drop-shadow-lg rounded-xl text-gray-700 bg-white active:text-gray-100 active:bg-redshift-hover">
-        <div class="fas fa-save"></div>
-        <p class="ml-2">Guardar Regra</p>
-      </button>
+        <!-- Reintegrados os data-attributes do Flowbite para disparar a modal 'authentication-modal' ou 'assignModal' -->
+        <button (click)="openAssignModal()" data-modal-target="crud-modal" data-modal-toggle="crud-modal" type="button"
+          class="flex items-center w-full px-4 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 hover:text-redshift-red shadow-sm transition dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600">
+          <i class="fas fa-user-plus mr-2 text-gray-500 dark:text-gray-400"></i>
+          Atribuir a clientes
+        </button>
+
+        <button (click)="updateRuleModelCode()" type="button"
+          class="flex items-center w-full px-4 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 hover:text-redshift-red shadow-sm transition dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600">
+          <i class="fas fa-save mr-2 text-gray-500 dark:text-gray-400"></i>
+          Guardar Regra
+        </button>
+      </div>
     </div>
+
   </div>
 
   <!-- Instâncias da Regra -->
@@ -200,16 +215,25 @@
                 Regra</label>
               <select id="syntax" formControlName="syntax" (change)="onSyntaxChange()" required
                 class="block w-full rounded-md border-0 px-2 py-2.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm">
+
                 <ng-container *ngIf="ruleModel.type === 'SOAR'">
                   <option *ngFor="let sintax of soarSintaxes" [ngValue]="sintax">
                     {{ sintax }}
                   </option>
                 </ng-container>
+
                 <ng-container *ngIf="ruleModel.type === 'SIEM'">
                   <option *ngFor="let sintax of siemSintaxes" [ngValue]="sintax">
                     {{ sintax }}
                   </option>
                 </ng-container>
+
+                <ng-container *ngIf="ruleModel.type === 'EDR'">
+                  <option *ngFor="let sintax of edrSintaxes" [ngValue]="sintax">
+                    {{ sintax }}
+                  </option>
+                </ng-container>
+
               </select>
             </div>
 
@@ -220,13 +244,109 @@
             </textarea>
           </div>
 
-          <button type="submit" (click)="createRule()" data-modal-toggle="crud-modal"
-            class="text-white inline-flex items-center bg-redshift-red hover:bg-redshift-hover focus:ring-4 focus:outline-none font-medium rounded-lg text-sm px-5 py-2.5 text-center">
-            <i class="fas fa-save mr-2"></i>
-            Guardar
-          </button>
+          <div class="flex items-center justify-end p-4 border-t border-gray-200 dark:border-gray-700 space-x-3">
+            <button (click)="createRule()" [disabled]="createRuleForm.invalid" type="button"
+              class="py-2 px-4 text-sm font-medium text-white bg-redshift-red hover:bg-redshift-hover disabled:bg-gray-300 disabled:cursor-not-allowed rounded-lg shadow-sm transition">
+              Guardar
+            </button>
+            <button type="button" data-modal-hide="crud-modal" class=" py-2 px-4 text-sm font-medium text-gray-500 bg-white rounded-lg border border-gray-200
+              hover:bg-gray-100 hover:text-gray-900 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500
+              dark:hover:text-white dark:hover:bg-gray-600 transition">
+              Fechar
+            </button>
+          </div>
+
         </form>
       </div>
+    </div>
+  </div>
+
+  <!-- Modal Converter Regra -->
+  <div *ngIf="showConvertModal"
+    class="fixed top-0 left-0 w-full h-full flex items-center justify-center bg-black bg-opacity-50 z-50 p-4">
+
+    <div class="relative bg-white rounded-lg shadow-xl w-full max-w-6xl overflow-hidden dark:bg-gray-800">
+
+      <!-- Header -->
+      <div class="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+        <h3 class="text-xl font-bold text-gray-900 dark:text-white">
+          Converter Regra
+        </h3>
+        <button (click)="closeConvertModal()" type="button"
+          class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white">
+          <i class="fas fa-times text-base"></i>
+          <span class="sr-only">Fechar</span>
+        </button>
+      </div>
+
+      <!-- Body com Grid (5 colunas | 2 colunas centrais | 5 colunas) -->
+      <div class="p-6">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-center">
+
+          <!-- Campo Texto: Antes -->
+          <div class="lg:col-span-5 flex flex-col h-full">
+            <label class="block mb-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
+              Sintaxe Original <span *ngIf="ruleModel?.syntax" class="text-xs font-normal text-gray-500">({{
+                ruleModel.syntax
+                }})</span>
+            </label>
+            <textarea [(ngModel)]="sourceRuleContent" rows="14" readonly
+              class="w-full p-3 text-xs font-mono bg-gray-50 border border-gray-300 rounded-lg text-gray-800 focus:outline-none focus:ring-0 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200 resize-none"></textarea>
+          </div>
+
+          <!-- Painel Central de Ações (lg:col-span-2) -->
+          <div class="lg:col-span-2 flex flex-col items-center justify-center space-y-4 py-2">
+            <div class="w-full">
+              <label
+                class="block mb-1 text-xs font-medium text-gray-600 dark:text-gray-400 text-center whitespace-nowrap">
+                Converter para
+              </label>
+              <select [(ngModel)]="targetSyntax"
+                class="bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded-lg focus:ring-redshift-red focus:border-redshift-red block w-full p-2.5 truncate dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                <option value="" disabled selected>Selecionar</option>
+                <option *ngFor="let syntax of availableSyntaxes" [value]="syntax.id">
+                  {{ syntax.name }}
+                </option>
+              </select>
+            </div>
+
+            <button (click)="convertRule()" [disabled]="!targetSyntax || isConverting" type="button"
+              class="w-full inline-flex items-center justify-center py-2 px-4 text-white bg-redshift-red hover:bg-redshift-hover disabled:bg-gray-300 disabled:cursor-not-allowed font-medium rounded-lg text-sm shadow-sm transition">
+              <i class="fas fa-arrow-right hidden lg:inline" [class.fa-spin]="isConverting"></i>
+              <i class="fas fa-arrow-down lg:hidden" [class.fa-spin]="isConverting"></i>
+            </button>
+          </div>
+
+          <!-- Campo Texto: Depois -->
+          <div class="lg:col-span-5 flex flex-col h-full">
+            <div class="flex justify-between items-center mb-2">
+              <label class="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                Resultado da Conversão
+              </label>
+              <button *ngIf="convertedRuleContent" (click)="copyConvertedToClipboard()" type="button"
+                class="text-xs text-gray-500 hover:text-redshift-red inline-flex items-center transition">
+                <i class="fas fa-copy mr-1"></i> Copiar
+              </button>
+            </div>
+            <textarea [(ngModel)]="convertedRuleContent" rows="14" placeholder="O resultado aparecerá aqui..."
+              class="w-full p-3 text-xs font-mono bg-gray-50 border border-gray-300 rounded-lg text-gray-800 focus:ring-redshift-red focus:border-redshift-red dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200 resize-none"></textarea>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="flex items-center justify-end p-4 border-t border-gray-200 dark:border-gray-700 space-x-3">
+        <button (click)="applyConvertedRule()" [disabled]="!convertedRuleContent" type="button"
+          class="py-2 px-4 text-sm font-medium text-white bg-redshift-red hover:bg-redshift-hover disabled:bg-gray-300 disabled:cursor-not-allowed rounded-lg shadow-sm transition">
+          Aplicar à Regra
+        </button>
+        <button (click)="closeConvertModal()" type="button"
+          class="py-2 px-4 text-sm font-medium text-gray-500 bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-gray-900 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 dark:hover:text-white dark:hover:bg-gray-600 transition">
+          Fechar
+        </button>
+      </div>
+
     </div>
   </div>
 </div>
