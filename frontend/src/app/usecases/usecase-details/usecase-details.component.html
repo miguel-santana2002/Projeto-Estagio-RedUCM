@@ -162,7 +162,7 @@
 
     <div *ngIf="showTaskDetails"
       class="fixed top-0 left-0 w-full h-full flex items-center justify-center bg-black bg-opacity-50 z-50">
-      <div class="overflow-auto bg-white p-4 rounded-lg shadow-lg w-11/12 h-3/4">
+      <div class="relative overflow-auto bg-white p-4 rounded-lg shadow-lg w-11/12 h-3/4">
         <div *ngIf="!isEditing">
 
           <div class="flex mx-4 mt-4 items-center">
@@ -215,7 +215,7 @@
 
     <div *ngIf="showModal"
       class="fixed top-0 left-0 w-full h-full flex items-center justify-center bg-black bg-opacity-50 z-50 transition duration-300">
-      <div class="bg-white p-4 rounded-lg shadow-lg transition duration-300">
+      <div class="relative bg-white p-4 rounded-lg shadow-lg transition duration-300">
         <img *ngIf="usecase.playbook" [src]="usecase.playbook" class="max-w-full max-h-full" alt="Selected Image">
         <button (click)="closeModal()"
           class="absolute top-0 right-0 m-2 p-2 bg-gray-200 rounded-full hover:bg-gray-300">
@@ -270,9 +270,5 @@
             </button>
 
           </form>
-
-
-
-
 
         </div>
