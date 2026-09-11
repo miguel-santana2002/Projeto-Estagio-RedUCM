@@ -1,84 +1,151 @@
-<header class=" w-full">
-    <nav class="bg-white border-gray-200 py-4 dark:bg-gray-900">
-        <div class="flex flex-wrap items-center justify-between max-w-screen-xl px-4 mx-auto">
-            <a href="/home" class="flex items-center">
-                <img src="./assets/logo.png" class="h-6 mr-3 sm:h-9" alt="Redshift Logo" />
+<header class="w-full">
+  <nav class="bg-white border-gray-200 py-4 dark:bg-gray-900 shadow-sm">
+    <div class="flex flex-wrap items-center justify-between max-w-screen-xl px-4 mx-auto">
+
+      <!-- Logo -->
+      <a [routerLink]="['/home']" class="flex items-center">
+        <img src="./assets/logo.png" class="h-6 mr-3 sm:h-9" alt="Redshift Logo" />
+      </a>
+
+      <!-- Perfil e Logout -->
+      <div class="flex items-center lg:order-2">
+        <span class="text-sm text-gray-600 dark:text-gray-300">
+          Bem-vindo,&#160;<span class="font-medium text-gray-800 dark:text-white">{{ user?.email || user?.username
+            }}</span>
+        </span>
+
+        <button (click)="logout()" type="button" title="Terminar Sessão"
+          class="dark:text-white hover:bg-gray-50 focus:ring-4 focus:ring-gray-300 font-medium rounded-lg text-sm px-3 py-1.5 ml-2 text-redshift-red dark:hover:bg-gray-700 focus:outline-none dark:focus:ring-gray-800 transition">
+          <i class="fas fa-sign-out-alt text-base"></i>
+        </button>
+      </div>
+
+      <!-- Links de Navegação -->
+      <div class="items-center justify-between hidden w-full lg:flex lg:w-auto lg:order-1" id="mobile-menu-2">
+        <ul class="flex flex-col mt-4 font-medium lg:flex-row lg:space-x-8 lg:mt-0">
+
+          <!-- Início -->
+          <li>
+            <a [routerLink]="['/home']" routerLinkActive="text-redshift-red font-semibold"
+              [routerLinkActiveOptions]="{exact: true}"
+              class="block py-2 pl-3 pr-4 text-gray-700 rounded lg:bg-transparent lg:p-0 dark:text-white hover:text-redshift-hover">
+              Início
             </a>
-            <div class="flex items-center lg:order-2">
+          </li>
 
-                    Bem-vindo,&#160;<span class="font-medium text-gray-800 dark:text-white">{{user.email}}</span>
+          <!-- Utilizadores (Admin apenas) -->
+          <li *ngIf="user.companies?.length === 0">
+            <a [routerLink]="['/manage-users']" routerLinkActive="text-redshift-red font-semibold"
+              class="block py-2 pl-3 pr-4 text-gray-700 rounded lg:p-0 dark:text-gray-400 lg:dark:hover:text-white hover:text-redshift-hover">
+              Utilizadores
+            </a>
+          </li>
 
-                    <button (click)="logout()" class=" dark:text-white hover:bg-gray-50 focus:ring-4 focus:ring-gray-300 font-medium rounded-lg text-sm px-4 lg:px-4 mt-[2px] py-1 lg:py-2 text-redshift-red  dark:hover:bg-gray-700 focus:outline-none dark:focus:ring-gray-800">
-                        <i class="fas fa-sign-out-alt mr-1"></i>
-                    </button>
+          <!-- Clientes (Admin apenas) -->
+          <li *ngIf="user.companies?.length === 0">
+            <a [routerLink]="['/manage-clients']" routerLinkActive="text-redshift-red font-semibold"
+              class="block py-2 pl-3 pr-4 text-gray-700 rounded lg:p-0 dark:text-gray-400 lg:dark:hover:text-white hover:text-redshift-hover">
+              Clientes
+            </a>
+          </li>
+
+          <!-- Dropdown Use Cases -->
+          <li class="relative">
+            <button id="dropdownUseCasesButton" data-dropdown-toggle="dropdownUseCases"
+              data-dropdown-placement="bottom-start" type="button"
+              class="flex items-center justify-between w-full py-2 px-3 text-gray-700 rounded hover:bg-gray-100 md:hover:bg-transparent md:border-0 md:hover:text-redshift-hover md:p-0 md:w-auto dark:text-gray-400 dark:hover:text-white">
+              Use Cases
+              <i class="fas fa-chevron-down text-xs ml-2"></i>
+            </button>
+
+            <div id="dropdownUseCases"
+              class="z-30 hidden font-normal bg-white divide-y divide-gray-100 rounded-lg shadow-lg w-48 border border-gray-100 dark:bg-gray-700 dark:divide-gray-600 dark:border-gray-600">
+              <ul class="py-2 text-sm text-gray-700 dark:text-gray-200" aria-labelledby="dropdownUseCasesButton">
+                <li>
+                  <a [routerLink]="['/manage-use-cases']"
+                    class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
+                    Gerir Use Cases
+                  </a>
+                </li>
+                <li *ngIf="user.companies?.length === 0">
+                  <a [routerLink]="['/create-usecase']"
+                    class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
+                    Criar Use Case
+                  </a>
+                </li>
+              </ul>
             </div>
-            <div class="items-center justify-between hidden w-full lg:flex lg:w-auto lg:order-1" id="mobile-menu-2">
-                <ul class="flex flex-col mt-4 font-medium lg:flex-row lg:space-x-8 lg:mt-0">
-                    
-                    <li>
-                        <a href="/home" class="block py-2 pl-3 pr-4 text-white  rounded lg:bg-transparent lg:text-black lg:p-0 dark:text-white" aria-current="page">Início</a>
-                    </li>
-                    
-                    <li *ngIf="user.companies?.length === 0" >
-                        <a href="/manage-users" class="block py-2 pl-3 pr-4 text-gray-700 border-b border-gray-100 hover:bg-gray-50 lg:hover:bg-transparent lg:border-0  lg:p-0 dark:text-gray-400 lg:dark:hover:text-white dark:hover:bg-gray-700 dark:hover:text-white lg:dark:hover:bg-transparent dark:border-gray-700">Utilizadores</a>
-                    </li>
-                    <li *ngIf="user.companies?.length === 0" >
-                        <a href="/manage-clients" class="block py-2 pl-3 pr-4 text-gray-700 border-b border-gray-100 hover:bg-gray-50 lg:hover:bg-transparent lg:border-0  lg:p-0 dark:text-gray-400 lg:dark:hover:text-white dark:hover:bg-gray-700 dark:hover:text-white lg:dark:hover:bg-transparent dark:border-gray-700">Clientes</a>
-                    </li>
-                    <li>
-                        <button id="dropdownNavbarLink" data-dropdown-toggle="dropdownNavbar" class="flex items-center justify-between w-full py-2 px-3 text-gray-700 rounded hover:bg-gray-100 md:hover:bg-transparent md:border-0 md:hover:text-redshift-hover md:p-0 md:w-auto dark:text-gray-400 dark:hover:text-white dark:focus:text-white dark:border-gray-700 dark:hover:bg-gray-700 md:dark:hover:bg-transparent">Use Cases <svg class="w-2.5 h-2.5 ms-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 10 6">
-                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 4 4 4-4"/>
-                          </svg></button>
-                          <div id="dropdownNavbar" class="z-10 hidden font-normal bg-white divide-y divide-gray-100 rounded-lg shadow w-44 dark:bg-gray-700 dark:divide-gray-600">
-                            <ul class="py-2 text-sm text-gray-700 dark:text-gray-200" aria-labelledby="dropdownLargeButton">
-                              <li>
-                                <a href="/manage-use-cases" class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">Gerir Use Cases</a>
-                              </li>
-                              <li>
-                                <a *ngIf="user.companies?.length === 0"  href="/create-usecase" class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">Criar Use Case</a>
-                              </li>
-                            
-                            </ul>
-                        </div>                    
-                    </li>
-                    <li>
-                        <button id="dropdownNavbarLink" data-dropdown-toggle="dropdownRules" class="flex items-center justify-between w-full py-2 px-3 text-gray-700 rounded hover:bg-gray-100 md:hover:bg-transparent md:border-0 md:hover:text-redshift-hover md:p-0 md:w-auto dark:text-gray-400 dark:hover:text-white dark:focus:text-white dark:border-gray-700 dark:hover:bg-gray-700 md:dark:hover:bg-transparent">Regras <svg class="w-2.5 h-2.5 ms-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 10 6">
-                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 4 4 4-4"/>
-                          </svg></button>
-                          <div id="dropdownRules" class="z-10 hidden font-normal bg-white divide-y divide-gray-100 rounded-lg shadow w-44 dark:bg-gray-700 dark:divide-gray-600">
-                            <ul class="py-2 text-sm text-gray-700 dark:text-gray-200" aria-labelledby="dropdownLargeButton">
-                              <li>
-                                <a *ngIf="user.companies?.length === 0"  href="/create-rule-model" class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">Criar Modelo de Regra</a>
-                              </li>
-                              <li>
-                                <a  *ngIf="user.companies?.length === 0"  href="/manage-rule-models" class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">Gerir Modelos de Regra</a>
-                              </li>
-                              <li>
-                                <a  *ngIf="user.companies?.length !== 0"  href="/read-rule-models" class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">Listagem de Modelos de Regra</a>
-                              </li>
-                              <hr class="solid my-1">
+          </li>
 
-                              <li>
-                                <a href="/manage-rules" *ngIf="user.companies?.length === 0" class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">Instâncias de Regra</a>
-                              </li>
+          <!-- Dropdown Regras -->
+          <li class="relative">
+            <button id="dropdownRulesButton" data-dropdown-toggle="dropdownRules" data-dropdown-placement="bottom-start"
+              type="button"
+              class="flex items-center justify-between w-full py-2 px-3 text-gray-700 rounded hover:bg-gray-100 md:hover:bg-transparent md:border-0 md:hover:text-redshift-hover md:p-0 md:w-auto dark:text-gray-400 dark:hover:text-white">
+              Regras
+              <i class="fas fa-chevron-down text-xs ml-2"></i>
+            </button>
 
-                              <li>
-                                <a href="/my-instance-rules" *ngIf="user.companies?.length !== 0" class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">Instâncias de Regra</a>
-                              </li>
-                              <hr class="solid my-1">
-                              <li>
-                                <a *ngIf="user.companies?.length === 0" href="/manage-logsources"  class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">Gerir Logsources</a>
-                              </li>
-                            </ul>
-                        </div></li>
-                   
-                      
-                    
-                        <li>
-                          <a href="/statistics" class="block py-2 pl-3 pr-4 text-white rounded lg:bg-transparent lg:text-black lg:p-0 dark:text-white" aria-current="page">Estatísticas</a>
-                      </li>
-                </ul>
+            <div id="dropdownRules"
+              class="z-30 hidden font-normal bg-white divide-y divide-gray-100 rounded-lg shadow-lg w-52 border border-gray-100 dark:bg-gray-700 dark:divide-gray-600 dark:border-gray-600">
+              <ul class="py-2 text-sm text-gray-700 dark:text-gray-200" aria-labelledby="dropdownRulesButton">
+                <li *ngIf="user.companies?.length === 0">
+                  <a [routerLink]="['/create-rule-model']"
+                    class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
+                    Criar Modelo de Regra
+                  </a>
+                </li>
+                <li *ngIf="user.companies?.length === 0">
+                  <a [routerLink]="['/manage-rule-models']"
+                    class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
+                    Gerir Modelos de Regra
+                  </a>
+                </li>
+                <li *ngIf="user.companies?.length !== 0">
+                  <a [routerLink]="['/read-rule-models']"
+                    class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
+                    Listagem de Modelos de Regra
+                  </a>
+                </li>
+
+                <hr class="border-gray-200 dark:border-gray-600 my-1">
+
+                <li *ngIf="user.companies?.length === 0">
+                  <a [routerLink]="['/manage-rules']"
+                    class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
+                    Instâncias de Regra
+                  </a>
+                </li>
+                <li *ngIf="user.companies?.length !== 0">
+                  <a [routerLink]="['/my-instance-rules']"
+                    class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
+                    Instâncias de Regra
+                  </a>
+                </li>
+
+                <hr *ngIf="user.companies?.length === 0" class="border-gray-200 dark:border-gray-600 my-1">
+
+                <li *ngIf="user.companies?.length === 0">
+                  <a [routerLink]="['/manage-logsources']"
+                    class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
+                    Gerir Logsources
+                  </a>
+                </li>
+              </ul>
             </div>
-        </div>
-    </nav>
+          </li>
+
+          <!-- Estatísticas -->
+          <li>
+            <a [routerLink]="['/statistics']" routerLinkActive="text-redshift-red font-semibold"
+              class="block py-2 pl-3 pr-4 text-gray-700 rounded lg:p-0 dark:text-gray-400 lg:dark:hover:text-white hover:text-redshift-hover">
+              Estatísticas
+            </a>
+          </li>
+
+        </ul>
+      </div>
+
+    </div>
+  </nav>
 </header>

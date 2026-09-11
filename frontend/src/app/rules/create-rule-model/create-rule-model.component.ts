@@ -1,285 +1,245 @@
-import { ChangeDetectorRef, Component, ɵformatRuntimeError } from '@angular/core';
-import { HeaderComponent } from "../../layout/header/header.component";
-import { TitlebannerComponent } from "../../layout/titlebanner/titlebanner.component";
+import { Component, OnInit } from '@angular/core';
+import { HeaderComponent } from '../../layout/header/header.component';
+import { TitlebannerComponent } from '../../layout/titlebanner/titlebanner.component';
 import { CommonModule } from '@angular/common';
-import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Type } from 'class-transformer';
-import { CodeEditorComponent, CodeEditorModule, CodeModel, CodeModelChangedEvent } from '@ngstack/code-editor';
-import {editor, Range} from 'monaco-editor'
+import {
+  FormControl,
+  FormGroup,
+  FormsModule,
+  ReactiveFormsModule,
+  Validators,
+} from '@angular/forms';
+import {
+  CodeEditorComponent,
+  CodeEditorModule,
+  CodeModel,
+  CodeModelChangedEvent,
+} from '@ngstack/code-editor';
 import { UsecasesService } from '../../services/usecases.service';
 import { RulesService } from '../../services/rules.service';
 import { TagInputModule } from 'ngx-chips';
 import { Router } from '@angular/router';
 
-
 @Component({
-    selector: 'app-create-rule-model',
-    standalone: true,
-    templateUrl: './create-rule-model.component.html',
-    styleUrl: './create-rule-model.component.css',
-    imports: [HeaderComponent, TitlebannerComponent, CommonModule, TagInputModule, FormsModule, ReactiveFormsModule, CodeEditorModule ]
+  selector: 'app-create-rule-model',
+  standalone: true,
+  templateUrl: './create-rule-model.component.html',
+  styleUrl: './create-rule-model.component.css',
+  imports: [
+    HeaderComponent,
+    TitlebannerComponent,
+    CommonModule,
+    TagInputModule,
+    FormsModule,
+    ReactiveFormsModule,
+    CodeEditorModule,
+  ],
 })
-export class CreateRuleModelComponent {
+export class CreateRuleModelComponent implements OnInit {
+  usecases: any = [];
+  registeredLogsources: string[] = [];
 
-usecases : any = ['Vazio'];
+  // Categorização atualizada incluindo as novas sintaxes
+  types: { [key: string]: string[] } = {
+    SIEM: [
+      'AQL (QRadar)',
+      'SPL (Splunk)',
+      'SPL2 (Splunk)',
+      'KQL (Sentinel)',
+      'EQL (Elastic)',
+      'Sigma Rule',
+      'Elastic Lucene Rule',
+    ],
+    EDR: ['CQL (CrowdStrike)'],
+    SOAR: ['YARA Rule'],
+  };
 
-registeredLogsources : string[] = ['Vazio'];
+  selectedType: string = 'SIEM';
+  selectedSyntax: string = 'AQL (QRadar)';
+  selectedUseCase: any = '';
 
-constructor(private useCasesService : UsecasesService, private rulesService : RulesService, private router : Router) { }
+  createRuleModelForm = new FormGroup({
+    title: new FormControl('', Validators.required),
+    selectedUseCase: new FormControl('', Validators.required),
+    selectedType: new FormControl('SIEM', Validators.required),
+    syntax: new FormControl('AQL (QRadar)', Validators.required),
+    logsources: new FormControl<any>(null, Validators.required),
+  });
 
+  options = {
+    language: 'sql',
+    minimap: { enabled: true },
+    automaticLayout: true,
+    dragAndDrop: true,
+  };
 
+  selectedModel: CodeModel = {
+    value: '',
+    language: 'sql',
+    uri: 'rule-model-editor',
+  };
 
-ngOnInit() {
+  theme = 'vs';
 
-  this.useCasesService.getUseCases().subscribe((data) => {
-    this.usecases = data;
+  constructor(
+    private useCasesService: UsecasesService,
+    private rulesService: RulesService,
+    private router: Router,
+  ) {}
 
-    this.rulesService.getRegisteredLogSources().subscribe((data : any) => {
-      console.log(data);
-      this.registeredLogsources = data.map((logsource: any) => logsource.name);
+  ngOnInit(): void {
+    this.useCasesService.getUseCases().subscribe((data) => {
+      this.usecases = data;
+      this.rulesService.getRegisteredLogSources().subscribe((res: any) => {
+        this.registeredLogsources = res.map((log: any) => log.name);
+      });
+    });
 
-    })
-
-  })
-
-}
-
-selectedUseCase : any = "";
-
-code : any = "";
-
-
-
-types = {
-  SIEM: ['Sigma Rule', 'Splunk Rule', 'QRadar Rule', 'Elastic Lucene Rule'],
-  SOAR: ['YARA Rule']
-};
-
-
-
-typeKeys() {
-  return Object.keys(this.types);
-}
-
-
-
-selectedType: any = "SIEM";
-
-
-
-
-
-  defaultCode = ``
-
-  createRuleModel() {
-
-    var arrayLogsources : any = this.createRuleModelForm.value.logsources
-
-    var logsources = arrayLogsources?.map((logsource: any) => logsource.value);
-    
-    var ruleModel = {
-      title: this.createRuleModelForm.value.title,
-      useCaseId: this.selectedUseCase,
-      type: this.selectedType,
-      ruleCode: this.selectedModel.value,
-      logsources: logsources
-    }
-    console.log(ruleModel);
-
-this.rulesService.createRuleModel(ruleModel).subscribe((data) => {
-  console.log(data);
-  this.router.navigate(['/manage-rule-models']);
-
-
-
-});
-
-
-
-
+    this.applyExampleCode(this.selectedSyntax);
   }
 
-  ruleModel :any = {
-    title: "",
-    useCaseId: "",
-    type: "",
-    ruleCode: "",
-    logsources: []
-}
+  typeKeys(): string[] {
+    return Object.keys(this.types);
+  }
 
-createRuleModelForm = new FormGroup({
-  title: new FormControl('', Validators.required),
-  selectedUseCase: new FormControl('',Validators.required),
-  selectedType: new FormControl('',Validators.required),
-  logsources: new FormControl('',Validators.required),
+  getAvailableSyntaxes(): string[] {
+    return this.types[this.selectedType] || [];
+  }
 
-})
+  onTypeChange(): void {
+    const syntaxes = this.getAvailableSyntaxes();
+    if (syntaxes.length > 0) {
+      this.selectedSyntax = syntaxes[0];
+      this.createRuleModelForm.patchValue({ syntax: this.selectedSyntax });
+      this.applyExampleCode(this.selectedSyntax);
+    }
+  }
 
+  onSyntaxChange(): void {
+    this.applyExampleCode(this.selectedSyntax);
+  }
 
+  applyExampleCode(syntax: string): void {
+    const lang = this.getMonacoLanguage(syntax);
+    this.options.language = lang;
+    this.selectedModel = {
+      ...this.selectedModel,
+      value: this.examples[syntax] || '',
+      language: lang,
+    };
+  }
 
-options = {
-  language: 'YAML',
-  
-  
-  minimap: {
-    enabled: true,
-  },
-  automaticLayout: true,
-dragAndDrop: true,
+  getMonacoLanguage(syntax: string): string {
+    switch (syntax) {
+      case 'Elastic Lucene Rule':
+        return 'json';
+      case 'AQL (QRadar)':
+      case 'SPL (Splunk)':
+      case 'SPL2 (Splunk)':
+      case 'KQL (Sentinel)':
+      case 'CQL (CrowdStrike)':
+        return 'sql';
+      default:
+        return 'yaml';
+    }
+  }
 
+  onEditorLoaded(editor: CodeEditorComponent): void {}
 
-}
+  onCodeModelChanged(event: CodeModelChangedEvent): void {
+    setTimeout(() => {
+      event.sender.formatDocument();
+    }, 100);
+  }
 
-selectedModel : CodeModel = {
-  value: this.defaultCode,
-  language: 'YAML',
-  uri: ''
-}
+  onCodeChanged(value: any): void {}
 
-theme = 'vs'
+  createRuleModel(): void {
+    if (this.createRuleModelForm.invalid) {
+      return;
+    }
 
-onEditorLoaded(editor: CodeEditorComponent) {
-  console.log('loaded', editor);
-}
+    const arrayLogsources: any = this.createRuleModelForm.value.logsources;
+    const logsources = arrayLogsources?.map((logsource: any) =>
+      typeof logsource === 'string' ? logsource : logsource.value,
+    );
 
-onCodeModelChanged(event: CodeModelChangedEvent) {
+    const payload = {
+      title: this.createRuleModelForm.value.title,
+      useCaseId: this.createRuleModelForm.value.selectedUseCase,
+      type: this.createRuleModelForm.value.selectedType,
+      syntax: this.createRuleModelForm.value.syntax,
+      ruleCode: this.selectedModel.value,
+      logsources: logsources,
+    };
 
-  console.log('code model changed', event);
+    this.rulesService.createRuleModel(payload).subscribe({
+      next: () => {
+        this.router.navigate(['/manage-rule-models']);
+      },
+      error: (err) => console.error('Erro ao criar modelo de regra:', err),
+    });
+  }
 
-  setTimeout(() => {
-    event.sender.formatDocument();
-  }, 100);
-}
+  examples: { [key: string]: string } = {
+    'AQL (QRadar)': `SELECT QIDNAME(qid) as "Event Name", sourceip, destinationip, count(*) as "Event Count"
+FROM events
+WHERE qid = 28250001
+GROUP BY sourceip
+ORDER BY "Event Count" DESC
+LAST 24 HOURS`,
 
-onCodeChanged(value : any) {
-}
+    'SPL (Splunk)': `index=* sourcetype=WinEventLog:Security EventCode=4625
+| stats count by Account_Name, Workstation_Name, Source_Network_Address
+| where count > 5`,
 
+    'SPL2 (Splunk)': `$data = from _internal
+| where status >= 400
+| stats count() by status, host
+| into $target_dataset;`,
 
+    'KQL (Sentinel)': `SecurityEvent
+| where TimeGenerated > ago(1h)
+| where EventID == 4625
+| summarize FailedLogins = count() by Account, Computer, IpAddress
+| where FailedLogins > 5`,
 
-examples: { [key: string]: string } = {
-  'Sigma Rule': `title: ${this.createRuleModelForm.value.title || 'Título da Regra'}
-  status: experimental
-  description: Uma descrição do que sua regra é destinada a detectar
-  references:
-      - Uma lista de todas as referências que podem ajudar um leitor ou analista a entender o significado de uma regra acionada
-  tags:
-      - attack.execution  # exemplo de categoria MITRE ATT&CK
-      - attack.t1059      # exemplo de ID da técnica MITRE ATT&CK
-      - car.2014-04-003   # exemplo de ID do CAR
-  author: Michael Haag, Florian Roth, Markus Neis  # exemplo, uma lista de autores
-  date: 06/04/2018  # Data da regra
-  logsource:                      # importante para o mapeamento de campos em arquivos de configuração pré-definidos ou adicionais
-      category: process_creation  # Neste exemplo, escolhemos a categoria 'process_creation'
-      product: windows            # o produto respectivo
-  detection:
-      selection:
-          NomeDoCampo: 'ValorString'
-          NomeDoCampo: ValorInteiro
-          NomeDoCampo|modificador: 'Valor'
-      condition: seleção
-  fields:
-      - campos na fonte de log que são importantes para investigar mais a fundo
-  falsepositives:
-      - descrever possíveis condições de falsos positivos para ajudar os analistas em sua investigação
-  level: um dos cinco níveis (informational, low, medium, high, critical)
-  `,
-  'Splunk Rule': `# Título da Regra: [TÍTULO DA REGRA]
+    'EQL (Elastic)': `sequence by process.entity_id with maxspan=1m
+  [process where event.type == "start" and process.name == "cmd.exe"]
+  [process where event.type == "start" and process.name == "whoami.exe"]`,
 
-  # ID da Regra: [ID_DA_REGRA]
-  
-  # Descrição:
-  # Descreva brevemente o que essa regra detecta e por que é importante.
-  
-  # Autor: [NOME_DO_AUTOR]
-  
-  # Nível de Severidade: [NÍVEL_DE_SEVERIDADE]
-  
-  # Categoria: [CATEGORIA_DA_REGRA]
-  
-  # Tags: [TAGS_RELACIONADOS]
-  
-  # Ambiente: [AMBIENTE_RECOMENDADO]
-  
-  # Condições de Detecção:
-  
-  # Substitua os placeholders abaixo pelos campos e valores relevantes dos seus dados.
-  
-  index=[NOME_DO_INDICE]
-  sourcetype=[TIPO_DE_FONTE_DE_DADOS]
-  | [AÇÃO_DE_PESQUISA_OU_FILTRO]
-  | [OUTRA_AÇÃO_DE_PESQUISA_OU_FILTRO_SE_NECESSÁRIO]
-  | [CONDICIONAL_ADICIONAL_SE_NECESSÁRIO]
-  
-  # Consequências:
-  # Descreva as possíveis consequências ou impactos da atividade detectada.
-  
-  # Recomendações de Mitigação:
-  # Forneça orientações sobre como lidar com a atividade detectada ou como mitigar os possíveis riscos.
-  
-  # Referências:
-  # Inclua quaisquer referências relevantes ou recursos adicionais relacionados a esta regra.
-  `,
-  'QRadar Rule': `# Nome da regra
-  name: "Nome da Regra"
-  
-  # Descrição da regra
-  description: |
-    Descrição da atividade ou ameaça que esta regra detecta.
-  
-  # Lista de regras (pode haver várias)
-  rules:
-  
-    # Regra 1
-    - rule_name: "Nome da Regra 1"
-      description: "Descrição da Regra 1"
-  
-      # Condição da regra
-      when:
-        # Condições de correspondência do evento
-        - "Condição de Correspondência 1"
-        - "Condição de Correspondência 2"
-        # ...
-      
-      # Ações a serem executadas quando a regra corresponder
-      then:
-        # Ação 1
-        - "Ação 1"
-        # Ação 2
-        - "Ação 2"
-        # ...
-notes: |
-  Notas adicionais sobre a regra, referências, etc.
-      `,
+    'CQL (CrowdStrike)': `#event_simpleName=ProcessRollup2
+| in(FileName, ["powershell.exe", "cmd.exe"])
+| CommandLine=/.*-enc.*/i
+| groupBy([ComputerName, UserName], function=count())`,
 
-'Elastic Lucene Rule':
-`
-{
-  "name": "${this.createRuleModelForm.value.title || 'Título da Regra'}",
-  "description": "Uma descrição do que a sua regra é destinada a detectar",
-  "risk_score": 50,
-  "severity": "médio",
+    'Sigma Rule': `title: Execução Suspeita de Linha de Comandos
+status: experimental
+description: Deteção genérica de ferramentas de reconhecimento
+logsource:
+    category: process_creation
+    product: windows
+detection:
+    selection:
+        EventID: 4688
+        CommandLine|contains: 'whoami'
+    condition: selection
+level: medium`,
+
+    'Elastic Lucene Rule': `{
+  "name": "Falhas de Autenticação Repetidas",
   "type": "query",
   "language": "lucene",
-  "query": "event.category:authentication AND event.outcome:failure"
-  "index": ["seu-indice-padrao-*"],
-  "interval": "5m",
-  "from": "now-5m",
-  "actions": [
-    {
-      "action_type_id": ".email",
-      "group": "default",
-      "params": {
-        "to": ["seu_email@exemplo.com"],
-        "subject": "Alerta: ${this.createRuleModelForm.value.title || 'Título da Regra'}",
-        "message": "Um alerta foi acionado com base na sua consulta Lucene: {{context.query}}"
-      }
-    }
-  ],
-  "throttle": "1h",
-  "tags": ["exemplo", "lucene", "detecção"],
-  "enabled": true
-}`
-      
-}
+  "query": "event.category:authentication AND event.outcome:failure",
+  "severity": "medium"
+}`,
 
+    'YARA Rule': `rule Suspicious_Process_Execution {
+    strings:
+        $s1 = "powershell -enc" nocase
+        $s2 = "cmd.exe /c" nocase
+    condition:
+        any of them
+}`,
+  };
 }

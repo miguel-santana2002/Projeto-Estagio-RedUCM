@@ -1,43 +1,50 @@
-import { Component, Input } from '@angular/core';
-import { AuthService } from '../../services/auth.service';
-import { initFlowbite } from 'flowbite';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
+import { NavigationEnd, Router, RouterModule } from '@angular/router';
+import { filter } from 'rxjs/operators';
+import { initFlowbite } from 'flowbite';
+
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-header',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, RouterModule],
   templateUrl: './header.component.html',
-  styleUrl: './header.component.css'
+  styleUrl: './header.component.css',
 })
-export class HeaderComponent {
-  private authService: AuthService;
-  user : any = { username: "", companies: [] };
+export class HeaderComponent implements OnInit {
+  user: any = { username: '', companies: [] };
 
+  constructor(
+    private authService: AuthService,
+    private router: Router,
+  ) {}
 
-  logout() {
-    this.authService.logout();
-    this.router.navigate(['/']);
-  }
-  
-  constructor(authService: AuthService, private router : Router) {
-    this.authService = authService;
-  }
-
-  
-  ngOnInit() {
-
-   
+  ngOnInit(): void {
+    // 1. Inicializa o Flowbite no primeiro carregamento
     initFlowbite();
+
+    // 2. Reinicializa os listeners de dropdowns/drawers a cada transição de rota terminada
+    this.router.events
+      .pipe(filter((event) => event instanceof NavigationEnd))
+      .subscribe(() => {
+        setTimeout(() => {
+          initFlowbite();
+        }, 50);
+      });
+
+    // 3. Obtém informação do utilizador autenticado
     this.authService.loggedInInfo().subscribe((value) => {
-      console.log(value);
-     this.user = value;
+      this.user = value || { username: '', companies: [] };
       if (this.user.companies == null) {
         this.user.companies = [];
       }
-
-      console.log(this.user);
     });
+  }
+
+  logout(): void {
+    this.authService.logout();
+    this.router.navigate(['/']);
   }
 }
