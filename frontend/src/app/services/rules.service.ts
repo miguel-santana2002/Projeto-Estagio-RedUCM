@@ -81,4 +81,12 @@ export class RulesService {
       },
     );
   }
+
+  updateRuleModel(id: number, ruleModel: any) {
+    return this.http.post(`${AUTH_URL}updateRuleModel/${id}`, ruleModel, {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+  }
 }

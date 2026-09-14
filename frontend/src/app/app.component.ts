@@ -13,6 +13,7 @@ import { MatSidenavModule } from '@angular/material/sidenav';
 import { AuthService } from './services/auth.service';
 import { initFlowbite } from 'flowbite';
 import { SpinnerComponent } from './layout/spinner/spinner.component';
+import { LoaderService } from './layout/loader.service';
 
 @Component({
   selector: 'app-root',
@@ -39,6 +40,7 @@ export class AppComponent implements OnInit {
   constructor(
     private authService: AuthService,
     private router: Router,
+    public loaderService: LoaderService,
   ) {
     // Escuta mudanças de navegação
     this.router.events

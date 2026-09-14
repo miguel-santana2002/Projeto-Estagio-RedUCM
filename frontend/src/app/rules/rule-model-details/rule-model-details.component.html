@@ -25,68 +25,89 @@
     {{ ruleModel.title }}
   </h1>
 
-  <!-- Metadados da Regra -->
-  <div class="flex flex-wrap items-center gap-8 ml-4">
+  <!-- Barra de Metadados e Ação -->
+  <div class="flex items-center justify-between gap-6 py-4 my-2">
 
-    <!-- Use Case -->
-    <div class="flex items-center">
-      <img src="./assets/tag.png" class="rounded-lg size-10 hover:drop-shadow-md transition duration-300" />
-      <div class="ml-4">
-        <h1 class="font-inter font-semibold text-xl text-gray-600">
-          RedUC{{ ruleModel.useCaseId }}
-        </h1>
-        <p class="text-gray-500 text-sm">Use Case Associado</p>
-      </div>
-    </div>
+    <!-- Bloco de Metadados (Tamanhos e Ícones Originais) -->
+    <div class="flex items-center gap-7 flex-wrap">
 
-    <!-- Técnicas MITRE -->
-    <div class="flex items-center">
-      <img src="./assets/mitrelogo.png" class="rounded-lg size-10 hover:drop-shadow-md transition duration-300" />
-      <div class="ml-4">
-        <div class="flex flex-wrap">
-          <div [routerLink]="'/techniqueDetails/' + technique" *ngFor="let technique of usecase?.mitreTechniques"
-            class="bg-[#0d2f52] cursor-pointer text-white text-sm rounded-md px-1 max-w-12 mr-1 my-1">
-            {{ technique }}
-          </div>
+      <!-- Use Case -->
+      <div class="flex items-center gap-3">
+        <i class="fas fa-tag text-gray-500 text-2xl"></i>
+        <div class="flex flex-col justify-center">
+          <span class="text-base font-bold text-gray-900 leading-tight">
+            <span class="text-redshift-red font-bold">Red</span>UC{{ ruleModel.useCaseId }}
+          </span>
+          <span class="text-xs text-gray-500 font-normal">Use Case Associado</span>
         </div>
-        <p class="text-gray-500 text-sm">Técnicas Mitre Associadas</p>
       </div>
+
+      <!-- Técnicas MITRE (se existirem) -->
+      <div class="flex items-center gap-3" *ngIf="ruleModel.mitreTechniques?.length">
+        <span class="bg-[#0b1b2b] text-white text-[11px] font-bold px-2 py-1 rounded">
+          MITRE
+        </span>
+        <div class="flex flex-col justify-center">
+          <div class="flex items-center gap-1">
+            <span *ngFor="let mitre of ruleModel.mitreTechniques"
+              class="bg-[#0d2f52] text-white text-xs px-2 py-0.5 rounded font-medium">
+              {{ mitre }}
+            </span>
+          </div>
+          <span class="text-xs text-gray-500 font-normal">Técnicas Mitre Associadas</span>
+        </div>
+      </div>
+
+      <!-- Tipo -->
+      <div class="flex items-center gap-3">
+        <i class="fas fa-cubes text-gray-500 text-2xl"></i>
+        <div class="flex flex-col justify-center">
+          <span class="text-base font-bold text-gray-900 leading-tight">{{ ruleModel.type }}</span>
+          <span class="text-xs text-gray-500 font-normal">Tipo</span>
+        </div>
+      </div>
+
+      <!-- Sintaxe -->
+      <div class="flex items-center gap-3">
+        <i class="fas fa-code text-redshift-red text-2xl"></i>
+        <div class="flex flex-col justify-center">
+          <span class="text-base font-bold text-gray-900 leading-tight">{{ ruleModel.syntax || 'N/D' }}</span>
+          <span class="text-xs text-gray-500 font-normal">Sintaxe</span>
+        </div>
+      </div>
+
+      <!-- Logsources -->
+      <div class="flex items-center gap-3">
+        <i class="fas fa-network-wired text-gray-500 text-2xl"></i>
+        <div class="flex flex-col justify-center">
+          <div class="flex items-center gap-2 max-w-xl">
+            <!-- Exibe 2 tags completas com limite para não quebrar -->
+            <span *ngFor="let log of ruleModel.logsources?.slice(0, 2)" [title]="log"
+              class="bg-[#0d2f52] text-white text-xs px-2.5 py-1 rounded font-medium truncate max-w-[220px]">
+              {{ log }}
+            </span>
+
+            <!-- Contador com lista completa no hover -->
+            <span *ngIf="ruleModel.logsources?.length > 2" [title]="ruleModel.logsources.slice(2).join(', ')"
+              class="bg-[#0d2f52] hover:bg-[#15467a] text-white text-xs px-2 py-0.5 rounded-full font-bold cursor-help">
+              +{{ ruleModel.logsources.length - 2 }}
+            </span>
+
+            <span *ngIf="!ruleModel.logsources?.length" class="text-sm text-gray-400">N/D</span>
+          </div>
+          <span class="text-xs text-gray-500 font-normal">LogSources</span>
+        </div>
+      </div>
+
     </div>
 
-    <!-- Tipo -->
-    <div class="flex items-center">
-      <img src="./assets/category.png" class="rounded-lg size-10 hover:drop-shadow-md transition duration-300" />
-      <div class="ml-4">
-        <h1 class="font-inter font-semibold text-xl text-gray-600">
-          {{ ruleModel.type }}
-        </h1>
-        <p class="text-gray-500 text-sm">Tipo</p>
-      </div>
-    </div>
-
-    <!-- Sintaxe Adicionada -->
-    <div class="flex items-center">
-      <div
-        class="flex items-center justify-center size-10 rounded-lg bg-gray-100 border border-gray-200 text-redshift-red text-xl shadow-sm">
-        <i class="fas fa-code"></i>
-      </div>
-      <div class="ml-4">
-        <h1 class="font-inter font-semibold text-xl text-gray-600">
-          {{ ruleModel.syntax || 'N/D' }}
-        </h1>
-        <p class="text-gray-500 text-sm">Sintaxe</p>
-      </div>
-    </div>
-
-    <!-- LogSources -->
-    <div class="flex items-center">
-      <img src="./assets/source.png" class="rounded-lg size-10 hover:drop-shadow-md transition duration-300" />
-      <div class="ml-4">
-        <h1 class="font-inter font-semibold text-xl text-gray-600">
-          {{ ruleModel.logsources }}
-        </h1>
-        <p class="text-gray-500 text-sm">LogSources</p>
-      </div>
+    <!-- Botão Editar Regra à Direita -->
+    <div class="flex-shrink-0">
+      <button [routerLink]="['/edit-rule-model', ruleModel.id]"
+        class="inline-flex items-center gap-2 bg-white hover:bg-gray-50 text-gray-700 font-semibold text-sm py-2 px-4 border border-gray-300 rounded-lg shadow-sm hover:border-gray-400 transition">
+        <i class="fas fa-pen-to-square text-redshift-red text-base"></i>
+        <span>Editar Regra</span>
+      </button>
     </div>
 
   </div>
@@ -106,7 +127,7 @@
     <!-- Coluna de Ações -->
     <div class="xl:col-span-2 w-full flex flex-col space-y-4">
       <div
-        class="bg-gray-50 dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col space-y-3">
+        class="bg-gray-200 dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col space-y-3">
         <h3 class="text-base font-semibold text-gray-700 dark:text-gray-200 mb-1">
           Ações
         </h3>
@@ -141,7 +162,7 @@
   </div>
 
   <!-- Instâncias da Regra -->
-  <h1 class="font-inter font-semibold text-2xl text-gray-700 mb-4">
+  <h1 class="font-inter font-semibold text-2xl text-gray-700 mb-4 mt-8">
     Regras baseadas neste Modelo
   </h1>
 

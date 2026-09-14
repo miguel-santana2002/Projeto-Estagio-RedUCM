@@ -1,3 +1,10 @@
+<!-- Overlay Global do Spinner com backdrop opaco -->
+@if (loaderService.isLoading()) {
+<div class="fixed inset-0 z-50 flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+  <app-spinner></app-spinner>
+</div>
+}
+
 <div class="flex flex-col min-h-screen bg-gray-50 dark:bg-gray-900">
   <main class="flex-grow flex flex-col">
     <router-outlet></router-outlet>

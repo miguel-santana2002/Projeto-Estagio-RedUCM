@@ -129,35 +129,32 @@ export class RuleModelDetailsComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    const id = this.route.snapshot.params['id'];
+    const id = Number(this.route.snapshot.params['id']);
 
-    this.rulesService.getRuleModelById(id).subscribe({
-      next: (data: any) => {
-        this.ruleModel = data;
+    this.rulesService.getRuleModelById(id).subscribe((data: any) => {
+      this.ruleModel = data;
 
-        const initialSyntax =
-          this.ruleModel.syntax ||
-          (this.ruleModel.type === 'SIEM' ? 'AQL (QRadar)' : 'YARA Rule');
+      const initialSyntax =
+        this.ruleModel.syntax ||
+        (this.ruleModel.type === 'SIEM' ? 'AQL (QRadar)' : 'YARA Rule');
 
-        this.ruleModel.syntax = initialSyntax;
+      this.ruleModel.syntax = initialSyntax;
 
-        const lang = this.getMonacoLanguage(initialSyntax);
-        this.options.language = lang;
-        this.selectedModel = {
-          value: this.ruleModel.ruleCode || '',
-          language: lang,
-          uri: `model-${this.ruleModel.id}`,
-        };
+      const lang = this.getMonacoLanguage(initialSyntax);
+      this.options.language = lang;
+      this.selectedModel = {
+        value: this.ruleModel.ruleCode || '',
+        language: lang,
+        uri: `model-${this.ruleModel.id}`,
+      };
 
-        this.createRuleForm.patchValue({
-          modalCode: this.ruleModel.ruleCode,
-          syntax: initialSyntax,
-          logsources: this.ruleModel.logsources,
-        });
+      this.createRuleForm.patchValue({
+        modalCode: this.ruleModel.ruleCode,
+        syntax: initialSyntax,
+        logsources: this.ruleModel.logsources,
+      });
 
-        this.loadUseCaseAndDependencies();
-      },
-      error: (err) => console.error('Erro ao obter modelo de regra:', err),
+      this.loadUseCaseAndDependencies();
     });
   }
 
@@ -215,6 +212,7 @@ export class RuleModelDetailsComponent implements OnInit {
 
   onCodeChanged(value: any): void {
     this.code = value;
+    this.selectedModel.value = value;
   }
 
   copyToClipboard(): void {
@@ -407,7 +405,9 @@ export class RuleModelDetailsComponent implements OnInit {
     let clientId = formVals.client;
     if (typeof clientId === 'string') {
       const found = this.clients.find((c: any) => c.name === clientId);
-      if (found) clientId = found.pk;
+      if (found) {
+        clientId = found.id ?? found.pk;
+      }
     }
 
     const rulePayload = {
@@ -420,6 +420,11 @@ export class RuleModelDetailsComponent implements OnInit {
 
     this.rulesService.createRule(rulePayload).subscribe({
       next: () => {
+        document
+          .querySelectorAll('[modal-backdrop]')
+          .forEach((el) => el.remove());
+
+        document.body.classList.remove('overflow-hidden');
         this.router.navigate(['/manage-rules']);
       },
       error: (e) => console.error('Erro ao atribuir regra ao cliente:', e),

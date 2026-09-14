@@ -8,10 +8,11 @@ from rules.models import RegisteredLogSource, Rule, RuleModel
 from rest_framework import viewsets
 from django.http import JsonResponse
 from rest_framework.decorators import api_view
+from rest_framework.response import Response
 from drf_spectacular.utils import extend_schema
 from drf_spectacular.utils import OpenApiResponse
 from rest_framework import status
-
+from django.shortcuts import get_object_or_404
 
 
 @extend_schema(request=RuleModelSerializer,
@@ -78,13 +79,9 @@ def getRuleModelsByUseCase(request, useCaseId):
                 })
 @api_view(['GET'])
 def getRuleModelById(request, id):
-    if request.method == 'GET':
-        rule = RuleModel.objects.get(id=id)
-        serializer = RuleModelSerializer(rule, many=False)
-        return JsonResponse(serializer.data, safe=False)
-
-    else:
-        return JsonResponse({'error': 'Invalid request method'})
+    rule = get_object_or_404(RuleModel, id=id)
+    serializer = RuleModelSerializer(rule, many=False)
+    return Response(serializer.data, status=status.HTTP_200_OK)
     
 
 @extend_schema(request=RuleModelSerializer,
@@ -156,13 +153,12 @@ def getRules(request):
                 })
 @api_view(['GET'])
 def getRuleById(request, id):
-    if request.method == 'GET':
+    try:
         rule = Rule.objects.get(id=id)
         serializer = RuleSerializer(rule, many=False)
         return JsonResponse(serializer.data, safe=False)
-
-    else:
-        return JsonResponse({'error': 'Invalid request method'})
+    except Rule.DoesNotExist:
+        return JsonResponse({'error': 'Rule not found'}, status=404)
     
 
 @api_view(['POST'])
@@ -230,3 +226,19 @@ def updateRuleCode(request,id):
         return JsonResponse({'message': 'Regra Atualizada com Sucesso'})
     else:
         return JsonResponse({'error': 'Invalid request method'})
+
+@api_view(['POST'])
+def updateRuleModel(request, id):
+    try:
+        rule_model = RuleModel.objects.get(id=id)
+        
+        rule_model.title = request.data.get('title', rule_model.title)
+        rule_model.type = request.data.get('type', rule_model.type)
+        rule_model.syntax = request.data.get('syntax', rule_model.syntax)
+        rule_model.logsources = request.data.get('logsources', rule_model.logsources)
+        rule_model.ruleCode = request.data.get('ruleCode', rule_model.ruleCode)
+        
+        rule_model.save()
+        return JsonResponse({'message': 'Modelo de regra atualizado com sucesso!'})
+    except RuleModel.DoesNotExist:
+        return JsonResponse({'error': 'Modelo de regra não encontrado'}, status=404)

@@ -26,6 +26,8 @@ import { ManageLogsourcesComponent } from './rules/manage-logsources/manage-logs
 import { isAdminGuard } from './helper/is-admin.guard';
 import { UpdateUserComponent } from './update-user/update-user.component';
 import { EditClientComponent } from './clients/edit-client/edit-client.component';
+import { EditRuleModelComponent } from './rules/edit-rule-model/edit-rule-model.component';
+import { numericIdGuard } from './guards/numeric-id.guard';
 
 export const routes: Routes = [
   { path: '', component: LandingpageComponent },
@@ -52,25 +54,38 @@ export const routes: Routes = [
     canActivate: [isAdminGuard],
   },
   { path: 'manage-use-cases', component: ManageUseCasesComponent },
-  { path: 'usecaseDetails/:id', component: UsecaseDetailsComponent },
+  {
+    path: 'usecaseDetails/:id',
+    component: UsecaseDetailsComponent,
+    canActivate: [numericIdGuard],
+  },
   {
     path: 'create-rule-model',
     component: CreateRuleModelComponent,
     canActivate: [isAdminGuard],
   },
+  // techniqueDetails/:id usa códigos MITRE (ex: T1552), não deves colocar numericIdGuard aqui se o ID for alfanumérico
   { path: 'techniqueDetails/:id', component: TechniqueDetailsComponent },
   {
     path: 'manage-rule-models',
     component: ManageRuleModelsComponent,
     canActivate: [isAdminGuard],
   },
-  { path: 'ruleModelDetails/:id', component: RuleModelDetailsComponent },
+  {
+    path: 'ruleModelDetails/:id',
+    component: RuleModelDetailsComponent,
+    canActivate: [numericIdGuard],
+  },
   {
     path: 'manage-rules',
     component: ManageRulesComponent,
     canActivate: [isAdminGuard],
   },
-  { path: 'ruleDetails/:id', component: RuleDetailsComponent },
+  {
+    path: 'ruleDetails/:id',
+    component: RuleDetailsComponent,
+    canActivate: [numericIdGuard],
+  },
   { path: 'read-rule-models', component: ReadRuleModelsComponent },
   { path: 'read-use-cases', component: ReadUseCasesComponent },
   { path: 'my-instance-rules', component: MyInstanceRulesComponent },
@@ -78,7 +93,7 @@ export const routes: Routes = [
   {
     path: 'edit-usecase/:id',
     component: EditUseCaseComponent,
-    canActivate: [isAdminGuard],
+    canActivate: [isAdminGuard, numericIdGuard],
   },
   {
     path: 'manage-logsources',
@@ -88,12 +103,21 @@ export const routes: Routes = [
   {
     path: 'update-user/:id',
     component: UpdateUserComponent,
-    canActivate: [isAdminGuard],
+    canActivate: [isAdminGuard, numericIdGuard],
   },
   {
     path: 'edit-client/:id',
     component: EditClientComponent,
-    canActivate: [isAdminGuard],
+    canActivate: [isAdminGuard, numericIdGuard],
+  },
+  {
+    path: 'edit-rule-model/:id',
+    component: EditRuleModelComponent,
+    canActivate: [isAdminGuard, numericIdGuard],
+  },
+  {
+    path: 'page-not-found',
+    component: PageNotFoundComponent,
   },
   {
     path: '**',
