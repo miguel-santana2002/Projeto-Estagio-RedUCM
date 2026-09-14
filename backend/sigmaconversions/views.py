@@ -1,14 +1,15 @@
 import yaml
 from django.http import JsonResponse
 from rest_framework.decorators import api_view
-from drf_spectacular.utils import extend_schema, OpenApiResponse
+from rest_framework import serializers
+from drf_spectacular.utils import extend_schema, OpenApiResponse, inline_serializer
 
 from sigma.collection import SigmaCollection
 
-from sigma.backends.splunk import SplunkBackend
+from sigma.backends.splunk import SplunkBackend, SplunkSPL2Backend
 from sigma.pipelines.splunk import splunk_windows_pipeline
 
-from sigma.backends.qradar import QRadarBackend
+from sigma.backends.QRadarAQL import QRadarAQLBackend
 
 from sigma.backends.elasticsearch import EqlBackend
 from sigma.pipelines.elasticsearch import ecs_windows
@@ -16,10 +17,8 @@ from sigma.pipelines.elasticsearch import ecs_windows
 from sigma.backends.kusto import KustoBackend
 
 from sigma.backends.crowdstrike import LogScaleBackend
-from sigma.backends.crowdstrike import CrowdStrikeBackend
 from sigma.pipelines.crowdstrike import crowdstrike_falcon_pipeline
-from rest_framework import serializers
-from drf_spectacular.utils import extend_schema, OpenApiResponse, inline_serializer
+
 
 # IMPORTANTE: cada entrada aqui é uma FUNÇÃO, não uma instância.
 # Isto garante que cada conversão recebe um backend novo, com a pipeline
@@ -31,7 +30,7 @@ from drf_spectacular.utils import extend_schema, OpenApiResponse, inline_seriali
 # para Kusto, o Kusto sai com nomes de campo do EQL).
 BACKEND_FACTORIES = {
     'Splunk Rule': lambda: SplunkBackend(processing_pipeline=splunk_windows_pipeline()),
-    'Splunk SPL2 Rule': lambda: SplunkBackend(processing_pipeline=splunk_windows_pipeline()), # Usa a mesma classe backend do Splunk
+    'Splunk SPL2 Rule': lambda: SplunkSPL2Backend(processing_pipeline=splunk_windows_pipeline()),
     'QRadar Rule': lambda: QRadarAQLBackend(),
     'Elastic Rule': lambda: EqlBackend(processing_pipeline=ecs_windows()),
     'Sentinel Rule': lambda: KustoBackend(),
@@ -157,35 +156,20 @@ def convertSigmaToElasticLucena(request):
 
 
 # =============================================================================
-# NOTAS / LIMITAÇÕES CONHECIDAS (testadas manualmente, 11/09/2026)
+# NOTAS / LIMITAÇÕES CONHECIDAS
 # =============================================================================
-#
-# 1. SPL2 e CQL (CrowdStrike) podem sair com parênteses mal agrupados em
-#    regras com múltiplas condições "contains"/OR. Exemplo testado:
-#    "A AND B OR C" em vez de "A AND (B OR C)", o que muda a lógica da
-#    deteção (fica mais permissivo do que devia). Confirmado no SPL2;
-#    suspeito também no CQL mas não validado num CrowdStrike real.
-#    -> Não confiar cegamente nestes dois outputs em regras com múltiplos
-#       "contains"/OR sem revisão manual antes de ir para produção.
-#
-# 2. QRadar (QRadarAQLBackend) não suporta regras de correlação (tipo
-#    "5 falhas de login em 10min"), só regras de evento único. Tentar
-#    converter uma correlação para QRadar dá NotImplementedError (já
-#    tratado no código acima, devolve erro 400 claro em vez de rebentar).
-#
-# 3. FortiSIEM não tem backend pySigma, nem oficial nem da comunidade.
-#    Não é possível converter automaticamente para FortiSIEM com esta
-#    abordagem. Alternativas: import manual do XML no FortiSIEM (como
-#    documentado no levantamento inicial), ou escrever um conversor
-#    próprio de raiz (fora do âmbito do pySigma).
-#
-# 4. Nunca reutilizar o mesmo objeto SigmaCollection (o resultado de
-#    validate_and_parse_sigma_rules) em mais do que uma conversão. As
-#    pipelines modificam os nomes de campo dentro do próprio objeto em
-#    memória; reutilizá-lo noutro backend contamina os nomes de campo
-#    com os da conversão anterior. Confirmado: converter para EQL e
-#    depois reutilizar o mesmo objeto para Kusto faz o Kusto sair com
-#    nomes de campo ECS (do EQL) em vez dos nomes originais da regra.
-#    O código acima já evita isto (convert_sigma_rule faz sempre parse
-#    do YAML de novo, por chamada).
+# 1. QRadar usa pySigma-backend-QRadar-community (não o IBM/pySigma-backend-
+#    QRadar-AQL original, que está descontinuado e não suporta pySigma 1.x).
+#    Testado: instala e funciona sem conflitos junto com todos os outros
+#    backends (pySigma 1.5.0). Não é preciso microserviço nem ambiente
+#    isolado, ao contrário do que se pensava antes.
+# 2. SPL2 e CQL (CrowdStrike) podem sair com parênteses mal agrupados em
+#    regras com múltiplas condições "contains"/OR. Validar manualmente
+#    antes de produção.
+# 3. QRadar (QRadarAQLBackend) não suporta regras de correlação, só
+#    regras de evento único (dá NotImplementedError, já tratado).
+# 4. FortiSIEM não tem backend Sigma (nem oficial nem comunidade).
+# 5. Nunca reutilizar o mesmo objeto SigmaCollection entre backends
+#    diferentes (contamina nomes de campo). convert_sigma_rule já faz
+#    parse do YAML de novo em cada chamada.
 # =============================================================================

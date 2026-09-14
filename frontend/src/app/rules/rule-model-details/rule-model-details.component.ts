@@ -160,7 +160,9 @@ export class RuleModelDetailsComponent implements OnInit {
   openAssignModal(): void {
     const currentCode = this.selectedModel.value;
     this.ruleModel.ruleCode = currentCode;
-    const defaultSyntax = this.ruleModel.type === 'SIEM' ? 'Sigma Rule' : 'Yara Rule';
+    
+    // CORREÇÃO: Como "Sigma Rule" já não está no HTML, temos de forçar uma opção que exista (ex: AQL)
+    const defaultSyntax = this.ruleModel.type === 'SIEM' ? 'AQL (QRadar)' : 'AQL (QRadar)';
 
     this.createRuleForm.patchValue({
       modalCode: currentCode,
@@ -176,10 +178,7 @@ export class RuleModelDetailsComponent implements OnInit {
     const selectedSyntax = this.createRuleForm.get('syntax')?.value;
     const baseCode = this.ruleModel.ruleCode;
 
-    if (selectedSyntax === 'Sigma Rule' || selectedSyntax === 'Yara Rule') {
-      this.createRuleForm.patchValue({ modalCode: baseCode });
-      return;
-    }
+    if (!selectedSyntax) return;
 
     let request$;
 
@@ -188,10 +187,14 @@ export class RuleModelDetailsComponent implements OnInit {
       case 'Splunk Rule':
         request$ = this.sigmaConversionsService.convertSigmaToSplunk(baseCode);
         break;
+      case 'SPL2 (Splunk)': // AGORA TEM A SUA PRÓPRIA FUNÇÃO
+        request$ = this.sigmaConversionsService.convertSigmaToSplunk2(baseCode);
+        break;
       case 'AQL (QRadar)':
       case 'QRadar Rule':
         request$ = this.sigmaConversionsService.convertSigmaToQRadar(baseCode);
         break;
+      case 'EQL (Elastic)':
       case 'Elastic Lucene Rule':
       case 'Elastic Rule':
         request$ = this.sigmaConversionsService.convertSigmaToElasticLucena(baseCode);
@@ -252,10 +255,10 @@ export class RuleModelDetailsComponent implements OnInit {
 
   private convertRuleToBackend(selectedSyntax: string, ruleCode: string): Promise<any> {
     return new Promise((resolve, reject) => {
+      // Adicionadas todas as 6 sintaxes para passarem na validação
       const validSyntaxes = [
-        'Yara Rule', 'SPL (Splunk)', 'AQL (QRadar)', 'Elastic Lucene Rule',
-        'KQL (Sentinel)', 'CQL (CrowdStrike)', 'Sigma Rule', 'Splunk Rule',
-        'QRadar Rule', 'Elastic Rule', 'Sentinel Rule', 'CrowdStrike Rule'
+        'AQL (QRadar)', 'CQL (CrowdStrike)', 'EQL (Elastic)', 
+        'KQL (Sentinel)', 'SPL (Splunk)', 'SPL2 (Splunk)'
       ];
 
       if (validSyntaxes.includes(selectedSyntax)) {
@@ -266,3 +269,4 @@ export class RuleModelDetailsComponent implements OnInit {
     });
   }
 }
+

@@ -16,7 +16,7 @@ drf-yasg==1.21.7
 enterpriseattack==0.1.8
 pySigma>=1.5.0
 pySigma-backend-elasticsearch>=2.1.1
-git+https://github.com/SigmaHQ/pySigma-backend-qradar.git
+pySigma-backend-QRadar-community>=0.4.0
 pysigma-backend-splunk>=2.1.0
 pysigma-backend-kusto>=1.0.1
 pysigma-backend-crowdstrike>=3.0.0

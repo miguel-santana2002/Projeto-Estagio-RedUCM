@@ -121,7 +121,7 @@
       <div class="relative bg-white rounded-lg shadow dark:bg-gray-700">
         <!-- Modal header -->
         <div class="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-600">
-          <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Copiar regra para cliente</h3>
+          <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Copiar regra (TESTE)</h3>
           <button type="button"
             class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white"
             data-modal-toggle="crud-modal">
@@ -160,18 +160,17 @@
               </select>
             </div>
 
-            <!-- Seleção de Sintaxe (Alinhada com o TypeScript) -->
+            <!-- Seleção de Sintaxe -->
             <div class="col-span-1">
               <label for="syntax" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Seleção de Sintaxe</label>
               <select id="syntax" formControlName="syntax" (change)="onSyntaxChange()" required
                 class="block w-full rounded-md border-0 px-2 py-2.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 sm:text-sm sm:leading-6">
-                <option value="Sigma Rule">Sigma Rule</option>
-                <option value="Yara Rule">Yara Rule</option>
                 <option value="AQL (QRadar)">AQL (QRadar)</option>
                 <option value="CQL (CrowdStrike)">CQL (CrowdStrike)</option>
-                <option value="Elastic Lucene Rule">Elastic Lucene Rule</option>
+                <option value="EQL (Elastic)">EQL (Elastic)</option>
                 <option value="KQL (Sentinel)">KQL (Sentinel)</option>
                 <option value="SPL (Splunk)">SPL (Splunk)</option>
+                <option value="SPL2 (Splunk)">SPL2 (Splunk)</option>
               </select>
             </div>
 

@@ -21,14 +21,21 @@ export class SigmaConversionsService {
     return this.http.post(`${AUTH_URL}convertSigmaToElasticLucena`, { rule: rule });
   }
 
+  // --- REENCAMINHADOS PARA O ENDPOINT GENÉRICO ---
+  
   convertSigmaToCrowdstrike(rule: any) {
-    return this.http.post(`${AUTH_URL}convertSigmaToCrowdstrike`, { rule: rule });
+    return this.convertSigma(rule, 'CrowdStrike Rule');
   }
 
   convertSigmaToSentinel(rule: any) {
-    return this.http.post(`${AUTH_URL}convertSigmaToSentinel`, { rule: rule });
+    return this.convertSigma(rule, 'Sentinel Rule');
   }
 
+  convertSigmaToSplunk2(rule: any) {
+    return this.convertSigma(rule, 'Splunk SPL2 Rule');
+  }
+
+  // Endpoint genérico
   convertSigma(rule: any, backend: any) {
     return this.http.post(`${AUTH_URL}convertSigma`, { rule: rule, backend: backend });
   }
