@@ -79,7 +79,7 @@ export class RuleModelDetailsComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    const id = this.route.snapshot.params['id'];
+    const id = Number(this.route.snapshot.params['id']);
 
     this.rulesService.getRuleModelById(id).subscribe((data: any) => {
       this.ruleModel = data;
@@ -142,6 +142,7 @@ export class RuleModelDetailsComponent implements OnInit {
 
   onCodeChanged(value: any): void {
     this.code = value;
+    this.selectedModel.value = value;
   }
 
   copyToClipboard(): void {
@@ -149,6 +150,9 @@ export class RuleModelDetailsComponent implements OnInit {
   }
 
   updateRuleModelCode(): void {
+    const newCode = this.selectedModel.value;
+    const newSyntax = this.ruleModel.syntax;
+
     this.rulesService
       .updateRuleModelCode(this.selectedModel.value, this.ruleModel.id)
       .subscribe((data: any) => {
@@ -173,6 +177,104 @@ export class RuleModelDetailsComponent implements OnInit {
 
     this.onSyntaxChange();
   }
+
+  // --- Lógica da Modal de Conversão ---
+
+  openConvertModal(): void {
+    this.sourceRuleContent =
+      this.selectedModel.value || this.ruleModel.ruleCode || '';
+    this.convertedRuleContent = '';
+    this.targetSyntax = '';
+    this.isConverting = false;
+    this.showConvertModal = true;
+  }
+
+  closeConvertModal(): void {
+    this.showConvertModal = false;
+  }
+
+  convertRule(): void {
+    if (!this.targetSyntax || !this.sourceRuleContent) return;
+
+    this.isConverting = true;
+    this.convertedRuleContent = '';
+
+    if (
+      this.targetSyntax === 'Sigma Rule' ||
+      this.targetSyntax === 'YARA Rule'
+    ) {
+      this.convertedRuleContent = this.sourceRuleContent;
+      this.isConverting = false;
+      return;
+    }
+
+    let request$;
+    switch (this.targetSyntax) {
+      case 'SPL (Splunk)':
+      case 'Splunk Rule':
+        request$ = this.sigmaConversionsService.convertSigmaToSplunk(
+          this.sourceRuleContent,
+        );
+        break;
+      case 'AQL (QRadar)':
+      case 'QRadar Rule':
+        request$ = this.sigmaConversionsService.convertSigmaToQRadar(
+          this.sourceRuleContent,
+        );
+        break;
+      case 'Elastic Lucene Rule':
+      case 'Elastic Rule':
+        request$ = this.sigmaConversionsService.convertSigmaToElasticLucena(
+          this.sourceRuleContent,
+        );
+        break;
+      default:
+        this.convertedRuleContent = this.sourceRuleContent;
+        this.isConverting = false;
+        return;
+    }
+
+    request$.subscribe({
+      next: (res: any) => {
+        const cleanCode = Array.isArray(res) && res.length > 0 ? res[0] : res;
+        this.convertedRuleContent = cleanCode;
+        this.isConverting = false;
+      },
+      error: (err: any) => {
+        const errorMessage =
+          err.error?.error || err.statusText || 'Erro na conversão.';
+        this.convertedRuleContent = `Falha na conversão: ${errorMessage}`;
+        this.isConverting = false;
+      },
+    });
+  }
+
+  copyConvertedToClipboard(): void {
+    if (this.convertedRuleContent) {
+      this.clipboard.copy(this.convertedRuleContent);
+      this.message = 'Código convertido copiado com sucesso!';
+      setTimeout(() => (this.message = ''), 3000);
+    }
+  }
+
+  applyConvertedRule(): void {
+    if (!this.convertedRuleContent) return;
+
+    this.ruleModel.syntax = this.targetSyntax;
+    const lang = this.getMonacoLanguage(this.targetSyntax);
+    this.options.language = lang;
+
+    this.selectedModel = {
+      value: this.convertedRuleContent,
+      language: lang,
+      uri: `model-${this.ruleModel.id}-${Date.now()}`,
+    };
+
+    this.ruleModel.ruleCode = this.convertedRuleContent;
+    this.closeConvertModal();
+  }
+
+  // --- Fim da Modal de Conversão ---
 
   onSyntaxChange(): void {
     const selectedSyntax = this.createRuleForm.get('syntax')?.value;

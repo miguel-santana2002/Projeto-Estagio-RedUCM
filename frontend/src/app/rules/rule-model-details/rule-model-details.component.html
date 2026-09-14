@@ -48,6 +48,64 @@
         </div>
         <p class="text-gray-500">Técnicas Mitre Associadas</p>
       </div>
+
+      <!-- Técnicas MITRE (se existirem) -->
+      <div class="flex items-center gap-3" *ngIf="ruleModel.mitreTechniques?.length">
+        <span class="bg-[#0b1b2b] text-white text-[11px] font-bold px-2 py-1 rounded">
+          MITRE
+        </span>
+        <div class="flex flex-col justify-center">
+          <div class="flex items-center gap-1">
+            <span *ngFor="let mitre of ruleModel.mitreTechniques"
+              class="bg-[#0d2f52] text-white text-xs px-2 py-0.5 rounded font-medium">
+              {{ mitre }}
+            </span>
+          </div>
+          <span class="text-xs text-gray-500 font-normal">Técnicas Mitre Associadas</span>
+        </div>
+      </div>
+
+      <!-- Tipo -->
+      <div class="flex items-center gap-3">
+        <i class="fas fa-cubes text-gray-500 text-2xl"></i>
+        <div class="flex flex-col justify-center">
+          <span class="text-base font-bold text-gray-900 leading-tight">{{ ruleModel.type }}</span>
+          <span class="text-xs text-gray-500 font-normal">Tipo</span>
+        </div>
+      </div>
+
+      <!-- Sintaxe -->
+      <div class="flex items-center gap-3">
+        <i class="fas fa-code text-redshift-red text-2xl"></i>
+        <div class="flex flex-col justify-center">
+          <span class="text-base font-bold text-gray-900 leading-tight">{{ ruleModel.syntax || 'N/D' }}</span>
+          <span class="text-xs text-gray-500 font-normal">Sintaxe</span>
+        </div>
+      </div>
+
+      <!-- Logsources -->
+      <div class="flex items-center gap-3">
+        <i class="fas fa-network-wired text-gray-500 text-2xl"></i>
+        <div class="flex flex-col justify-center">
+          <div class="flex items-center gap-2 max-w-xl">
+            <!-- Exibe 2 tags completas com limite para não quebrar -->
+            <span *ngFor="let log of ruleModel.logsources?.slice(0, 2)" [title]="log"
+              class="bg-[#0d2f52] text-white text-xs px-2.5 py-1 rounded font-medium truncate max-w-[220px]">
+              {{ log }}
+            </span>
+
+            <!-- Contador com lista completa no hover -->
+            <span *ngIf="ruleModel.logsources?.length > 2" [title]="ruleModel.logsources.slice(2).join(', ')"
+              class="bg-[#0d2f52] hover:bg-[#15467a] text-white text-xs px-2 py-0.5 rounded-full font-bold cursor-help">
+              +{{ ruleModel.logsources.length - 2 }}
+            </span>
+
+            <span *ngIf="!ruleModel.logsources?.length" class="text-sm text-gray-400">N/D</span>
+          </div>
+          <span class="text-xs text-gray-500 font-normal">LogSources</span>
+        </div>
+      </div>
+
     </div>
 
     <div class="flex items-center ml-12">
@@ -97,6 +155,7 @@
         <p class="ml-2">Guardar Regra</p>
       </button>
     </div>
+
   </div>
 
   <!-- Regras baseadas neste Modelo -->

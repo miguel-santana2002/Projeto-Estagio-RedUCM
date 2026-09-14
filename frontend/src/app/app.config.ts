@@ -4,17 +4,18 @@ import {
   importProvidersFrom,
 } from '@angular/core';
 import { RouteReuseStrategy, provideRouter } from '@angular/router';
-
-import { routes } from './app.routes';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import {
   HTTP_INTERCEPTORS,
-  HttpClientModule,
   provideHttpClient,
+  withInterceptorsFromDi,
 } from '@angular/common/http';
+
+import { routes } from './app.routes';
 import { TokenInterceptor } from './helper/token.interceptor';
-import { CustomReuseStrategy } from './app.strategies';
+import { Error404Interceptor } from './interceptors/error-404.interceptor';
 import { LoadingInterceptor } from './layout/loading';
+import { CustomReuseStrategy } from './app.strategies';
 import { CodeEditorModule } from '@ngstack/code-editor';
 
 const tokenInterceptorProvider: Provider = {
@@ -23,22 +24,28 @@ const tokenInterceptorProvider: Provider = {
   multi: true,
 };
 
+const error404InterceptorProvider: Provider = {
+  provide: HTTP_INTERCEPTORS,
+  useClass: Error404Interceptor,
+  multi: true,
+};
+
 export const appConfig: ApplicationConfig = {
   providers: [
+    provideRouter(routes),
+    provideAnimationsAsync(),
+    provideHttpClient(withInterceptorsFromDi()),
+    importProvidersFrom(CodeEditorModule.forRoot()),
     {
       provide: HTTP_INTERCEPTORS,
       useClass: LoadingInterceptor,
-      multi: true
+      multi: true,
     },
-    provideRouter(routes),
-    provideAnimationsAsync(),
-    provideHttpClient(),
-    importProvidersFrom(HttpClientModule, CodeEditorModule.forRoot(), 	
-  ),
     tokenInterceptorProvider,
+    error404InterceptorProvider,
     {
       provide: RouteReuseStrategy,
       useClass: CustomReuseStrategy,
-    }, provideAnimationsAsync(),
+    },
   ],
 };

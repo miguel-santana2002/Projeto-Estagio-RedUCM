@@ -1,8 +1,35 @@
-<header class=" w-full">
-    <nav class="bg-white border-gray-200 py-4 dark:bg-gray-900">
-        <div class="flex flex-wrap items-center justify-between max-w-screen-xl px-4 mx-auto">
-            <a href="/home" class="flex items-center">
-                <img src="./assets/logo.png" class="h-6 mr-3 sm:h-9" alt="Redshift Logo" />
+<header class="w-full">
+  <nav class="bg-white border-gray-200 py-4 dark:bg-gray-900 shadow-sm">
+    <div class="flex flex-wrap items-center justify-between max-w-screen-xl px-4 mx-auto">
+
+      <!-- Logo -->
+      <a [routerLink]="['/home']" class="flex items-center">
+        <img src="./assets/logo.png" class="h-6 mr-3 sm:h-9" alt="Redshift Logo" />
+      </a>
+
+      <!-- Perfil e Logout -->
+      <div class="flex items-center lg:order-2">
+        <span class="text-gray-600 dark:text-gray-300">
+          Bem-vindo,&#160;<span class="font-medium text-gray-800 dark:text-white">{{ user?.email || user?.username
+            }}</span>
+        </span>
+
+        <button (click)="logout()" type="button" title="Terminar Sessão"
+          class="dark:text-white hover:bg-gray-50 focus:ring-4 focus:ring-gray-300 font-medium rounded-lg text-sm px-3 py-1.5 ml-2 text-redshift-red dark:hover:bg-gray-700 focus:outline-none dark:focus:ring-gray-800 transition">
+          <i class="fas fa-sign-out-alt text-base"></i>
+        </button>
+      </div>
+
+      <!-- Links de Navegação -->
+      <div class="items-center justify-between hidden w-full lg:flex lg:w-auto lg:order-1" id="mobile-menu-2">
+        <ul class="flex flex-col mt-4 font-medium lg:flex-row lg:space-x-8 lg:mt-0">
+
+          <!-- Início -->
+          <li>
+            <a [routerLink]="['/home']" routerLinkActive="text-redshift-red font-semibold"
+              [routerLinkActiveOptions]="{ exact: true }"
+              class="block py-2 pl-3 pr-4 text-gray-700 rounded lg:bg-transparent lg:p-0 dark:text-white hover:text-redshift-hover transition-colors">
+              Início
             </a>
             <div class="flex items-center lg:order-2">
 

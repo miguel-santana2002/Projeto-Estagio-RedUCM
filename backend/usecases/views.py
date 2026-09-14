@@ -230,12 +230,12 @@ def deleteUseCase(request, id):
                 })
 @api_view(['GET'])
 def getUseCaseById(request, id):
-    if request.method == 'GET':
+    try:
         usecase = UseCase.objects.get(id=id)
         serializer = UseCaseSerializer(usecase, many=False)
         return JsonResponse(serializer.data, safe=False)
-    else:
-        return JsonResponse({'error': 'Invalid request method'})
+    except UseCase.DoesNotExist:
+        return JsonResponse({'error': 'Use case not found'}, status=404)
 
 
 @extend_schema(request=UseCaseSerializer,

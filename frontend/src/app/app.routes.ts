@@ -25,29 +25,102 @@ import { EditUseCaseComponent } from './usecases/edit-use-case/edit-use-case.com
 import { ManageLogsourcesComponent } from './rules/manage-logsources/manage-logsources.component';
 import { isAdminGuard } from './helper/is-admin.guard';
 import { UpdateUserComponent } from './update-user/update-user.component';
+import { EditClientComponent } from './clients/edit-client/edit-client.component';
+import { EditRuleModelComponent } from './rules/edit-rule-model/edit-rule-model.component';
+import { numericIdGuard } from './guards/numeric-id.guard';
 
 export const routes: Routes = [
   { path: '', component: LandingpageComponent},
   { path: 'home', component: HomeComponent, canActivate: [authGuard] },
   { path: 'login', component: LoginComponent },
-  { path: 'manage-users', component: ManageUsersComponent, canActivate: [isAdminGuard]},
-  { path: 'create-user', component: CreateUserComponent, canActivate: [isAdminGuard] },
-  {path: 'manage-clients', component: ManageClientsComponent, canActivate: [isAdminGuard]},
-  {path: 'create-usecase', component: CreateUseCaseComponent, canActivate: [isAdminGuard]},
-  {path: 'manage-use-cases', component: ManageUseCasesComponent},
-  {path: 'usecaseDetails/:id', component: UsecaseDetailsComponent},
-  {path: 'create-rule-model', component: CreateRuleModelComponent, canActivate: [isAdminGuard]},
-  {path: 'techniqueDetails/:id', component: TechniqueDetailsComponent},
-  {path: 'manage-rule-models', component: ManageRuleModelsComponent, canActivate: [isAdminGuard]},
-  {path: 'ruleModelDetails/:id', component: RuleModelDetailsComponent},
-  {path: 'manage-rules', component: ManageRulesComponent, canActivate: [isAdminGuard]},
-  {path: 'ruleDetails/:id', component: RuleDetailsComponent},
-  {path: 'read-rule-models', component: ReadRuleModelsComponent},
-  {path: 'read-use-cases', component: ReadUseCasesComponent},
-  {path: 'my-instance-rules', component: MyInstanceRulesComponent},
-  {path: 'statistics', component: StatisticsPageComponent},
-  {path: 'edit-usecase/:id', component: EditUseCaseComponent, canActivate: [isAdminGuard]},
-  {path: 'manage-logsources', component: ManageLogsourcesComponent, canActivate: [isAdminGuard]},
-  {path: 'update-user/:id', component: UpdateUserComponent, canActivate: [isAdminGuard]},
-  { path: '**', component: PageNotFoundComponent },
+  {
+    path: 'manage-users',
+    component: ManageUsersComponent,
+    canActivate: [isAdminGuard],
+  },
+  {
+    path: 'create-user',
+    component: CreateUserComponent,
+    canActivate: [isAdminGuard],
+  },
+  {
+    path: 'manage-clients',
+    component: ManageClientsComponent,
+    canActivate: [isAdminGuard],
+  },
+  {
+    path: 'create-usecase',
+    component: CreateUseCaseComponent,
+    canActivate: [isAdminGuard],
+  },
+  { path: 'manage-use-cases', component: ManageUseCasesComponent },
+  {
+    path: 'usecaseDetails/:id',
+    component: UsecaseDetailsComponent,
+    canActivate: [numericIdGuard],
+  },
+  {
+    path: 'create-rule-model',
+    component: CreateRuleModelComponent,
+    canActivate: [isAdminGuard],
+  },
+  // techniqueDetails/:id usa códigos MITRE (ex: T1552), não deves colocar numericIdGuard aqui se o ID for alfanumérico
+  { path: 'techniqueDetails/:id', component: TechniqueDetailsComponent },
+  {
+    path: 'manage-rule-models',
+    component: ManageRuleModelsComponent,
+    canActivate: [isAdminGuard],
+  },
+  {
+    path: 'ruleModelDetails/:id',
+    component: RuleModelDetailsComponent,
+    canActivate: [numericIdGuard],
+  },
+  {
+    path: 'manage-rules',
+    component: ManageRulesComponent,
+    canActivate: [isAdminGuard],
+  },
+  {
+    path: 'ruleDetails/:id',
+    component: RuleDetailsComponent,
+    canActivate: [numericIdGuard],
+  },
+  { path: 'read-rule-models', component: ReadRuleModelsComponent },
+  { path: 'read-use-cases', component: ReadUseCasesComponent },
+  { path: 'my-instance-rules', component: MyInstanceRulesComponent },
+  { path: 'statistics', component: StatisticsPageComponent },
+  {
+    path: 'edit-usecase/:id',
+    component: EditUseCaseComponent,
+    canActivate: [isAdminGuard, numericIdGuard],
+  },
+  {
+    path: 'manage-logsources',
+    component: ManageLogsourcesComponent,
+    canActivate: [isAdminGuard],
+  },
+  {
+    path: 'update-user/:id',
+    component: UpdateUserComponent,
+    canActivate: [isAdminGuard, numericIdGuard],
+  },
+  {
+    path: 'edit-client/:id',
+    component: EditClientComponent,
+    canActivate: [isAdminGuard, numericIdGuard],
+  },
+  {
+    path: 'edit-rule-model/:id',
+    component: EditRuleModelComponent,
+    canActivate: [isAdminGuard, numericIdGuard],
+  },
+  {
+    path: 'page-not-found',
+    component: PageNotFoundComponent,
+  },
+  {
+    path: '**',
+    component: PageNotFoundComponent,
+  },
 ];
