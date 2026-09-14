@@ -57,7 +57,7 @@ export class EditClientComponent implements OnInit {
         );
         this.loadClientData();
       },
-      error: (err) => {
+      error: (err: any) => {
         console.error('Erro ao obter log sources:', err);
         this.isLoading = false;
       },
@@ -80,7 +80,7 @@ export class EditClientComponent implements OnInit {
 
         this.isLoading = false;
       },
-      error: (err) => {
+      error: (err: any) => {
         console.error('Erro ao carregar dados do cliente:', err);
         this.errorMessage = 'Erro ao carregar dados do cliente.';
         this.isLoading = false;

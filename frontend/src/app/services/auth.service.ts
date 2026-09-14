@@ -9,9 +9,6 @@ const USER_TOKEN = 'user-token';
 @Injectable({
   providedIn: 'root',
 })
-
-
-
 export class AuthService {
 
   private accessToken: string = '';
@@ -66,7 +63,6 @@ export class AuthService {
     );
   }
   
-
   deleteUser(id: any) {
     const headers = new HttpHeaders({'Content-Type': 'application/json'});
     return this.http.post<any>(`${AUTH_URL}deleteUser/${id}`, { headers });
@@ -138,12 +134,9 @@ export class AuthService {
 
   logout() {
     localStorage.removeItem(USER_TOKEN);
-
   }
 
-
   createUser(userData: any): Observable<any> {
-    
     const headers = new HttpHeaders({'Content-Type': 'application/json'});
     return this.http.post<any>(`${AUTH_URL}createUser`, userData, { headers });
   }
@@ -162,6 +155,18 @@ export class AuthService {
     const headers = new HttpHeaders({'Content-Type': 'application/json'});
     return this.http.get<any>(`${AUTH_URL}getCompanies`, { headers });
   }
+
+  // --- Novas funções adicionadas após o merge ---
+  getClientById(id: any): Observable<any> {
+    const headers = new HttpHeaders({'Content-Type': 'application/json'});
+    return this.http.get<any>(`${AUTH_URL}getCompany/${id}`, { headers });
+  }
+
+  updateCompany(id: any, payload: any): Observable<any> {
+    const headers = new HttpHeaders({'Content-Type': 'application/json'});
+    return this.http.post<any>(`${AUTH_URL}updateCompany/${id}`, payload, { headers });
+  }
+  // ---------------------------------------------
 
   getLogsourcesByClient(clientName: any): Observable<any> {
     const headers = new HttpHeaders({'Content-Type': 'application/json'});
@@ -186,10 +191,6 @@ export class AuthService {
       })
     );
   }
-  
-  
-
-
 }
 
 export class User {

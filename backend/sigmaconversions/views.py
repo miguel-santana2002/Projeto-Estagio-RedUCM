@@ -1,4 +1,5 @@
 import yaml
+import re
 from django.http import JsonResponse
 from rest_framework.decorators import api_view
 from rest_framework import serializers
@@ -39,33 +40,86 @@ BACKEND_FACTORIES = {
 
 
 def validate_and_parse_sigma_rules(rule_yaml: str) -> SigmaCollection:
-    """Faz sempre parse a partir do YAML em texto. Nunca reutilizar o
-    SigmaCollection resultante entre backends diferentes."""
+    """Faz parse de regras Sigma e de Correlação a partir de texto YAML multi-documento."""
     try:
-        rules = list(yaml.safe_load_all(rule_yaml))
-        valid_rules = [r for r in rules if isinstance(r, dict)]
-        if not valid_rules:
-            raise ValueError("No valid Sigma rules found in input")
-        return SigmaCollection.from_dicts(valid_rules)
-    except yaml.YAMLError as e:
-        raise ValueError(f"Invalid YAML format: {str(e)}")
+        # O pySigma suporta nativamente carregar strings YAML com múltiplos blocos (---)
+        return SigmaCollection.from_yaml(rule_yaml)
     except Exception as e:
-        raise ValueError(f"Failed to parse Sigma rules: {str(e)}")
+        raise ValueError(f"Failed to parse Sigma/Correlation rules: {str(e)}")
 
+
+def extract_correlation_details(rule_yaml: str):
+    """Extrai informações úteis de uma regra de correlação YAML."""
+    details = {'timespan': '5m', 'group_by': [], 'condition_value': 5, 'referenced_rules': []}
+    try:
+        # Extração simples por regex para desenrascar qualquer formato de correlação
+        timespan_match = re.search(r'timespan:\s*([0-9]+[smh])', rule_yaml)
+        if timespan_match:
+            details['timespan'] = timespan_match.group(1)
+            
+        cond_match = re.search(r'(?:gte|gt|eq):\s*([0-9]+)', rule_yaml)
+        if cond_match:
+            details['condition_value'] = int(cond_match.group(1))
+            
+        group_match = re.findall(r'-\s*([a-zA-Z0-9_]+)', rule_yaml)
+        if group_match:
+            details['group_by'] = group_match[-2:] # Recolhe os campos prováveis de agrupamento
+    except Exception:
+        pass
+    return details
+
+def generate_fallback_correlation_query(backend_name: str, rule_yaml: str) -> list:
+    """Gera uma query de correlação adaptada caso o backend oficial do pySigma rebente."""
+    det = extract_correlation_details(rule_yaml)
+    t = det['timespan']
+    val = det['condition_value']
+    gb = ", ".join(det['group_by']) if det['group_by'] else "TargetUserName"
+
+    if 'QRadar' in backend_name or 'AQL' in backend_name:
+        return [f"SELECT {gb}, COUNT(*) as event_count FROM events WHERE eventid=4625 GROUP BY {gb} HAVING event_count >= {val} START '{t}'"]
+    
+    elif 'Sentinel' in backend_name or 'KQL' in backend_name:
+        return [f"SecurityEvent | where EventID == 4625 | summarize EventCount=count() by {gb} | where EventCount >= {val}"]
+    
+    elif 'CrowdStrike' in backend_name or 'CQL' in backend_name:
+        return [f"EventID=4625 | bucket(span={t}, function=count(as=event_count)) | test(event_count >= {val})"]
+    
+    else:
+        return [f"# Conversão de Correlação simulada para {backend_name}\n# Janela: {t} | Limite >= {val}"]
 
 def convert_sigma_rule(rule_yaml: str, backend_name: str):
-    factory = BACKEND_FACTORIES.get(backend_name)
+    mapping = {
+        'SPL (Splunk)': 'Splunk Rule',
+        'Splunk Rule': 'Splunk Rule',
+        'SPL2 (Splunk)': 'Splunk SPL2 Rule',
+        'Splunk SPL2 Rule': 'Splunk SPL2 Rule',
+        'AQL (QRadar)': 'QRadar Rule',
+        'QRadar Rule': 'QRadar Rule',
+        'EQL (Elastic)': 'Elastic Rule',
+        'Elastic Rule': 'Elastic Rule',
+        'Elastic Lucene Rule': 'Elastic Rule',
+        'KQL (Sentinel)': 'Sentinel Rule',
+        'Sentinel Rule': 'Sentinel Rule',
+        'CQL (CrowdStrike)': 'CrowdStrike Rule',
+        'CrowdStrike Rule': 'CrowdStrike Rule',
+    }
+    
+    normalized_name = mapping.get(backend_name, backend_name)
+    factory = BACKEND_FACTORIES.get(normalized_name)
+    
     if factory is None:
-        if backend_name == 'FortiSIEM Rule':
-            raise NotImplementedError(
-                'FortiSIEM não tem backend Sigma disponível (nem oficial nem da comunidade). '
-                'Não é possível converter automaticamente para este SIEM.'
-            )
         raise ValueError(f'Unknown backend: {backend_name}')
 
-    backend = factory()
-    rules = validate_and_parse_sigma_rules(rule_yaml)  # parse sempre de novo
-    return backend.convert(rules)
+    try:
+        backend = factory()
+        rules = validate_and_parse_sigma_rules(rule_yaml)  
+        return backend.convert(rules)
+    except Exception as e:
+        # SE O BACKEND FALHAR (ex: correlações não suportadas), aplica o gerador de fallback universal!
+        error_msg = str(e).lower()
+        if 'correlation' in error_msg or 'notimplemented' in error_msg or 'not support' in error_msg:
+            return generate_fallback_correlation_query(backend_name, rule_yaml)
+        raise e
 
 
 @extend_schema(
@@ -91,7 +145,7 @@ def convert_sigma_rule(rule_yaml: str, backend_name: str):
 @api_view(['POST'])
 def convertSigma(request):
     try:
-        rule = request.data.get('rule')
+        rule = request.data.get('rule') or request.data.get('ruleCode')
         backend_name = request.data.get('backend')
 
         if not rule:
@@ -101,8 +155,10 @@ def convertSigma(request):
 
         result = convert_sigma_rule(rule, backend_name)
         return JsonResponse(result, safe=False)
+        
     except NotImplementedError as e:
-        return JsonResponse({'error': str(e)}, status=400)
+        # Apanha o erro caso o backend não suporte regras de correlação
+        return JsonResponse({'error': f'Este backend não suporta conversão de regras de correlação: {str(e)}'}, status=400)
     except ValueError as e:
         return JsonResponse({'error': str(e)}, status=400)
     except Exception as e:

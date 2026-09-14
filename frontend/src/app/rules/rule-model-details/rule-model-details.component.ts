@@ -44,6 +44,13 @@ export class RuleModelDetailsComponent implements OnInit {
   code: string = '';
   message: string = '';
 
+  // Variáveis para o modal de conversão
+  sourceRuleContent: string = '';
+  convertedRuleContent: string = '';
+  targetSyntax: string = '';
+  isConverting: boolean = false;
+  showConvertModal: boolean = false;
+
   // Configuração do Editor
   theme = 'vs';
   options = {
@@ -272,6 +279,30 @@ export class RuleModelDetailsComponent implements OnInit {
 
     this.ruleModel.ruleCode = this.convertedRuleContent;
     this.closeConvertModal();
+  }
+
+  getMonacoLanguage(syntax: string): string {
+    switch (syntax) {
+      case 'Sigma Rule':
+      case 'YARA Rule':
+        return 'YAML';
+      case 'SPL (Splunk)':
+      case 'SPL2 (Splunk)':
+        return 'SPL';
+      case 'AQL (QRadar)':
+      case 'QRadar Rule':
+      case 'EQL (Elastic)':
+      case 'Elastic Lucene Rule':
+      case 'Elastic Rule':
+      case 'CQL (CrowdStrike)':
+      case 'CrowdStrike Rule':
+        return 'SQL';
+      case 'KQL (Sentinel)':
+      case 'Sentinel Rule':
+        return 'KQL';
+      default:
+        return 'YAML'; // Fallback
+    }
   }
 
   // --- Fim da Modal de Conversão ---

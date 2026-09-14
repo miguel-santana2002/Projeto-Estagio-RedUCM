@@ -2,12 +2,12 @@ import { Component, Input } from '@angular/core';
 import { AuthService } from '../../services/auth.service';
 import { initFlowbite } from 'flowbite';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 
 @Component({
   selector: 'app-header',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, RouterModule],
   templateUrl: './header.component.html',
   styleUrl: './header.component.css'
 })

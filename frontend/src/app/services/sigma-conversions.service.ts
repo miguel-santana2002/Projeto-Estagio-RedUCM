@@ -10,19 +10,17 @@ export class SigmaConversionsService {
   constructor(private http: HttpClient) {}
 
   convertSigmaToSplunk(rule: any) {
-    return this.http.post(`${AUTH_URL}convertSigmaToSplunk`, { rule: rule });
+    return this.convertSigma(rule, 'Splunk Rule');
   }
 
   convertSigmaToQRadar(rule: any) {
-    return this.http.post(`${AUTH_URL}convertSigmaToQRadar`, { rule: rule });
+    return this.convertSigma(rule, 'QRadar Rule');
   }
 
   convertSigmaToElasticLucena(rule: any) {
-    return this.http.post(`${AUTH_URL}convertSigmaToElasticLucena`, { rule: rule });
+    return this.convertSigma(rule, 'Elastic Rule');
   }
 
-  // --- REENCAMINHADOS PARA O ENDPOINT GENÉRICO ---
-  
   convertSigmaToCrowdstrike(rule: any) {
     return this.convertSigma(rule, 'CrowdStrike Rule');
   }
@@ -35,7 +33,7 @@ export class SigmaConversionsService {
     return this.convertSigma(rule, 'Splunk SPL2 Rule');
   }
 
-  // Endpoint genérico
+  // Endpoint genérico central que fala com o views.py do Django
   convertSigma(rule: any, backend: any) {
     return this.http.post(`${AUTH_URL}convertSigma`, { rule: rule, backend: backend });
   }
