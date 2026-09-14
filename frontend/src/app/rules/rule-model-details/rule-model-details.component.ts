@@ -84,12 +84,32 @@ export class RuleModelDetailsComponent implements OnInit {
   message: string = '';
 
   soarSintaxes = ['YARA Rule'];
+
   siemSintaxes = [
     'AQL (QRadar)',
     'SPL (Splunk)',
+    'SPL2 (Splunk)',
+    'KQL (Sentinel)',
+    'EQL (Elastic)',
     'Sigma Rule',
     'Elastic Lucene Rule',
   ];
+
+  edrSintaxes = ['CQL (CrowdStrike)', 'Defender KQL', 'Sigma Rule'];
+
+  availableSyntaxes = [
+    { id: 'SPL (Splunk)', name: 'SPL (Splunk)' },
+    { id: 'AQL (QRadar)', name: 'AQL (QRadar)' },
+    { id: 'Elastic Lucene Rule', name: 'Elastic Lucene Rule' },
+    { id: 'Sigma Rule', name: 'Sigma Rule' },
+  ];
+
+  // Estado da Modal de Conversão
+  showConvertModal: boolean = false;
+  sourceRuleContent: string = '';
+  convertedRuleContent: string = '';
+  targetSyntax: string = '';
+  isConverting: boolean = false;
 
   createRuleForm = new FormGroup({
     modalCode: new FormControl(''),
@@ -109,39 +129,32 @@ export class RuleModelDetailsComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    const id = this.route.snapshot.params['id'];
+    const id = Number(this.route.snapshot.params['id']);
 
-    this.rulesService.getRuleModelById(id).subscribe({
-      next: (data: any) => {
-        this.ruleModel = data;
+    this.rulesService.getRuleModelById(id).subscribe((data: any) => {
+      this.ruleModel = data;
 
-        // 1. Usa a sintaxe persistida no modelo (ou fallback se for registo legado)
-        const initialSyntax =
-          this.ruleModel.syntax ||
-          (this.ruleModel.type === 'SIEM' ? 'AQL (QRadar)' : 'YARA Rule');
+      const initialSyntax =
+        this.ruleModel.syntax ||
+        (this.ruleModel.type === 'SIEM' ? 'AQL (QRadar)' : 'YARA Rule');
 
-        this.ruleModel.syntax = initialSyntax;
+      this.ruleModel.syntax = initialSyntax;
 
-        // 2. Ajusta dinamicamente a linguagem de sintaxe do Monaco Editor
-        const lang = this.getMonacoLanguage(initialSyntax);
-        this.options.language = lang;
-        this.selectedModel = {
-          value: this.ruleModel.ruleCode || '',
-          language: lang,
-          uri: `model-${this.ruleModel.id}`,
-        };
+      const lang = this.getMonacoLanguage(initialSyntax);
+      this.options.language = lang;
+      this.selectedModel = {
+        value: this.ruleModel.ruleCode || '',
+        language: lang,
+        uri: `model-${this.ruleModel.id}`,
+      };
 
-        // 3. Inicializa o formulário do modal
-        this.createRuleForm.patchValue({
-          modalCode: this.ruleModel.ruleCode,
-          syntax: initialSyntax,
-          logsources: this.ruleModel.logsources,
-        });
+      this.createRuleForm.patchValue({
+        modalCode: this.ruleModel.ruleCode,
+        syntax: initialSyntax,
+        logsources: this.ruleModel.logsources,
+      });
 
-        // 4. Carrega metadados do Use Case associado
-        this.loadUseCaseAndDependencies();
-      },
-      error: (err) => console.error('Erro ao obter modelo de regra:', err),
+      this.loadUseCaseAndDependencies();
     });
   }
 
@@ -199,6 +212,7 @@ export class RuleModelDetailsComponent implements OnInit {
 
   onCodeChanged(value: any): void {
     this.code = value;
+    this.selectedModel.value = value;
   }
 
   copyToClipboard(): void {
@@ -209,15 +223,26 @@ export class RuleModelDetailsComponent implements OnInit {
   }
 
   updateRuleModelCode(): void {
+    const newCode = this.selectedModel.value;
+    const newSyntax = this.ruleModel.syntax;
+
     this.rulesService
-      .updateRuleModelCode(this.selectedModel.value, this.ruleModel.id)
+      .updateRuleModelCode(newCode, this.ruleModel.id, newSyntax)
       .subscribe({
         next: (data: any) => {
           this.message = data.message || 'Regra atualizada com sucesso!';
-          this.ruleModel.ruleCode = this.selectedModel.value;
+          this.ruleModel.ruleCode = newCode;
+          this.ruleModel.syntax = newSyntax;
+
+          this.createRuleForm.patchValue({
+            modalCode: newCode,
+            syntax: newSyntax,
+          });
+
           setTimeout(() => (this.message = ''), 4000);
         },
-        error: (err) => console.error('Erro ao atualizar código:', err),
+        error: (err) =>
+          console.error('Erro ao atualizar código e sintaxe:', err),
       });
   }
 
@@ -231,6 +256,104 @@ export class RuleModelDetailsComponent implements OnInit {
       logsources: this.ruleModel.logsources,
     });
   }
+
+  // --- Lógica da Modal de Conversão ---
+
+  openConvertModal(): void {
+    this.sourceRuleContent =
+      this.selectedModel.value || this.ruleModel.ruleCode || '';
+    this.convertedRuleContent = '';
+    this.targetSyntax = '';
+    this.isConverting = false;
+    this.showConvertModal = true;
+  }
+
+  closeConvertModal(): void {
+    this.showConvertModal = false;
+  }
+
+  convertRule(): void {
+    if (!this.targetSyntax || !this.sourceRuleContent) return;
+
+    this.isConverting = true;
+    this.convertedRuleContent = '';
+
+    if (
+      this.targetSyntax === 'Sigma Rule' ||
+      this.targetSyntax === 'YARA Rule'
+    ) {
+      this.convertedRuleContent = this.sourceRuleContent;
+      this.isConverting = false;
+      return;
+    }
+
+    let request$;
+    switch (this.targetSyntax) {
+      case 'SPL (Splunk)':
+      case 'Splunk Rule':
+        request$ = this.sigmaConversionsService.convertSigmaToSplunk(
+          this.sourceRuleContent,
+        );
+        break;
+      case 'AQL (QRadar)':
+      case 'QRadar Rule':
+        request$ = this.sigmaConversionsService.convertSigmaToQRadar(
+          this.sourceRuleContent,
+        );
+        break;
+      case 'Elastic Lucene Rule':
+      case 'Elastic Rule':
+        request$ = this.sigmaConversionsService.convertSigmaToElasticLucena(
+          this.sourceRuleContent,
+        );
+        break;
+      default:
+        this.convertedRuleContent = this.sourceRuleContent;
+        this.isConverting = false;
+        return;
+    }
+
+    request$.subscribe({
+      next: (res: any) => {
+        const cleanCode = Array.isArray(res) && res.length > 0 ? res[0] : res;
+        this.convertedRuleContent = cleanCode;
+        this.isConverting = false;
+      },
+      error: (err: any) => {
+        const errorMessage =
+          err.error?.error || err.statusText || 'Erro na conversão.';
+        this.convertedRuleContent = `Falha na conversão: ${errorMessage}`;
+        this.isConverting = false;
+      },
+    });
+  }
+
+  copyConvertedToClipboard(): void {
+    if (this.convertedRuleContent) {
+      this.clipboard.copy(this.convertedRuleContent);
+      this.message = 'Código convertido copiado com sucesso!';
+      setTimeout(() => (this.message = ''), 3000);
+    }
+  }
+
+  applyConvertedRule(): void {
+    if (!this.convertedRuleContent) return;
+
+    this.ruleModel.syntax = this.targetSyntax;
+    const lang = this.getMonacoLanguage(this.targetSyntax);
+    this.options.language = lang;
+
+    this.selectedModel = {
+      value: this.convertedRuleContent,
+      language: lang,
+      uri: `model-${this.ruleModel.id}-${Date.now()}`,
+    };
+
+    this.ruleModel.ruleCode = this.convertedRuleContent;
+    this.closeConvertModal();
+  }
+
+  // --- Fim da Modal de Conversão ---
 
   onSyntaxChange(): void {
     const selectedSyntax = this.createRuleForm.get('syntax')?.value;
@@ -282,7 +405,9 @@ export class RuleModelDetailsComponent implements OnInit {
     let clientId = formVals.client;
     if (typeof clientId === 'string') {
       const found = this.clients.find((c: any) => c.name === clientId);
-      if (found) clientId = found.pk;
+      if (found) {
+        clientId = found.id ?? found.pk;
+      }
     }
 
     const rulePayload = {
@@ -295,6 +420,11 @@ export class RuleModelDetailsComponent implements OnInit {
 
     this.rulesService.createRule(rulePayload).subscribe({
       next: () => {
+        document
+          .querySelectorAll('[modal-backdrop]')
+          .forEach((el) => el.remove());
+
+        document.body.classList.remove('overflow-hidden');
         this.router.navigate(['/manage-rules']);
       },
       error: (e) => console.error('Erro ao atribuir regra ao cliente:', e),
