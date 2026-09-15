@@ -1,70 +1,145 @@
 <app-header></app-header>
 <app-titlebanner title="Gerir Logsources" image="./assets/bannercover.jpg"></app-titlebanner>
 
+<div class="page">
+  <div class="layout">
 
-<div class="flex p-6 mx-14">
-  <!-- Tabela de Log Sources -->
-  <div class="w-2/3 pr-6 mt-7">
-    <table class="min-w-full bg-white border border-gray-200">
-      <thead>
-        <tr class="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
-          <th class="py-3 px-6 text-left">Log Source</th>
-          <th class="py-3 px-9 text-left">Descrição</th>
-          <th class="py-3 px-4 text-left">Ações</th>
-        </tr>
-      </thead>
-      <tbody class="text-gray-600 text-sm font-light">
-        <tr class="border-b border-gray-200 hover:bg-gray-100" *ngFor="let log of logsources">
-          <td class="py-3 px-6 text-left">{{ log.name }}</td>
-          <td class="py-3 px-9 text-left">{{ log.description }}</td>
-          <td class="py-3 px-4 text-left">
-            <button data-modal-target="deleteModal" (click)="deleteLogSourceById(log.id)"
-              class=" drop-shadow-xl bg-red-500 text-white px-3 py-1 rounded-md">
-              <i class="fas fa-trash-alt"></i>
-            </button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
+    <section class="panel panel--main">
+      <header class="panel__toolbar">
+        <div class="panel__title-group">
+          <h3 class="panel__title">Fontes registadas</h3>
+          <span class="count-badge">{{ filteredLogsources.length }}</span>
+        </div>
+        <div class="search">
+          <i class="fas fa-search search__icon"></i>
+          <input
+            type="text"
+            class="search__input"
+            placeholder="Procurar por nome ou descrição"
+            [(ngModel)]="searchTerm"
+            name="search"
+          />
+        </div>
+      </header>
 
-  <!-- Formulário de Log Sources -->
-  <div class="w-1/3 pl-6">
-    <form #logForm="ngForm" (ngSubmit)="logForm.form.valid && createLogSource()">
-      <div class="mb-4">
-        <label class="block text-gray-700 text-sm font-bold mb-2" for="logName">Nome da LogSource <span
-            class="text-red-500">*</span>
-        </label>
-        <input #logNameCtrl="ngModel" [ngClass]="{'border-red-500': logNameCtrl.invalid && logNameCtrl.touched}"
-          class="shadow appearance-none w-full rounded border-gray-200 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-          id="logName" type="text" [(ngModel)]="newLog.name" name="logName" required />
+      <table class="registry">
+        <thead>
+          <tr>
+            <th class="registry__key">Log source</th>
+            <th>Descrição</th>
+            <th class="registry__action-col">Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let log of filteredLogsources" [class.registry__row--editing]="editingId === log.id">
+            <td class="registry__key">
+              <span class="key-tag">{{ log.name }}</span>
+            </td>
+            <td class="registry__desc">{{ log.description }}</td>
+            <td class="registry__action-col">
+              <div class="action-group">
+                <button
+                  (click)="startEdit(log)"
+                  class="icon-btn"
+                  title="Editar"
+                  aria-label="Editar logsource"
+                >
+                  <i class="fas fa-pen"></i>
+                </button>
+                <button
+                  (click)="confirmDelete(log)"
+                  class="icon-btn icon-btn--danger"
+                  title="Eliminar"
+                  aria-label="Eliminar logsource"
+                >
+                  <i class="fas fa-trash-alt"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
 
-        <p *ngIf="logNameCtrl.invalid && logNameCtrl.touched" class="text-red-500 text-xs mt-1">Obrigatório.</p>
-      </div>
+          <tr *ngIf="logsources.length === 0">
+            <td colspan="3" class="empty-state">
+              Ainda nenhuma logsource registada. Adiciona a primeira no painel ao lado.
+            </td>
+          </tr>
 
-      <div class="mb-4">
-        <label class="block text-gray-700 text-sm font-bold mb-2" for="logDescription">Descrição <span
-            class="text-red-500">*</span>
-        </label>
-        <textarea #logDescCtrl="ngModel" [ngClass]="{'border-red-500': logDescCtrl.invalid && logDescCtrl.touched}"
-          class="shadow appearance-none border-gray-200 rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-          id="logDescription" rows="4" [(ngModel)]="newLog.description" name="logDescription" required>
-        </textarea>
+          <tr *ngIf="logsources.length > 0 && filteredLogsources.length === 0">
+            <td colspan="3" class="empty-state">
+              Nenhuma logsource corresponde a "{{ searchTerm }}".
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
 
-        <p *ngIf="logDescCtrl.invalid && logDescCtrl.touched" class="text-red-500 text-xs mt-1">Obrigatório.</p>
-      </div>
-
-      <div *ngIf="errorMessage" class="mb-4 text-red-600">
-        {{ errorMessage }}
-      </div>
-
-
-      <div class="mb-4">
-        <button type="submit" [disabled]="!logForm.form.valid"
-          class="w-60 h-10 bg-redshift-red text-white rounded hover:bg-redshift-hover shadow-md disabled:opacity-50 disabled:cursor-not-allowed">
-          <i class="fas fa-plus"></i> Adicionar Novo
+    <aside class="panel panel--form">
+      <div class="panel__title--form-row">
+        <h3 class="panel__title panel__title--form">
+          {{ isEditing ? 'Editar fonte' : 'Registar nova fonte' }}
+        </h3>
+        <button *ngIf="isEditing" (click)="cancelEdit()" class="cancel-link" type="button">
+          Cancelar
         </button>
       </div>
-    </form>
+
+      <form #logForm="ngForm" (ngSubmit)="logForm.form.valid && submitForm()">
+        <div class="field">
+          <label class="field__label" for="logName">
+            Nome <span class="field__required">*</span>
+          </label>
+          <input
+            #logNameCtrl="ngModel"
+            [class.field__input--error]="logNameCtrl.invalid && logNameCtrl.touched"
+            class="field__input field__input--mono"
+            id="logName"
+            type="text"
+            [(ngModel)]="newLog.name"
+            name="logName"
+            required
+            placeholder="windows"
+          />
+          <p *ngIf="logNameCtrl.invalid && logNameCtrl.touched" class="field__error">
+            Indica um nome.
+          </p>
+        </div>
+
+        <div class="field">
+          <label class="field__label" for="logDescription">
+            Descrição <span class="field__required">*</span>
+          </label>
+          <textarea
+            #logDescCtrl="ngModel"
+            [class.field__input--error]="logDescCtrl.invalid && logDescCtrl.touched"
+            class="field__input"
+            id="logDescription"
+            rows="3"
+            [(ngModel)]="newLog.description"
+            name="logDescription"
+            required
+            placeholder="Windows Event Logs"
+          ></textarea>
+          <p *ngIf="logDescCtrl.invalid && logDescCtrl.touched" class="field__error">
+            Indica uma descrição.
+          </p>
+        </div>
+
+        <!-- Erro existente -->
+        <div *ngIf="errorMessage" class="form-error">
+          {{ errorMessage }}
+        </div>
+
+        <!-- Mensagem de sucesso verde -->
+        <div *ngIf="successMessage" class="form-success">
+          {{ successMessage }}
+        </div>
+
+        <button type="submit" [disabled]="!logForm.form.valid" class="submit-btn">
+          <i class="fas" [class.fa-plus]="!isEditing" [class.fa-check]="isEditing"></i>
+          {{ isEditing ? 'Guardar alterações' : 'Registar fonte' }}
+        </button>
+      </form>
+    </aside>
+
   </div>
 </div>

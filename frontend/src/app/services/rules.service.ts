@@ -89,4 +89,12 @@ export class RulesService {
       },
     });
   }
+
+  updateLogSourceById(id: number, logSource: any) {
+    return this.http.post(`${AUTH_URL}updateLogSourceById/${id}`, logSource, {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+  }
 }

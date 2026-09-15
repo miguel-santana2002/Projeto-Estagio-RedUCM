@@ -1,7 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, ViewChild } from '@angular/core';
 import { HeaderComponent } from "../../layout/header/header.component";
 import { TitlebannerComponent } from "../../layout/titlebanner/titlebanner.component";
-import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule, NgForm } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { RulesService } from '../../services/rules.service';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -15,44 +15,129 @@ import { HttpErrorResponse } from '@angular/common/http';
 })
 export class ManageLogsourcesComponent {
 
-newLog : any = {name: '', description:''} 
-  logsources : any;
+  @ViewChild('logForm') logForm!: NgForm;
 
-  errorMessage : any;
+  newLog: any = { name: '', description: '' }
+  logsources: any = [];
+  searchTerm: string = '';
+
+  editingId: number | null = null;
+  errorMessage: any;
+  successMessage: string | null = null;
+  private successTimeout: any;
+
+  get filteredLogsources(): any[] {
+    if (!this.searchTerm.trim()) {
+      return this.logsources;
+    }
+    const term = this.searchTerm.toLowerCase();
+    return this.logsources.filter((log: any) =>
+      log.name?.toLowerCase().includes(term) ||
+      log.description?.toLowerCase().includes(term)
+    );
+  }
+
+  get isEditing(): boolean {
+    return this.editingId !== null;
+  }
+
+  startEdit(log: any) {
+    this.editingId = log.id;
+    this.newLog = { name: log.name, description: log.description };
+    this.errorMessage = null;
+  }
+
+  cancelEdit() {
+    this.editingId = null;
+    this.errorMessage = null;
+    this.resetFormState();
+  }
+
+  private resetFormState() {
+    this.newLog = { name: '', description: '' };
+    if (this.logForm) {
+      this.logForm.resetForm();
+    }
+  }
+
+  private showSuccess(message: string) {
+    this.successMessage = message;
+    clearTimeout(this.successTimeout);
+    this.successTimeout = setTimeout(() => {
+      this.successMessage = null;
+    }, 2500);
+  }
+
+  submitForm() {
+    if (this.isEditing) {
+      this.updateLogSource();
+    } else {
+      this.createLogSource();
+    }
+  }
+
   createLogSource() {
     this.rulesService.createRegisteredLogSource(this.newLog).subscribe({
       next: (data) => {
         this.rulesService.getRegisteredLogSources().subscribe((data) => {
           this.logsources = data;
-          this.errorMessage = null; // Clear the error message if successful
+          this.errorMessage = null;
+          this.resetFormState();
+          this.showSuccess('Fonte registada com sucesso!'); // <-- Aqui
         });
       },
       error: (error: HttpErrorResponse) => {
         if (error.status === 400) {
-          this.errorMessage = error.error.error; // Display the error message from the server
+          this.errorMessage = error.error.error;
         }
       }
     });
   }
 
-  deleteLogSourceById(id : any) {
+  updateLogSource() {
+    if (this.editingId === null) return;
+    this.rulesService.updateLogSourceById(this.editingId, this.newLog).subscribe({
+      next: (data) => {
+        this.rulesService.getRegisteredLogSources().subscribe((data) => {
+          this.logsources = data;
+          this.errorMessage = null;
+          this.editingId = null;
+          this.resetFormState();
+          this.showSuccess('Alterações guardadas com sucesso!'); // <-- E aqui
+        });
+      },
+      error: (error: HttpErrorResponse) => {
+        if (error.status === 400) {
+          this.errorMessage = error.error.error;
+        }
+      }
+    });
+  }
+
+  confirmDelete(log: any) {
+    if (confirm(`Eliminar a logsource "${log.name}"?`)) {
+      this.deleteLogSourceById(log.id);
+    }
+  }
+
+  deleteLogSourceById(id: any) {
     this.rulesService.deleteLogSourceById(id).subscribe((data) => {
       this.rulesService.getRegisteredLogSources().subscribe((data) => {
         this.logsources = data;
+        if (this.editingId === id) {
+          this.cancelEdit();
+        }
       })
     })
-  }	
+  }
 
-
-  constructor(private rulesService : RulesService) { }
+  constructor(private rulesService: RulesService) { }
 
   ngOnInit() {
- 
     this.rulesService.getRegisteredLogSources().subscribe((data) => {
       this.logsources = data;
-      console.log(this.logsources)
     })
-
   }
 
 }
+

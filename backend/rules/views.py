@@ -236,3 +236,19 @@ def updateRuleModel(request, id):
         return JsonResponse({'message': 'Modelo de regra atualizado com sucesso!'})
     except RuleModel.DoesNotExist:
         return JsonResponse({'error': 'Modelo de regra não encontrado'}, status=404)
+
+@api_view(['POST'])
+def updateLogSourceById(request, id):
+    try:
+        logsource = RegisteredLogSource.objects.get(id=id)
+
+        new_name = request.data.get('name', logsource.name)
+        if new_name != logsource.name and RegisteredLogSource.objects.filter(name=new_name).exists():
+            return JsonResponse({'error': 'A logsource já existe'}, status=status.HTTP_400_BAD_REQUEST)
+
+        logsource.name = new_name
+        logsource.description = request.data.get('description', logsource.description)
+        logsource.save()
+        return JsonResponse({'message': 'LogSource atualizada com sucesso'})
+    except RegisteredLogSource.DoesNotExist:
+        return JsonResponse({'error': 'LogSource não encontrada'}, status=404)
