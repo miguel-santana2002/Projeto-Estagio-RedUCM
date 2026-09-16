@@ -1,19 +1,25 @@
-from django.shortcuts import render
-
-# Create your views here.
-
-from accounts.models import Company
-from rules.serializer import RegisteredLogSourceSerializer, RuleModelSerializer, RuleSerializer
-from rules.models import RegisteredLogSource, Rule, RuleModel
-from rest_framework import viewsets
+import hashlib
+from django.core.cache import cache
+from django.shortcuts import render, get_object_or_404
 from django.http import JsonResponse
+
+from rest_framework import viewsets, status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from drf_spectacular.utils import extend_schema
-from drf_spectacular.utils import OpenApiResponse
-from rest_framework import status
-from django.shortcuts import get_object_or_404
+from drf_spectacular.utils import extend_schema, OpenApiResponse
 
+from accounts.models import Company
+from rules.models import RegisteredLogSource, Rule, RuleModel
+from rules.serializers import (
+    RegisteredLogSourceSerializer,
+    RuleModelSerializer,
+    RuleSerializer,
+    ConvertRuleSerializer,
+    ConvertRuleResponseSerializer,
+)
+
+# Importar o pipeline consolidado
+from rules.services.rule_converter import convert_rule_pipeline
 
 @extend_schema(request=RuleModelSerializer,
                description='RuleModel creation based on the data inserted in the request body.',
@@ -242,3 +248,51 @@ def updateRuleModel(request, id):
         return JsonResponse({'message': 'Modelo de regra atualizado com sucesso!'})
     except RuleModel.DoesNotExist:
         return JsonResponse({'error': 'Modelo de regra não encontrado'}, status=404)
+
+
+@extend_schema(
+    request=ConvertRuleSerializer,
+    description='Converte queries SIEM entre formatos (SPL, KQL, AQL, Lucene, EQL, Sigma) via Ollama e pySigma.',
+    responses={
+        200: OpenApiResponse(response=ConvertRuleResponseSerializer, description='Regra convertida com sucesso.'),
+        400: OpenApiResponse(description='Erro de validação ou estrutura Sigma inválida.'),
+        500: OpenApiResponse(description='Erro interno de compilação ou falha no Ollama.')
+    }
+)
+@api_view(['POST'])
+def convertRule(request):
+    serializer = ConvertRuleSerializer(data=request.data)
+    if not serializer.is_valid():
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    source_query = serializer.validated_data['source_query']
+    source_syntax = serializer.validated_data['source_syntax']
+    target_syntax = serializer.validated_data['target_syntax']
+
+    # 1. Chave de Cache por Hash SHA-256
+    cache_payload = f"{source_syntax}::{target_syntax}::{source_query.strip()}"
+    cache_key = f"rule_convert_{hashlib.sha256(cache_payload.encode('utf-8')).hexdigest()}"
+
+    cached_result = cache.get(cache_key)
+    if cached_result:
+        return Response(cached_result, status=status.HTTP_200_OK)
+
+    # 2. Execução do Pipeline (Ollama Decompile + pySigma + Enrich Aggregations)
+    try:
+        result = convert_rule_pipeline(
+            source_query=source_query,
+            source_syntax=source_syntax,
+            target_syntax=target_syntax
+        )
+
+        # Guarda em cache durante 24 horas (86400 segundos)
+        cache.set(cache_key, result, timeout=86400)
+
+        return Response(result, status=status.HTTP_200_OK)
+
+    except ValueError as ve:
+        return Response({'error': f"Erro de validação: {str(ve)}"}, status=status.HTTP_400_BAD_REQUEST)
+    except RuntimeError as re:
+        return Response({'error': f"Erro no serviço/compilação: {str(re)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    except Exception as e:
+        return Response({'error': f"Erro inesperado: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

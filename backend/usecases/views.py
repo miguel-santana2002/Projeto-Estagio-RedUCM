@@ -1,7 +1,7 @@
 import json
 from django.shortcuts import render
 
-from usecases.serializer import UseCaseSerializer
+from usecases.serializers import UseCaseSerializer
 from usecases.models import UseCase
 from rest_framework.views import APIView
 from rest_framework.response import Response

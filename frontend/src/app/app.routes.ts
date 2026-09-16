@@ -5,8 +5,8 @@ import { LoginComponent } from './login/login.component';
 import { PageNotFoundComponent } from './page-not-found/page-not-found.component';
 import { authGuard } from './helper/auth.guard';
 import { LandingpageComponent } from './landingpage/landingpage.component';
-import { ManageUsersComponent } from './manage-users/manage-users.component';
-import { CreateUserComponent } from './create-user/create-user.component';
+import { ManageUsersComponent } from './users/manage-users/manage-users.component';
+import { CreateUserComponent } from './users/create-user/create-user.component';
 import { ManageClientsComponent } from './clients/manage-clients/manage-clients.component';
 import { CreateUseCaseComponent } from './usecases/create-use-case/create-use-case.component';
 import { ManageUseCasesComponent } from './usecases/manage-use-cases/manage-use-cases.component';
@@ -24,13 +24,13 @@ import { StatisticsPageComponent } from './statistics/statistics-page/statistics
 import { EditUseCaseComponent } from './usecases/edit-use-case/edit-use-case.component';
 import { ManageLogsourcesComponent } from './rules/manage-logsources/manage-logsources.component';
 import { isAdminGuard } from './helper/is-admin.guard';
-import { UpdateUserComponent } from './update-user/update-user.component';
+import { UpdateUserComponent } from './users/update-user/update-user.component';
 import { EditClientComponent } from './clients/edit-client/edit-client.component';
 import { EditRuleModelComponent } from './rules/edit-rule-model/edit-rule-model.component';
 import { numericIdGuard } from './guards/numeric-id.guard';
 
 export const routes: Routes = [
-  { path: '', component: LandingpageComponent },
+  { path: '', component: LandingpageComponent, pathMatch: 'full' },
   { path: 'home', component: HomeComponent, canActivate: [authGuard] },
   { path: 'login', component: LoginComponent },
   {
@@ -64,7 +64,6 @@ export const routes: Routes = [
     component: CreateRuleModelComponent,
     canActivate: [isAdminGuard],
   },
-  // techniqueDetails/:id usa códigos MITRE (ex: T1552), não deves colocar numericIdGuard aqui se o ID for alfanumérico
   { path: 'techniqueDetails/:id', component: TechniqueDetailsComponent },
   {
     path: 'manage-rule-models',

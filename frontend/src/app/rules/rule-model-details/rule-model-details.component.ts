@@ -99,8 +99,10 @@ export class RuleModelDetailsComponent implements OnInit {
 
   availableSyntaxes = [
     { id: 'SPL (Splunk)', name: 'SPL (Splunk)' },
+    { id: 'KQL (Sentinel)', name: 'KQL (Sentinel)' },
     { id: 'AQL (QRadar)', name: 'AQL (QRadar)' },
     { id: 'Elastic Lucene Rule', name: 'Elastic Lucene Rule' },
+    { id: 'EQL (Elastic)', name: 'EQL (Elastic)' },
     { id: 'Sigma Rule', name: 'Sigma Rule' },
   ];
 
@@ -108,8 +110,10 @@ export class RuleModelDetailsComponent implements OnInit {
   showConvertModal: boolean = false;
   sourceRuleContent: string = '';
   convertedRuleContent: string = '';
+  intermediateSigmaContent: string = '';
   targetSyntax: string = '';
   isConverting: boolean = false;
+  conversionError: string = '';
 
   createRuleForm = new FormGroup({
     modalCode: new FormControl(''),
@@ -196,6 +200,8 @@ export class RuleModelDetailsComponent implements OnInit {
         return 'json';
       case 'SPL (Splunk)':
       case 'AQL (QRadar)':
+      case 'KQL (Sentinel)':
+      case 'EQL (Elastic)':
         return 'sql';
       default:
         return 'yaml';
@@ -275,54 +281,34 @@ export class RuleModelDetailsComponent implements OnInit {
   convertRule(): void {
     if (!this.targetSyntax || !this.sourceRuleContent) return;
 
-    this.isConverting = true;
-    this.convertedRuleContent = '';
-
-    if (
-      this.targetSyntax === 'Sigma Rule' ||
-      this.targetSyntax === 'YARA Rule'
-    ) {
+    // Se a sintaxe de destino for igual à atual, não precisa de conversão
+    if (this.targetSyntax === this.ruleModel.syntax) {
       this.convertedRuleContent = this.sourceRuleContent;
-      this.isConverting = false;
       return;
     }
 
-    let request$;
-    switch (this.targetSyntax) {
-      case 'SPL (Splunk)':
-      case 'Splunk Rule':
-        request$ = this.sigmaConversionsService.convertSigmaToSplunk(
-          this.sourceRuleContent,
-        );
-        break;
-      case 'AQL (QRadar)':
-      case 'QRadar Rule':
-        request$ = this.sigmaConversionsService.convertSigmaToQRadar(
-          this.sourceRuleContent,
-        );
-        break;
-      case 'Elastic Lucene Rule':
-      case 'Elastic Rule':
-        request$ = this.sigmaConversionsService.convertSigmaToElasticLucena(
-          this.sourceRuleContent,
-        );
-        break;
-      default:
-        this.convertedRuleContent = this.sourceRuleContent;
-        this.isConverting = false;
-        return;
-    }
+    this.isConverting = true;
+    this.convertedRuleContent = '';
+    this.intermediateSigmaContent = '';
+    this.conversionError = '';
 
-    request$.subscribe({
+    const payload = {
+      source_query: this.sourceRuleContent,
+      source_syntax: this.ruleModel.syntax,
+      target_syntax: this.targetSyntax,
+    };
+
+    this.sigmaConversionsService.convertRuleWithAI(payload).subscribe({
       next: (res: any) => {
-        const cleanCode = Array.isArray(res) && res.length > 0 ? res[0] : res;
-        this.convertedRuleContent = cleanCode;
+        this.convertedRuleContent = res.target_query;
+        this.intermediateSigmaContent = res.sigma_rule;
         this.isConverting = false;
       },
       error: (err: any) => {
-        const errorMessage =
-          err.error?.error || err.statusText || 'Erro na conversão.';
-        this.convertedRuleContent = `Falha na conversão: ${errorMessage}`;
+        this.conversionError =
+          err.error?.error ||
+          err.message ||
+          'Erro durante a conversão da regra.';
         this.isConverting = false;
       },
     });
@@ -358,42 +344,27 @@ export class RuleModelDetailsComponent implements OnInit {
   onSyntaxChange(): void {
     const selectedSyntax = this.createRuleForm.get('syntax')?.value;
     const baseCode = this.ruleModel.ruleCode;
+    const baseSyntax = this.ruleModel.syntax;
 
-    if (selectedSyntax === 'Sigma Rule' || selectedSyntax === 'YARA Rule') {
+    if (!selectedSyntax || selectedSyntax === baseSyntax) {
       this.createRuleForm.patchValue({ modalCode: baseCode });
       return;
     }
 
-    let request$;
-    switch (selectedSyntax) {
-      case 'SPL (Splunk)':
-      case 'Splunk Rule':
-        request$ = this.sigmaConversionsService.convertSigmaToSplunk(baseCode);
-        break;
-      case 'AQL (QRadar)':
-      case 'QRadar Rule':
-        request$ = this.sigmaConversionsService.convertSigmaToQRadar(baseCode);
-        break;
-      case 'Elastic Lucene Rule':
-      case 'Elastic Rule':
-        request$ =
-          this.sigmaConversionsService.convertSigmaToElasticLucena(baseCode);
-        break;
-      default:
-        this.createRuleForm.patchValue({ modalCode: baseCode });
-        return;
-    }
+    const payload = {
+      source_query: baseCode,
+      source_syntax: baseSyntax,
+      target_syntax: selectedSyntax,
+    };
 
-    request$.subscribe({
+    this.sigmaConversionsService.convertRuleWithAI(payload).subscribe({
       next: (res: any) => {
-        const cleanCode = Array.isArray(res) && res.length > 0 ? res[0] : res;
-        this.createRuleForm.patchValue({ modalCode: cleanCode });
+        this.createRuleForm.patchValue({ modalCode: res.target_query });
       },
       error: (err: any) => {
-        const errorMessage =
-          err.error?.error || err.statusText || 'Erro na conversão.';
+        const errorMsg = err.error?.error || 'Erro na conversão.';
         this.createRuleForm.patchValue({
-          modalCode: `Falha na conversão: ${errorMessage}`,
+          modalCode: `Falha ao converter regra: ${errorMsg}`,
         });
       },
     });

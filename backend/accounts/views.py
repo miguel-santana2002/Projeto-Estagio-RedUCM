@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login
 from django.http import JsonResponse
 from accounts.models import Company, User  # Alterado para importar User de accounts.models
-from accounts.serializer import ChangePasswordSerializer, CompanySerializer, UserSerializer
+from accounts.serializers import ChangePasswordSerializer, CompanySerializer, UserSerializer
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import api_view, permission_classes
 from django.contrib.auth import get_user_model

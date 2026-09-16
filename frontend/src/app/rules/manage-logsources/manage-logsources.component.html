@@ -1,70 +1,98 @@
 <app-header></app-header>
 <app-titlebanner title="Gerir Logsources" image="./assets/bannercover.jpg"></app-titlebanner>
 
-
-<div class="flex p-6 mx-14">
+<div class="flex p-6 mx-14 dark:text-white">
   <!-- Tabela de Log Sources -->
   <div class="w-2/3 pr-6 mt-7">
-    <table class="min-w-full bg-white border border-gray-200">
-      <thead>
-        <tr class="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
-          <th class="py-3 px-6 text-left">Log Source</th>
-          <th class="py-3 px-9 text-left">Descrição</th>
-          <th class="py-3 px-4 text-left">Ações</th>
-        </tr>
-      </thead>
-      <tbody class="text-gray-600 text-sm font-light">
-        <tr class="border-b border-gray-200 hover:bg-gray-100" *ngFor="let log of logsources">
-          <td class="py-3 px-6 text-left">{{ log.name }}</td>
-          <td class="py-3 px-9 text-left">{{ log.description }}</td>
-          <td class="py-3 px-4 text-left">
-            <button data-modal-target="deleteModal" (click)="deleteLogSourceById(log.id)"
-              class=" drop-shadow-xl bg-red-500 text-white px-3 py-1 rounded-md">
-              <i class="fas fa-trash-alt"></i>
-            </button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+    <div
+      class="shadow-md rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 transition">
+      <table class="min-w-full leading-normal">
+        <thead>
+          <tr
+            class="bg-gray-100 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 uppercase text-xs font-semibold tracking-wider">
+            <th class="py-3 px-6 text-left">Log Source</th>
+            <th class="py-3 px-9 text-left">Descrição</th>
+            <th class="py-3 px-4 text-center">Ações</th>
+          </tr>
+        </thead>
+        <tbody class="text-sm font-normal divide-y divide-gray-200 dark:divide-gray-700">
+          <tr *ngFor="let log of logsources; let i = index"
+            [ngClass]="i % 2 === 0 ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-900'"
+            class="hover:bg-gray-100 dark:hover:bg-gray-700 transition">
+            <td class="py-3.5 px-6 text-left font-medium text-gray-900 dark:text-white">{{ log.name }}</td>
+            <td class="py-3.5 px-9 text-left text-gray-700 dark:text-gray-300">{{ log.description }}</td>
+            <td class="py-3.5 px-4 text-center whitespace-nowrap">
+              <button data-modal-target="deleteModal" (click)="deleteLogSourceById(log.id)"
+                class="drop-shadow-sm bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-md transition">
+                <i class="fas fa-trash-alt text-xs"></i>
+              </button>
+            </td>
+          </tr>
+          <tr *ngIf="!logsources?.length">
+            <td colspan="3" class="py-6 px-6 text-center text-gray-500 dark:text-gray-400">
+              Nenhuma LogSource encontrada.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
   </div>
 
   <!-- Formulário de Log Sources -->
-  <div class="w-1/3 pl-6">
-    <form #logForm="ngForm" (ngSubmit)="logForm.form.valid && createLogSource()">
-      <div class="mb-4">
-        <label class="block text-gray-700 text-sm font-bold mb-2" for="logName">Nome da LogSource <span
-            class="text-red-500">*</span>
-        </label>
-        <input #logNameCtrl="ngModel" [ngClass]="{'border-red-500': logNameCtrl.invalid && logNameCtrl.touched}"
-          class="shadow appearance-none w-full rounded border-gray-200 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-          id="logName" type="text" [(ngModel)]="newLog.name" name="logName" required />
+  <div class="w-1/3 pl-6 mt-7">
+    <div
+      class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 transition">
+      <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Adicionar LogSource</h2>
 
-        <p *ngIf="logNameCtrl.invalid && logNameCtrl.touched" class="text-red-500 text-xs mt-1">Obrigatório.</p>
-      </div>
+      <form #logForm="ngForm" (ngSubmit)="logForm.form.valid && createLogSource()">
 
-      <div class="mb-4">
-        <label class="block text-gray-700 text-sm font-bold mb-2" for="logDescription">Descrição <span
-            class="text-red-500">*</span>
-        </label>
-        <textarea #logDescCtrl="ngModel" [ngClass]="{'border-red-500': logDescCtrl.invalid && logDescCtrl.touched}"
-          class="shadow appearance-none border-gray-200 rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-          id="logDescription" rows="4" [(ngModel)]="newLog.description" name="logDescription" required>
-        </textarea>
+        <!-- Campo: Nome -->
+        <div class="mb-4">
+          <label class="block text-gray-700 dark:text-gray-300 text-sm font-medium mb-2" for="logName">
+            Nome da LogSource <span class="text-red-500">*</span>
+          </label>
+          <input #logNameCtrl="ngModel" [ngClass]="{
+              'border-red-500 dark:border-red-500': logNameCtrl.invalid && logNameCtrl.touched,
+              'border-gray-300 dark:border-gray-600': !(logNameCtrl.invalid && logNameCtrl.touched)
+            }"
+            class="border rounded-lg w-full py-2 px-3 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-redshift-red text-sm transition"
+            id="logName" type="text" [(ngModel)]="newLog.name" name="logName" placeholder="Ex: Windows Security Events"
+            required />
+          <p *ngIf="logNameCtrl.invalid && logNameCtrl.touched" class="text-red-600 dark:text-red-400 text-xs mt-1">
+            Obrigatório.</p>
+        </div>
 
-        <p *ngIf="logDescCtrl.invalid && logDescCtrl.touched" class="text-red-500 text-xs mt-1">Obrigatório.</p>
-      </div>
+        <!-- Campo: Descrição -->
+        <div class="mb-4">
+          <label class="block text-gray-700 dark:text-gray-300 text-sm font-medium mb-2" for="logDescription">
+            Descrição <span class="text-red-500">*</span>
+          </label>
+          <textarea #logDescCtrl="ngModel" [ngClass]="{
+              'border-red-500 dark:border-red-500': logDescCtrl.invalid && logDescCtrl.touched,
+              'border-gray-300 dark:border-gray-600': !(logDescCtrl.invalid && logDescCtrl.touched)
+            }"
+            class="border rounded-lg w-full py-2 px-3 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-redshift-red text-sm transition"
+            id="logDescription" rows="4" [(ngModel)]="newLog.description" name="logDescription"
+            placeholder="Breve resumo da fonte de registos..." required>
+          </textarea>
+          <p *ngIf="logDescCtrl.invalid && logDescCtrl.touched" class="text-red-600 dark:text-red-400 text-xs mt-1">
+            Obrigatório.</p>
+        </div>
 
-      <div *ngIf="errorMessage" class="mb-4 text-red-600">
-        {{ errorMessage }}
-      </div>
+        <!-- Mensagem de Erro Geral -->
+        <div *ngIf="errorMessage" class="mb-4 text-red-600 dark:text-red-400 text-sm">
+          {{ errorMessage }}
+        </div>
 
-
-      <div class="mb-4">
-        <button type="submit" [disabled]="!logForm.form.valid"
-          class="w-60 h-10 bg-redshift-red text-white rounded hover:bg-redshift-hover shadow-md disabled:opacity-50 disabled:cursor-not-allowed">
-          <i class="fas fa-plus"></i> Adicionar Novo
-        </button>
-      </div>
-    </form>
+        <!-- Botão Submeter -->
+        <div>
+          <button type="submit" [disabled]="!logForm.form.valid"
+            class="w-full h-10 bg-redshift-red hover:bg-redshift-hover text-white rounded-lg font-medium shadow-md transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+            <i class="fas fa-plus"></i>
+            <span>Adicionar Novo</span>
+          </button>
+        </div>
+      </form>
+    </div>
   </div>
 </div>
