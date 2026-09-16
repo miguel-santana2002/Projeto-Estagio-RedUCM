@@ -26,6 +26,8 @@
         <thead>
           <tr>
             <th class="registry__key">Log source</th>
+            <th>Tipo</th>
+            <th>Recolha</th>
             <th>Descrição</th>
             <th class="registry__action-col">Ações</th>
           </tr>
@@ -35,7 +37,20 @@
             <td class="registry__key">
               <span class="key-tag">{{ log.name }}</span>
             </td>
-            <td class="registry__desc">{{ log.description }}</td>
+            <td>
+              <span *ngIf="log.type" class="meta-tag">{{ typeLabel(log.type) }}</span>
+              <span *ngIf="!log.type" class="meta-empty">—</span>
+            </td>
+            <td>
+              <span *ngIf="log.collectionMethod" class="meta-tag">{{ collectionLabel(log.collectionMethod) }}</span>
+              <span *ngIf="!log.collectionMethod" class="meta-empty">—</span>
+            </td>
+            <td class="registry__desc">
+              {{ log.description }}
+              <div *ngIf="log.products?.length" class="products-row">
+                <span class="product-chip" *ngFor="let p of log.products">{{ p }}</span>
+              </div>
+            </td>
             <td class="registry__action-col">
               <div class="action-group">
                 <button
@@ -59,13 +74,13 @@
           </tr>
 
           <tr *ngIf="logsources.length === 0">
-            <td colspan="3" class="empty-state">
+            <td colspan="5" class="empty-state">
               Ainda nenhuma logsource registada. Adiciona a primeira no painel ao lado.
             </td>
           </tr>
 
           <tr *ngIf="logsources.length > 0 && filteredLogsources.length === 0">
-            <td colspan="3" class="empty-state">
+            <td colspan="5" class="empty-state">
               Nenhuma logsource corresponde a "{{ searchTerm }}".
             </td>
           </tr>
@@ -81,6 +96,10 @@
         <button *ngIf="isEditing" (click)="cancelEdit()" class="cancel-link" type="button">
           Cancelar
         </button>
+      </div>
+
+      <div *ngIf="successMessage" class="form-success">
+        {{ successMessage }}
       </div>
 
       <form #logForm="ngForm" (ngSubmit)="logForm.form.valid && submitForm()">
@@ -104,6 +123,36 @@
           </p>
         </div>
 
+        <div class="field-row">
+          <div class="field">
+            <label class="field__label" for="logType">Tipo</label>
+            <select class="field__input" id="logType" [(ngModel)]="newLog.type" name="logType">
+              <option value="">—</option>
+              <option *ngFor="let opt of typeOptions" [value]="opt.value">{{ opt.label }}</option>
+            </select>
+          </div>
+          <div class="field">
+            <label class="field__label" for="logCollection">Recolha</label>
+            <select class="field__input" id="logCollection" [(ngModel)]="newLog.collectionMethod" name="logCollection">
+              <option value="">—</option>
+              <option *ngFor="let opt of collectionOptions" [value]="opt.value">{{ opt.label }}</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="field__label" for="logProducts">Produtos</label>
+          <input
+            class="field__input"
+            id="logProducts"
+            type="text"
+            [(ngModel)]="productsInput"
+            name="logProducts"
+            placeholder="Sysmon, CrowdStrike Falcon"
+          />
+          <p class="field__hint">Separa por vírgula.</p>
+        </div>
+
         <div class="field">
           <label class="field__label" for="logDescription">
             Descrição <span class="field__required">*</span>
@@ -124,14 +173,8 @@
           </p>
         </div>
 
-        <!-- Erro existente -->
         <div *ngIf="errorMessage" class="form-error">
           {{ errorMessage }}
-        </div>
-
-        <!-- Mensagem de sucesso verde -->
-        <div *ngIf="successMessage" class="form-success">
-          {{ successMessage }}
         </div>
 
         <button type="submit" [disabled]="!logForm.form.valid" class="submit-btn">

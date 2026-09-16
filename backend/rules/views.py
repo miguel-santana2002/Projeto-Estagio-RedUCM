@@ -159,18 +159,23 @@ def getRuleById(request, id):
 def createRegisteredLogSource(request):
     if request.method == 'POST':
         data = request.data
-        new_logsource = RegisteredLogSource(name=data['name'], description=data['description'])
-
-        #check if exists
+ 
         logsource = RegisteredLogSource.objects.filter(name=data['name'])
         if logsource:
             return JsonResponse({'error': 'A logsource já existe'}, status=status.HTTP_400_BAD_REQUEST)
-        
-
+ 
+        new_logsource = RegisteredLogSource(
+            name=data['name'],
+            description=data['description'],
+            type=data.get('type'),
+            collectionMethod=data.get('collectionMethod'),
+            products=data.get('products', []),
+        )
         new_logsource.save()
         return JsonResponse(data, safe=False)
     else:
         return JsonResponse({'error': 'Invalid request method'}, status=status.HTTP_400_BAD_REQUEST)
+
     
 @api_view(['GET'])
 def getRegisteredLogSources(request):
@@ -182,14 +187,24 @@ def getRegisteredLogSources(request):
     else:
         return JsonResponse({'error': 'Invalid request method'})
     
-@api_view(['POST'])
-def deleteLogSourceById(request, id):
-    if request.method == 'POST':
+def updateLogSourceById(request, id):
+    try:
         logsource = RegisteredLogSource.objects.get(id=id)
-        logsource.delete()
-        return JsonResponse({'message': 'LogSource deleted successfully'})
-    else:
-        return JsonResponse({'error': 'Invalid request method'})
+ 
+        new_name = request.data.get('name', logsource.name)
+        if new_name != logsource.name and RegisteredLogSource.objects.filter(name=new_name).exists():
+            return JsonResponse({'error': 'A logsource já existe'}, status=status.HTTP_400_BAD_REQUEST)
+ 
+        logsource.name = new_name
+        logsource.description = request.data.get('description', logsource.description)
+        logsource.type = request.data.get('type', logsource.type)
+        logsource.collectionMethod = request.data.get('collectionMethod', logsource.collectionMethod)
+        logsource.products = request.data.get('products', logsource.products)
+        logsource.save()
+        return JsonResponse({'message': 'LogSource atualizada com sucesso'})
+    except RegisteredLogSource.DoesNotExist:
+        return JsonResponse({'error': 'LogSource não encontrada'}, status=404)
+
     
 
 @api_view(['POST'])
@@ -252,3 +267,12 @@ def updateLogSourceById(request, id):
         return JsonResponse({'message': 'LogSource atualizada com sucesso'})
     except RegisteredLogSource.DoesNotExist:
         return JsonResponse({'error': 'LogSource não encontrada'}, status=404)
+
+@api_view(['POST'])
+def deleteLogSourceById(request, id):
+    if request.method == 'POST':
+        logsource = RegisteredLogSource.objects.get(id=id)
+        logsource.delete()
+        return JsonResponse({'message': 'LogSource deleted successfully'})
+    else:
+        return JsonResponse({'error': 'Invalid request method'})

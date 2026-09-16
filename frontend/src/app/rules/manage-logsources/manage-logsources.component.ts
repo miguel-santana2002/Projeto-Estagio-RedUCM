@@ -17,7 +17,26 @@ export class ManageLogsourcesComponent {
 
   @ViewChild('logForm') logForm!: NgForm;
 
-  newLog: any = { name: '', description: '' }
+  typeOptions = [
+    { value: 'windows', label: 'Windows' },
+    { value: 'linux', label: 'Linux' },
+    { value: 'network', label: 'Network' },
+    { value: 'cloud', label: 'Cloud' },
+    { value: 'application', label: 'Application' },
+    { value: 'other', label: 'Other' },
+  ];
+
+  collectionOptions = [
+    { value: 'agent', label: 'Agent' },
+    { value: 'syslog', label: 'Syslog' },
+    { value: 'api', label: 'API' },
+    { value: 'file', label: 'File' },
+    { value: 'other', label: 'Other' },
+  ];
+
+  newLog: any = this.emptyLog();
+  productsInput: string = '';
+
   logsources: any = [];
   searchTerm: string = '';
 
@@ -25,6 +44,10 @@ export class ManageLogsourcesComponent {
   errorMessage: any;
   successMessage: string | null = null;
   private successTimeout: any;
+
+  private emptyLog() {
+    return { name: '', description: '', type: '', collectionMethod: '', products: [] };
+  }
 
   get filteredLogsources(): any[] {
     if (!this.searchTerm.trim()) {
@@ -41,9 +64,24 @@ export class ManageLogsourcesComponent {
     return this.editingId !== null;
   }
 
+  typeLabel(value: string): string {
+    return this.typeOptions.find(o => o.value === value)?.label || value;
+  }
+
+  collectionLabel(value: string): string {
+    return this.collectionOptions.find(o => o.value === value)?.label || value;
+  }
+
   startEdit(log: any) {
     this.editingId = log.id;
-    this.newLog = { name: log.name, description: log.description };
+    this.newLog = {
+      name: log.name,
+      description: log.description,
+      type: log.type || '',
+      collectionMethod: log.collectionMethod || '',
+      products: log.products || [],
+    };
+    this.productsInput = (log.products || []).join(', ');
     this.errorMessage = null;
   }
 
@@ -54,7 +92,8 @@ export class ManageLogsourcesComponent {
   }
 
   private resetFormState() {
-    this.newLog = { name: '', description: '' };
+    this.newLog = this.emptyLog();
+    this.productsInput = '';
     if (this.logForm) {
       this.logForm.resetForm();
     }
@@ -68,7 +107,15 @@ export class ManageLogsourcesComponent {
     }, 2500);
   }
 
+  private syncProducts() {
+    this.newLog.products = this.productsInput
+      .split(',')
+      .map(p => p.trim())
+      .filter(p => p.length > 0);
+  }
+
   submitForm() {
+    this.syncProducts();
     if (this.isEditing) {
       this.updateLogSource();
     } else {
@@ -83,7 +130,7 @@ export class ManageLogsourcesComponent {
           this.logsources = data;
           this.errorMessage = null;
           this.resetFormState();
-          this.showSuccess('Fonte registada com sucesso!'); // <-- Aqui
+          this.showSuccess('Fonte registada com sucesso!');
         });
       },
       error: (error: HttpErrorResponse) => {
@@ -103,7 +150,7 @@ export class ManageLogsourcesComponent {
           this.errorMessage = null;
           this.editingId = null;
           this.resetFormState();
-          this.showSuccess('Alterações guardadas com sucesso!'); // <-- E aqui
+          this.showSuccess('Alterações guardadas com sucesso!');
         });
       },
       error: (error: HttpErrorResponse) => {

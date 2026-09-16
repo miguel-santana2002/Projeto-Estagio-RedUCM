@@ -305,12 +305,62 @@
   cursor: not-allowed;
 }
 
+.field-row {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.field-row .field {
+  flex: 1;
+}
+
+select.field__input {
+  background: var(--surface);
+  cursor: pointer;
+}
+
+.field__hint {
+  font-size: 10.5px;
+  color: var(--graphite);
+  margin: 4px 0 0;
+}
+
+.meta-tag {
+  font-size: 11px;
+  color: var(--graphite);
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  padding: 2px 6px;
+}
+
+.meta-empty {
+  color: var(--line);
+  font-size: 11px;
+}
+
+.products-row {
+  margin-top: 4px;
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.product-chip {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10.5px;
+  background: var(--mono-bg);
+  color: var(--graphite);
+  border-radius: 3px;
+  padding: 1px 6px;
+}
+
 .form-success {
-  font-size: 11.5px;
-  background: #d1fae5;
-  border: 1px solid #10b981;
-  color: #065f46;
-  border-radius: 4px;
+  margin: 0.75rem 1.25rem 0;
   padding: 8px 10px;
-  margin-bottom: 1rem;
+  background: #e8f5ea;
+  border: 1px solid #8fc99a;
+  color: #2e7d32;
+  font-size: 11.5px;
+  border-radius: 4px;
 }
