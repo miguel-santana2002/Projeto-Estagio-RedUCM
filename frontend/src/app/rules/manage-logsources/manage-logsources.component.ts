@@ -1,20 +1,25 @@
-import { Component, ViewChild } from '@angular/core';
-import { HeaderComponent } from "../../layout/header/header.component";
-import { TitlebannerComponent } from "../../layout/titlebanner/titlebanner.component";
+import { Component, OnInit, ViewChild } from '@angular/core';
+import { HeaderComponent } from '../../layout/header/header.component';
+import { TitlebannerComponent } from '../../layout/titlebanner/titlebanner.component';
 import { FormsModule, ReactiveFormsModule, NgForm } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { RulesService } from '../../services/rules.service';
 import { HttpErrorResponse } from '@angular/common/http';
 
 @Component({
-    selector: 'app-manage-logsources',
-    standalone: true,
-    templateUrl: './manage-logsources.component.html',
-    styleUrl: './manage-logsources.component.css',
-    imports: [HeaderComponent, TitlebannerComponent, FormsModule, CommonModule, ReactiveFormsModule]
+  selector: 'app-manage-logsources',
+  standalone: true,
+  templateUrl: './manage-logsources.component.html',
+  styleUrl: './manage-logsources.component.css',
+  imports: [
+    HeaderComponent,
+    TitlebannerComponent,
+    FormsModule,
+    CommonModule,
+    ReactiveFormsModule,
+  ],
 })
-export class ManageLogsourcesComponent {
-
+export class ManageLogsourcesComponent implements OnInit {
   @ViewChild('logForm') logForm!: NgForm;
 
   typeOptions = [
@@ -47,8 +52,26 @@ export class ManageLogsourcesComponent {
   successMessage: string | null = null;
   private successTimeout: any;
 
+  selectedLog: any = null;
+  selectDelete: any; // Adicionado para gerir o ID da logsource a eliminar
+  modalElement: HTMLElement | null = null;
+
+  constructor(private rulesService: RulesService) {}
+
+  ngOnInit() {
+    this.rulesService.getRegisteredLogSources().subscribe((data) => {
+      this.logsources = data;
+    });
+  }
+
   private emptyLog() {
-    return { name: '', description: '', type: '', collectionMethod: '', products: [] };
+    return {
+      name: '',
+      description: '',
+      type: '',
+      collectionMethod: '',
+      products: [],
+    };
   }
 
   get filteredLogsources(): any[] {
@@ -56,9 +79,10 @@ export class ManageLogsourcesComponent {
       return this.logsources;
     }
     const term = this.searchTerm.toLowerCase();
-    return this.logsources.filter((log: any) =>
-      log.name?.toLowerCase().includes(term) ||
-      log.description?.toLowerCase().includes(term)
+    return this.logsources.filter(
+      (log: any) =>
+        log.name?.toLowerCase().includes(term) ||
+        log.description?.toLowerCase().includes(term),
     );
   }
 
@@ -67,28 +91,31 @@ export class ManageLogsourcesComponent {
   }
 
   typeLabel(value: string): string {
-    return this.typeOptions.find(o => o.value === value)?.label || value;
+    return this.typeOptions.find((o) => o.value === value)?.label || value;
   }
 
   collectionLabel(value: string): string {
-    return this.collectionOptions.find(o => o.value === value)?.label || value;
+    return (
+      this.collectionOptions.find((o) => o.value === value)?.label || value
+    );
   }
 
   startEdit(log: any) {
     this.editingId = log.id;
 
-    // Se o tipo existir mas não estiver na lista padrão, passa a palavra para a caixa custom e seleciona 'other'
     let mappedType = log.type || '';
-    if (mappedType && !this.typeOptions.some(o => o.value === mappedType)) {
+    if (mappedType && !this.typeOptions.some((o) => o.value === mappedType)) {
       this.customType = mappedType;
       mappedType = 'other';
     } else {
       this.customType = '';
     }
 
-    // O mesmo para a recolha
     let mappedCollection = log.collectionMethod || '';
-    if (mappedCollection && !this.collectionOptions.some(o => o.value === mappedCollection)) {
+    if (
+      mappedCollection &&
+      !this.collectionOptions.some((o) => o.value === mappedCollection)
+    ) {
       this.customCollection = mappedCollection;
       mappedCollection = 'other';
     } else {
@@ -133,8 +160,8 @@ export class ManageLogsourcesComponent {
   private syncProducts() {
     this.newLog.products = this.productsInput
       .split(',')
-      .map(p => p.trim())
-      .filter(p => p.length > 0);
+      .map((p) => p.trim())
+      .filter((p) => p.length > 0);
   }
 
   submitForm() {
@@ -149,7 +176,8 @@ export class ManageLogsourcesComponent {
   createLogSource() {
     const payload = { ...this.newLog };
     if (payload.type === 'other') payload.type = this.customType;
-    if (payload.collectionMethod === 'other') payload.collectionMethod = this.customCollection;
+    if (payload.collectionMethod === 'other')
+      payload.collectionMethod = this.customCollection;
 
     this.rulesService.createRegisteredLogSource(payload).subscribe({
       next: (data) => {
@@ -164,7 +192,7 @@ export class ManageLogsourcesComponent {
         if (error.status === 400) {
           this.errorMessage = error.error.error;
         }
-      }
+      },
     });
   }
 
@@ -173,7 +201,8 @@ export class ManageLogsourcesComponent {
 
     const payload = { ...this.newLog };
     if (payload.type === 'other') payload.type = this.customType;
-    if (payload.collectionMethod === 'other') payload.collectionMethod = this.customCollection;
+    if (payload.collectionMethod === 'other')
+      payload.collectionMethod = this.customCollection;
 
     this.rulesService.updateLogSourceById(this.editingId, payload).subscribe({
       next: (data) => {
@@ -189,36 +218,47 @@ export class ManageLogsourcesComponent {
         if (error.status === 400) {
           this.errorMessage = error.error.error;
         }
-      }
+      },
     });
   }
 
-  confirmDelete(log: any) {
-    if (confirm(`Eliminar a logsource "${log.name}"?`)) {
-      this.deleteLogSourceById(log.id);
+  updateSelectDelete(event: Event, log: any) {
+    event.stopPropagation();
+    this.selectDelete = log;
+  }
+
+  // Abre e fecha o modal de eliminação
+  openModal() {
+    this.modalElement = document.getElementById('deleteModal');
+    if (this.modalElement) {
+      this.modalElement.classList.remove('hidden');
+      this.modalElement.classList.add('flex');
     }
   }
 
-  deleteLogSourceById(id: any) {
-    this.rulesService.deleteLogSourceById(id).subscribe((data) => {
-      this.rulesService.getRegisteredLogSources().subscribe((data) => {
-        this.logsources = data;
-        if (this.editingId === id) {
-          this.cancelEdit();
-        }
-      })
-    })
+  closeModal() {
+    if (this.modalElement) {
+      this.modalElement.classList.add('hidden');
+      this.modalElement.classList.remove('flex');
+    }
   }
 
-  constructor(private rulesService: RulesService) { }
+  deleteLogSource() {
+    if (!this.selectDelete) return;
 
-  ngOnInit() {
-    this.rulesService.getRegisteredLogSources().subscribe((data) => {
-      this.logsources = data;
-    })
+    // Acede ao ID através do objeto guardado
+    this.rulesService
+      .deleteLogSourceById(this.selectDelete.id)
+      .subscribe(() => {
+        this.rulesService.getRegisteredLogSources().subscribe((data) => {
+          this.logsources = data;
+          if (this.editingId === this.selectDelete.id) {
+            this.cancelEdit();
+          }
+          this.selectDelete = null;
+        });
+      });
   }
-
-    selectedLog: any = null;
 
   viewDetails(log: any) {
     this.selectedLog = log;
@@ -235,6 +275,4 @@ export class ManageLogsourcesComponent {
   extraProductsCount(products: string[]): number {
     return Math.max((products || []).length - 3, 0);
   }
-
 }
-

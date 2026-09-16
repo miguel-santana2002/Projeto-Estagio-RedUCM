@@ -2,250 +2,217 @@
 
 <app-titlebanner title="Regra {{rule.id}} - {{rule.client.name}}" image="./assets/bannercover.jpg"></app-titlebanner>
 
-
+<!-- Toast de Sucesso -->
 <div *ngIf="message" id="toast-success"
-  class="fixed top-4 right-4 flex items-center w-full max-w-xs p-4 text-gray-500 bg-white rounded-lg shadow dark:text-gray-400 dark:bg-gray-800"
+  class="fixed top-4 right-4 flex items-center w-full max-w-xs p-4 text-gray-500 bg-white rounded-lg shadow dark:text-gray-400 dark:bg-gray-800 z-50 transition border border-transparent dark:border-gray-700"
   role="alert">
   <div
-    class="inline-flex items-center justify-center flex-shrink-0 w-8 h-8 text-green-500 bg-green-100 rounded-lg dark:bg-green-800 dark:text-green-200">
+    class="inline-flex items-center justify-center flex-shrink-0 w-8 h-8 text-green-500 bg-green-100 rounded-lg dark:bg-green-950/50 dark:text-green-400">
     <i class="fas fa-check text-base"></i>
     <span class="sr-only">Check icon</span>
   </div>
-  <div class="ms-3 text-sm font-normal">{{message}}</div>
+  <div class="ms-3 text-sm font-normal text-gray-800 dark:text-gray-200">{{message}}</div>
   <button type="button" (click)="message=''"
-    class="ms-auto -mx-1.5 -my-1.5 bg-white text-gray-400 hover:text-gray-900 rounded-lg focus:ring-2 focus:ring-gray-300 p-1.5 hover:bg-gray-100 inline-flex items-center justify-center h-8 w-8 dark:text-gray-500 dark:hover:text-white dark:bg-gray-800 dark:hover:bg-gray-700"
+    class="ms-auto -mx-1.5 -my-1.5 bg-white text-gray-400 hover:text-gray-900 rounded-lg focus:ring-2 focus:ring-gray-300 p-1.5 hover:bg-gray-100 inline-flex items-center justify-center h-8 w-8 dark:text-gray-400 dark:hover:text-white dark:bg-gray-800 dark:hover:bg-gray-700 transition"
     data-dismiss-target="#toast-success" aria-label="Close">
     <span class="sr-only">Close</span>
     <i class="fas fa-times text-sm"></i>
   </button>
 </div>
 
-<div class="mx-16 pt-6 ">
-  <h1 class="font-inter font-semibold text-2xl text-gray-700 mb-4">{{rule.ruleModel.title}}</h1>
+<div class="mx-16 pt-6 dark:text-white transition">
+  <h1 class="font-inter font-semibold text-2xl text-gray-700 dark:text-white mb-4">{{rule.ruleModel.title}}</h1>
 
-  <div class="flex ml-4 ">
-    <div class="flex items-center">
-      <img src="./assets/tag.png" class="rounded-lg size-10">
-      <div class="ml-4">
-        <h1 class="font-inter font-semibold text-xl text-gray-600">RedUC{{rule.ruleModel.useCaseId}}</h1>
-        <p class="text-gray-500">Use Case Associado</p>
+  <!-- Barra de Metadados (Unificada com o Design do RuleModel) -->
+  <div class="flex items-center flex-wrap gap-7 ml-4 my-2">
+
+    <!-- Use Case -->
+    <div class="flex items-center gap-3">
+      <i class="fas fa-tag text-gray-500 dark:text-gray-400 text-2xl"></i>
+      <div class="flex flex-col justify-center">
+        <span class="text-base font-bold text-gray-900 dark:text-white leading-tight">
+          <span class="text-redshift-red font-bold">Red</span>UC{{rule.ruleModel.useCaseId}}
+        </span>
+        <span class="text-xs text-gray-500 dark:text-gray-400 font-normal">Use Case Associado</span>
       </div>
     </div>
 
-    <div class="flex items-center ml-12">
-      <img src="./assets/mitrelogo.png" class="rounded-lg size-10">
-      <div class="ml-4">
-        <div class="flex flex-wrap">
-
+    <!-- Técnicas MITRE -->
+    <div class="flex items-center gap-3" *ngIf="usecase?.mitreTechniques?.length">
+      <span class="bg-[#0b1b2b] text-white text-[11px] font-bold px-2 py-1 rounded">
+        MITRE
+      </span>
+      <div class="flex flex-col justify-center">
+        <div class="flex items-center gap-1">
           <div [routerLink]="'/techniqueDetails/'+technique" *ngFor="let technique of usecase.mitreTechniques"
-            class="bg-[#0d2f52] cursor-pointer text-white text-sm rounded-md px-1 max-w-12 mr-1 my-1 ">
+            class="bg-[#0d2f52] hover:bg-[#15467a] transition cursor-pointer text-white text-xs px-2 py-0.5 rounded font-medium">
             {{ technique }}
-
           </div>
         </div>
-        <p class="text-gray-500">Técnicas Mitre Associadas</p>
+        <span class="text-xs text-gray-500 dark:text-gray-400 font-normal mt-0.5">Técnicas Mitre Associadas</span>
       </div>
     </div>
 
-    <div class="flex items-center ml-12">
-      <img src="./assets/category.png" class="rounded-lg size-10">
-      <div class="ml-4">
-        <h1 class="font-inter font-semibold text-xl text-gray-600">{{rule.ruleModel.type}}</h1>
-        <p class="text-gray-500">Tipo</p>
+    <!-- Tipo -->
+    <div class="flex items-center gap-3">
+      <i class="fas fa-cubes text-gray-500 dark:text-gray-400 text-2xl"></i>
+      <div class="flex flex-col justify-center">
+        <span class="text-base font-bold text-gray-900 dark:text-white leading-tight">{{rule.ruleModel.type}}</span>
+        <span class="text-xs text-gray-500 dark:text-gray-400 font-normal">Tipo</span>
       </div>
     </div>
 
-    <div class="flex items-center ml-12">
-      <img *ngIf="rule.syntax === 'Sigma Rule'" src="./assets/sigmalogo.svg" class="rounded-lg size-10"
-        alt="Sigma Logo">
-      <img *ngIf="rule.syntax === 'Splunk Rule'" src="./assets/splunklogo.svg" class="rounded-lg size-10"
-        alt="Sigma Logo">
-      <img *ngIf="rule.syntax === 'QRadar Rule'" src="./assets/qradarlogo.png" class="rounded-lg size-10"
-        alt="Sigma Logo">
-
-
-      <div class="ml-4">
-        <h1 class="font-inter font-semibold text-xl text-gray-600">{{rule.syntax}}</h1>
-        <p class="text-gray-500">Sintaxe</p>
+    <!-- Sintaxe -->
+    <div class="flex items-center gap-3">
+      <i class="fas fa-code text-redshift-red text-2xl"></i>
+      <div class="flex flex-col justify-center">
+        <span class="text-base font-bold text-gray-900 dark:text-white leading-tight">{{rule.syntax}}</span>
+        <span class="text-xs text-gray-500 dark:text-gray-400 font-normal">Sintaxe</span>
       </div>
-
-
-
-
     </div>
 
-    <div class="flex items-center ml-12">
-      <img src="./assets/source.png" class="rounded-lg size-10">
-      <div class="ml-4">
-        <h1 class="font-inter font-semibold text-xl text-gray-600">{{rule.logsources}}</h1>
-        <p class="text-gray-500">LogSources</p>
+    <!-- LogSources -->
+    <div class="flex items-center gap-3">
+      <i class="fas fa-network-wired text-gray-500 dark:text-gray-400 text-2xl"></i>
+      <div class="flex flex-col justify-center">
+        <div class="flex items-center gap-2 max-w-xl">
+
+          <!-- Se logsources for string ou array, esta formatação garante visual limpo e consistente -->
+          <span class="bg-[#0d2f52] text-white text-xs px-2.5 py-1 rounded font-medium truncate max-w-[220px]"
+            [title]="rule.logsources">
+            {{rule.logsources}}
+          </span>
+          <span *ngIf="!rule.logsources" class="text-sm text-gray-400 dark:text-gray-500">N/D</span>
+
+        </div>
+        <span class="text-xs text-gray-500 dark:text-gray-400 font-normal mt-0.5">LogSources</span>
       </div>
-
-
-
-
     </div>
-
-
-
-
-
-
-
-
 
   </div>
 
-  <div class="mx-16">
+  <!-- Botões de Conversão Sigma -->
+  <div class="mx-4 mt-10">
+    <div class="flex flex-wrap gap-4" [class.hidden]="rule.syntax !== 'Sigma Rule'">
 
-    <div class="ml-4 mt-8">
-
-
-      <div class="flex space-x-10" [class.hidden]="rule.syntax !== 'Sigma Rule'">
-
-
-        <button type="submit" (click)="convertSigmaToSplunk()" data-modal-target="crud-modal"
-          data-modal-toggle="crud-modal"
-          class="text-black inline-flex items-center bg-gray-200 hover:bg-redshift-hover transition duration-300 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
-          <img class="h-6 w-6 mr-3" src="./assets/splunklogo.svg">
-          Converter para Splunk Rule
-
-        </button>
-
-        <button type="submit" (click)="convertSigmaToQRadar()" data-modal-target="crud-modal"
-          data-modal-toggle="crud-modal"
-          class="text-black inline-flex items-center bg-gray-200 hover:bg-redshift-hover transition duration-300 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
-          <img class="h-6 w-6 mr-3" src="./assets/qradarlogo.png">
-          Converter para QRadar Rule
-
-        </button>
-
-        <button type="submit" (click)="convertSigmaToElasticLucena()" data-modal-target="crud-modal"
-          data-modal-toggle="crud-modal"
-          class="text-black inline-flex items-center bg-gray-200 hover:bg-redshift-hover transition duration-300 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
-          <img class="h-6 w-6 mr-3" src="./assets/elasticlogo.png">
-          Converter para Elastic Rule (Lucena)
-
-        </button>
-
-
-
-
-      </div>
-    </div>
-
-
-
-
-
-
-
-
-  </div>
-
-  <div class="flex my-12">
-
-    <div class=" h-full border  border-gray-300  mx-auto w-[80%] mr-12">
-
-
-      <ngs-code-editor class="h-[33rem]" [codeModel]="selectedModel" [theme]="theme" [options]="options"
-        (valueChanged)="onCodeChanged($event)" (loaded)="onEditorLoaded($event)"
-        (codeModelChanged)="onCodeModelChanged($event)">
-
-
-      </ngs-code-editor>
-
-
-
-
-
-    </div>
-
-
-    <div class=" md:w-[20%] h-72  ">
-      <div class="bg-gray-100 rounded-xl drop-shadow-lg p-4">
-        <h1 class="font-inter font-semibold text-xl text-gray-600 mx-auto">Informação Geral</h1>
-
-        <div class="items-center mt-4">
-          <div class="ml-4 my-2">
-            <h1 class="font-inter font-semibold text-xl text-gray-600">{{rule.client.name}}</h1>
-            <p class="text-gray-500 text-md">Cliente</p>
-          </div>
-          <div class="ml-4 my-2">
-            <h1 class="font-inter font-semibold text-xl text-gray-600">{{rule.ruleModel.title}}</h1>
-            <p class="text-gray-500 text-md">Nome da Regra</p>
-          </div>
-          <div class="ml-4 my-2">
-            <h1 class="font-inter font-semibold text-xl text-gray-600">{{usecase.title}}</h1>
-            <p class="text-gray-500 text-md">Nome do Use Case</p>
-          </div>
-        </div>
-
-
-
-
-
-      </div>
-
-      <button type="Primary Block" (click)="updateRuleCode()"
-        class="hover:drop-shadow-md transition duration-300 flex flex-row items-center content-center justify-start gap-1 h-sm w-full py-2 my-4 px-2 border border-gray-300 drop-shadow-lg rounded-xl text-gray-700 bg-white active:text-gray-100 active:bg-redshift-hover active:ring-0 focus:ring-offset-2 focus:ring">
-        <div class="fas fa-save "></div>
-        <p class="ml-2">Guardar alterações</p>
+      <button type="submit" (click)="convertSigmaToSplunk()" data-modal-target="crud-modal"
+        data-modal-toggle="crud-modal"
+        class="text-gray-800 dark:text-gray-200 inline-flex items-center bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-200 dark:hover:bg-gray-700 transition duration-200 font-medium rounded-lg text-sm px-5 py-2.5 shadow-sm">
+        <img class="h-6 w-6 mr-3" src="./assets/splunklogo.svg">
+        Converter para Splunk
       </button>
 
+      <button type="submit" (click)="convertSigmaToQRadar()" data-modal-target="crud-modal"
+        data-modal-toggle="crud-modal"
+        class="text-gray-800 dark:text-gray-200 inline-flex items-center bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-200 dark:hover:bg-gray-700 transition duration-200 font-medium rounded-lg text-sm px-5 py-2.5 shadow-sm">
+        <img class="h-6 w-6 mr-3" src="./assets/qradarlogo.png">
+        Converter para QRadar
+      </button>
+
+      <button type="submit" (click)="convertSigmaToElasticLucena()" data-modal-target="crud-modal"
+        data-modal-toggle="crud-modal"
+        class="text-gray-800 dark:text-gray-200 inline-flex items-center bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-200 dark:hover:bg-gray-700 transition duration-200 font-medium rounded-lg text-sm px-5 py-2.5 shadow-sm">
+        <img class="h-6 w-6 mr-3" src="./assets/elasticlogo.png">
+        Converter para Elastic (Lucene)
+      </button>
 
     </div>
+  </div>
 
+  <!-- Área Principal (Editor + Info) -->
+  <div class="flex flex-col lg:flex-row gap-8 my-10 mx-4">
 
+    <!-- Editor Monaco -->
+    <div class="w-full lg:w-[80%] border border-gray-300 dark:border-gray-700 rounded-lg overflow-hidden shadow-sm">
+      <ngs-code-editor class="block h-[33rem] w-full" [codeModel]="selectedModel" [theme]="theme" [options]="options"
+        (valueChanged)="onCodeChanged($event)" (loaded)="onEditorLoaded($event)"
+        (codeModelChanged)="onCodeModelChanged($event)">
+      </ngs-code-editor>
+    </div>
 
+    <!-- Painel Lateral -->
+    <div class="w-full lg:w-[20%] flex flex-col gap-4">
 
+      <div
+        class="bg-gray-100 dark:bg-gray-800 rounded-xl drop-shadow-md border border-transparent dark:border-gray-700 p-5 transition">
+        <h1
+          class="font-inter font-semibold text-xl text-gray-700 dark:text-gray-200 border-b border-gray-200 dark:border-gray-700 pb-2 mb-4">
+          Informação Geral</h1>
 
-    <div id="crud-modal" tabindex="-1" aria-hidden="true"
-      class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full">
-      <div class="relative p-4 w-10/12 min-w-96 max-h-full ">
-        <!-- Modal content -->
-        <div class="relative  bg-white rounded-lg shadow dark:bg-gray-700">
-          <!-- Modal header -->
-          <div class="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-600">
-            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
-              Conversão de Regra <br> RedRule{{rule.id}} - {{rule.ruleModel.title}} - {{rule.client.name}}
-
-            </h3>
-
-
-            <button type="button"
-              class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white"
-              data-modal-toggle="crud-modal">
-              <i class="fas fa-times text-sm" aria-hidden="true"></i>
-              <span class="sr-only">Close modal</span>
-            </button>
-
+        <div class="flex flex-col gap-4">
+          <div>
+            <h1 class="font-inter font-semibold text-lg text-gray-700 dark:text-white leading-tight">
+              {{rule.client.name}}</h1>
+            <p class="text-gray-500 dark:text-gray-400 text-sm">Cliente</p>
           </div>
-
-
-          <!-- Modal body -->
-          <form class="p-4 md:p-5">
-            <div class="grid gap-4 mb-4 grid-cols-2">
-
-
-              <label for="Personalização"
-                class="block mb-0 text-sm font-medium text-gray-900 dark:text-white">Regra</label>
-
-              <textarea rows="20" formControlName="modalCode"
-                class=" col-span-2 row-span-2 w-full  border border-gray-300 rounded-lg p-2 text-[14px]">{{convertedCode}}
-                        </textarea>
-
-
-
-
-
-            </div>
-            <button type="submit" (click)="downloadFile()"
-              class="text-white inline-flex items-center bg-redshift-red hover:bg-redshift-hover focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
-              <i class="fas fa-save mr-2"></i>
-              Guardar
-            </button>
-          </form>
+          <div>
+            <h1 class="font-inter font-semibold text-lg text-gray-700 dark:text-white leading-tight">
+              {{rule.ruleModel.title}}</h1>
+            <p class="text-gray-500 dark:text-gray-400 text-sm">Nome da Regra</p>
+          </div>
+          <div>
+            <h1 class="font-inter font-semibold text-lg text-gray-700 dark:text-white leading-tight">{{usecase.title}}
+            </h1>
+            <p class="text-gray-500 dark:text-gray-400 text-sm">Nome do Use Case</p>
+          </div>
         </div>
       </div>
+
+      <!-- Botão Guardar Alterações -->
+      <button type="button" (click)="updateRuleCode()"
+        class="w-full inline-flex items-center justify-center gap-2 py-3 px-4 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-200 font-semibold rounded-xl drop-shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-redshift-red dark:hover:text-white transition duration-200 focus:ring-2 focus:ring-redshift-red focus:outline-none">
+        <i class="fas fa-save text-base"></i>
+        <span>Guardar alterações</span>
+      </button>
+
     </div>
+  </div>
+
+  <!-- Modal Conversão -->
+  <div id="crud-modal" tabindex="-1" aria-hidden="true"
+    class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full bg-black/60 backdrop-blur-sm">
+    <div class="relative p-4 w-10/12 min-w-[300px] max-w-5xl max-h-full">
+      <!-- Modal content -->
+      <div
+        class="relative bg-white rounded-lg shadow-xl dark:bg-gray-800 border border-transparent dark:border-gray-700 transition">
+
+        <!-- Modal header -->
+        <div
+          class="flex items-center justify-between p-4 md:p-5 border-b border-gray-200 dark:border-gray-700 rounded-t">
+          <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+            Conversão de Regra <br>
+            <span class="text-sm font-normal text-gray-500 dark:text-gray-400">RedRule{{rule.id}} -
+              {{rule.ruleModel.title}} - {{rule.client.name}}</span>
+          </h3>
+          <button type="button"
+            class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-700 dark:hover:text-white transition"
+            data-modal-toggle="crud-modal">
+            <i class="fas fa-times text-base" aria-hidden="true"></i>
+            <span class="sr-only">Close modal</span>
+          </button>
+        </div>
+
+        <!-- Modal body -->
+        <form class="p-4 md:p-5">
+          <div class="mb-4">
+            <label for="Personalização" class="block mb-2 text-sm font-semibold text-gray-900 dark:text-white">
+              Regra Convertida
+            </label>
+            <textarea rows="16" readonly
+              class="w-full border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/60 rounded-lg p-3 text-sm font-mono text-gray-800 dark:text-gray-200 focus:ring-redshift-red focus:border-redshift-red resize-none">{{convertedCode}}</textarea>
+          </div>
+
+          <div class="flex justify-end">
+            <button type="button" (click)="downloadFile()"
+              class="inline-flex items-center px-5 py-2.5 text-sm font-medium text-white bg-redshift-red hover:bg-redshift-hover rounded-lg shadow-sm transition">
+              <i class="fas fa-download mr-2"></i>
+              Guardar Ficheiro
+            </button>
+          </div>
+        </form>
+
+      </div>
+    </div>
+  </div>
+
+</div>
