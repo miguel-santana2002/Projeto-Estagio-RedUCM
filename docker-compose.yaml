@@ -17,6 +17,23 @@ services:
     networks:
       - webapp-network
 
+  ollama:
+    image: ollama/ollama:latest
+    container_name: local_ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    networks:
+      - webapp-network
+    restart: unless-stopped
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
   django:
     build:
       context: ./backend
@@ -25,6 +42,7 @@ services:
       - .env
     environment:
       POSTGRES_HOST: postgres
+      OLLAMA_HOST: http://ollama:11434
     volumes:
       - ./backend:/app:z
       - ./mediafiles:/mediafiles:z
@@ -33,6 +51,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      ollama:
+        condition: service_started
     networks:
       - webapp-network
 
@@ -53,3 +73,4 @@ networks:
 
 volumes:
   postgres_data:
+  ollama_data:

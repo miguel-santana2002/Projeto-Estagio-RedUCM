@@ -1,23 +1,19 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  content: [
-    "./src/**/*.{html,ts}",
-    "./node_modules/flowbite/**/*.js",
-    
-  ],
+  darkMode: "class",
+  content: ["./src/**/*.{html,ts}", "./node_modules/flowbite/**/*.js"],
   theme: {
     extend: {
       colors: {
         "redshift-red": "#E72230",
         "redshift-hover": "#c13e47",
-      }
-      ,
+      },
       fontFamily: {
-        "roboto": ["Roboto"],
-        "inter": ["Inter"],
+        roboto: ["Roboto"],
+        inter: ["Inter"],
         "open-sans": ["Open Sans"],
-        "poppins": ["Poppins"],
-        "varela-round": ['Varela Round']
+        poppins: ["Poppins"],
+        "varela-round": ["Varela Round"],
       },
       keyframes: {
         myBounce: {
@@ -31,20 +27,16 @@ module.exports = {
             transform: "scaleX(1) scaleY(1)",
           },
         },
-
       },
       animation: {
-        "myBounceAnim": "myBounce 8s linear infinite",
+        myBounceAnim: "myBounce 8s linear infinite",
       },
     },
   },
   plugins: [
-    require('flowbite/plugin')({
+    require("flowbite/plugin")({
       charts: true,
-
     }),
-    require('preline/plugin'),
-
-
+    require("preline/plugin"),
   ],
-}
+};

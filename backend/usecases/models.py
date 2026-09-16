@@ -26,7 +26,7 @@ class UseCase(models.Model):
 
 
 class UseCaseViewSet(viewsets.ModelViewSet):
-    from usecases.serializer import UseCaseSerializer
+    from usecases.serializers import UseCaseSerializer
     queryset = UseCase.objects.order_by('-id')
     serializer_class = UseCaseSerializer
     parser_classes = (MultiPartParser, FormParser)

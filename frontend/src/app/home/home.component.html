@@ -1,90 +1,101 @@
 <app-header></app-header>
 
+<div
+    class="mx-24 py-6 sm:px-8 flex border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 transition-colors duration-200">
 
-<div class=" mx-24 py-6 sm:px-8 flex border-t">
-
+    <!-- Secção Esquerda: Boas-Vindas e Estatísticas -->
     <div class="min-w-[75%]">
         <section class="bg-white dark:bg-gray-900">
             <div class="py-8 px-4 mx-auto max-w-screen-xl lg:py-16 lg:px-4">
                 <div class="max-w-screen-lg text-gray-500 sm:text-lg dark:text-gray-400">
-                    <h2 class="mb-2 text-4xl tracking-tight font-bold text-gray-800 dark:text-white">Bem-vindo,
-                        {{user.username}}</h2>
-                    <p class="mb-6">Aqui poderá encontrar um resumo dos dados estatísticos e atalhos rápidos para as
-                        suas tarefas mais comuns.</p>
+                    <h2 class="mb-2 text-4xl tracking-tight font-bold text-gray-800 dark:text-white">
+                        Bem-vindo, {{user.username}}
+                    </h2>
+                    <p class="mb-6 text-gray-600 dark:text-gray-400">
+                        Aqui poderá encontrar um resumo dos dados estatísticos e atalhos rápidos para as suas tarefas
+                        mais comuns.
+                    </p>
                     <div class="flex space-x-10">
 
+                        <!-- Card 1: Use Cases -->
                         <div
-                            class="flex items-center p-8 bg-white shadow-md rounded-lg hover:shadow-2xl transition duration-300 h-32 w-80">
+                            class="flex items-center p-8 bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 shadow-md rounded-lg hover:shadow-2xl transition duration-300 h-32 w-80">
                             <div
-                                class="inline-flex flex-shrink-0 items-center justify-center h-16 w-16 text-redshift-red bg-red-100 rounded-full mr-4">
-                                <i class="fas fa-file "></i>
+                                class="inline-flex flex-shrink-0 items-center justify-center h-16 w-16 text-redshift-red bg-red-100 dark:bg-red-950/40 dark:text-red-400 rounded-full mr-4">
+                                <i class="fas fa-file"></i>
                             </div>
                             <div>
-                                <span class="block text-xl font-bold">{{numberOfUseCases}}</span>
-                                <span class="block text-gray-500 text-sm ">Use Cases Registados</span>
-
+                                <span
+                                    class="block text-xl font-bold text-gray-900 dark:text-white">{{numberOfUseCases}}</span>
+                                <span class="block text-gray-500 dark:text-gray-400 text-sm">Use Cases Registados</span>
                             </div>
                         </div>
 
+                        <!-- Card 2: Modelos de Regra -->
                         <div
-                            class="flex items-center p-8 bg-white shadow-md rounded-lg hover:shadow-2xl transition duration-300 h-32 w-80">
+                            class="flex items-center p-8 bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 shadow-md rounded-lg hover:shadow-2xl transition duration-300 h-32 w-80">
                             <div
-                                class="inline-flex flex-shrink-0 items-center justify-center h-16 w-16 text-redshift-red bg-red-100 rounded-full mr-4">
-                                <i class="fas fa-list-ul "></i>
+                                class="inline-flex flex-shrink-0 items-center justify-center h-16 w-16 text-redshift-red bg-red-100 dark:bg-red-950/40 dark:text-red-400 rounded-full mr-4">
+                                <i class="fas fa-list-ul"></i>
                             </div>
                             <div>
-                                <span class="block text-xl font-bold">{{numberOfRuleModels}}</span>
-                                <span class="block text-gray-500 text-sm">Modelos de Regra Disponíveis</span>
-
+                                <span
+                                    class="block text-xl font-bold text-gray-900 dark:text-white">{{numberOfRuleModels}}</span>
+                                <span class="block text-gray-500 dark:text-gray-400 text-sm">Modelos de Regra
+                                    Disponíveis</span>
                             </div>
                         </div>
 
+                        <!-- Card 3: Regras Atribuídas -->
                         <div
-                            class="flex items-center p-8 bg-white shadow-md rounded-lg hover:shadow-2xl transition duration-300 h-32 w-80">
+                            class="flex items-center p-8 bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 shadow-md rounded-lg hover:shadow-2xl transition duration-300 h-32 w-80">
                             <div
-                                class="inline-flex flex-shrink-0 items-center justify-center h-16 w-16 text-redshift-red bg-red-100 rounded-full mr-4">
-                                <i class="fas fa-handshake "></i>
+                                class="inline-flex flex-shrink-0 items-center justify-center h-16 w-16 text-redshift-red bg-red-100 dark:bg-red-950/40 dark:text-red-400 rounded-full mr-4">
+                                <i class="fas fa-handshake"></i>
                             </div>
                             <div>
-                                <span class="block text-xl font-bold">{{numberOfRules}}</span>
-                                <span class="block text-gray-500 text-sm">Regras Atribuídas</span>
-
+                                <span
+                                    class="block text-xl font-bold text-gray-900 dark:text-white">{{numberOfRules}}</span>
+                                <span class="block text-gray-500 dark:text-gray-400 text-sm">Regras Atribuídas</span>
                             </div>
                         </div>
+
                     </div>
-
                 </div>
             </div>
-
-
         </section>
     </div>
 
+    <!-- Secção Direita: Card de Perfil -->
     <div class="min-w-[20%] ml-10">
-        <div class="bg-white shadow-xl hover:drop-shadow-xl transition duration-300 rounded-2xl py-3">
+        <div
+            class="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 shadow-xl hover:drop-shadow-xl transition duration-300 rounded-2xl py-3">
             <div class="photo-wrapper p-2">
                 <img class="w-32 h-32 rounded-full mx-auto" src="./assets/usericon.png" alt="User Icon">
             </div>
             <div class="p-2">
-                <h3 class="text-center text-xl text-gray-900 font-medium leading-8">{{user.username}}</h3>
-                <div class="text-center text-gray-400 text-xs font-semibold">
+                <h3 class="text-center text-xl text-gray-900 dark:text-white font-medium leading-8">{{user.username}}
+                </h3>
+                <div class="text-center text-gray-400 dark:text-gray-400 text-xs font-semibold">
                     <p>{{user.companies?.length === 0 ? 'Administrador' : 'Operador'}}</p>
                 </div>
-                <table class="text-xs my-3">
+                <table class="text-xs my-3 w-full">
                     <tbody>
                         <tr>
-                            <td class="px-2 py-2 text-gray-500 font-semibold text-sm">Email</td>
-                            <td class="px-2 py-2 text-sm">
-                                {{ user.email.length > 20 ? (user.email | slice:0:20) + '...' : user.email }}
+                            <td class="px-2 py-2 text-gray-500 dark:text-gray-400 font-semibold text-sm">Email</td>
+                            <td class="px-2 py-2 text-sm text-gray-800 dark:text-gray-200">
+                                {{ user.email.length > 30 ? (user.email | slice:0:20) + '...' : user.email }}
                             </td>
                         </tr>
                         <tr>
-                            <td class="px-2 py-2 text-gray-500 font-semibold text-sm">Registo</td>
-                            <td class="px-2 py-2 text-sm">{{user.date_joined | date: 'dd/MM/yyyy'}}</td>
+                            <td class="px-2 py-2 text-gray-500 dark:text-gray-400 font-semibold text-sm">Registo</td>
+                            <td class="px-2 py-2 text-sm text-gray-800 dark:text-gray-200">{{user.date_joined | date:
+                                'dd/MM/yyyy'}}</td>
                         </tr>
                         <tr>
-                            <td class="px-2 py-2 text-gray-500 font-semibold text-sm">Clientes</td>
-                            <td class="px-2 py-2 text-sm">
+                            <td class="px-2 py-2 text-gray-500 dark:text-gray-400 font-semibold text-sm align-top">
+                                Clientes</td>
+                            <td class="px-2 py-2 text-sm text-gray-800 dark:text-gray-200">
                                 <ul>
                                     <li *ngFor="let company of user.companies ?? []">{{ company }}</li>
                                 </ul>
@@ -92,69 +103,67 @@
                         </tr>
                     </tbody>
                 </table>
-
-
             </div>
         </div>
-    </div>
-
-    <div>
-
-
     </div>
 
 </div>
 
-<section *ngIf="user.companies?.length === 0 " class="bg-gray-100 dark:bg-gray-900">
+<!-- Secção: Atalhos Rápidos (Administrador) -->
+<section *ngIf="user.companies?.length === 0"
+    class="bg-gray-100 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 transition-colors duration-200">
     <div class="py-8 px-4 mx-auto max-w-screen-xl sm:py-8 lg:px-6">
         <div class="mb-10">
             <h2 class="mb-4 text-2xl tracking-tight font-extrabold text-gray-800 dark:text-white">Atalhos Rápidos</h2>
-            <p class="text-gray-500 text-md dark:text-gray-400">Navegue agora, para aquelas que são as funcionalidades
-                mais comuns de utilização no RedUCM.</p>
+            <p class="text-gray-500 dark:text-gray-400 text-md">
+                Navegue agora, para aquelas que são as funcionalidades mais comuns de utilização no RedUCM.
+            </p>
         </div>
         <div class="space-y-8 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-12 md:space-y-0">
+
+            <!-- Card Gerir Use Cases -->
             <div>
-
-
                 <div
                     class="max-w-sm bg-white border border-gray-200 rounded-lg shadow-md hover:drop-shadow-xl transition duration-300 dark:bg-gray-800 dark:border-gray-700">
-                    <a href="/manage-use-cases">
-                        <img class="rounded-t-lg" src="./assets/show1.png" alt="" />
+                    <a routerLink="/manage-use-cases">
+                        <img class="rounded-t-lg w-full" src="./assets/show1.png" alt="" />
                     </a>
                     <div class="p-5">
-                        <a href="/manage-use-cases">
+                        <a routerLink="/manage-use-cases">
                             <h5 class="mb-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-white">Gerir Use
                                 Cases</h5>
                         </a>
-                        <p class="mb-3 font-normal text-gray-700 dark:text-gray-400">Aqui poderá efetuar a gestão
-                            relativa aos Use Cases disponibilizados na plataforma, adicionar novos Use Cases e consultar
-                            os mesmos.</p>
-                        <a href="/manage-use-cases"
-                            class="inline-flex items-center px-3 py-2 text-sm font-medium text-center text-white bg-redshift-red rounded-lg hover:bg-redshift-hover focus:ring-4 focus:outline-none focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
+                        <p class="mb-3 font-normal text-gray-700 dark:text-gray-300">
+                            Aqui poderá efetuar a gestão relativa aos Use Cases disponibilizados na plataforma,
+                            adicionar novos Use Cases e consultar os mesmos.
+                        </p>
+                        <a routerLink="/manage-use-cases"
+                            class="inline-flex items-center px-3 py-2 text-sm font-medium text-center text-white bg-redshift-red rounded-lg hover:bg-redshift-hover transition">
                             Aceder
                             <i class="fas fa-arrow-right ms-2"></i>
                         </a>
                     </div>
                 </div>
             </div>
+
+            <!-- Card Gerir Modelos de Regra -->
             <div>
-
-
                 <div
                     class="max-w-sm bg-white border border-gray-200 rounded-lg shadow-md hover:drop-shadow-xl transition duration-300 dark:bg-gray-800 dark:border-gray-700">
-                    <a href="/manage-rule-models">
-                        <img class="rounded-t-lg" src="./assets/show2.png" alt="" />
+                    <a routerLink="/manage-rule-models">
+                        <img class="rounded-t-lg w-full" src="./assets/show2.png" alt="" />
                     </a>
                     <div class="p-5">
-                        <a href="/manage-rule-models">
+                        <a routerLink="/manage-rule-models">
                             <h5 class="mb-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-white">Gerir
                                 Modelos de Regra</h5>
                         </a>
-                        <p class="mb-3 font-normal text-gray-700 dark:text-gray-400">Nesta secção poderá efetuar a
-                            gestão relativa aos modelos de regra da plataforma, adicionar novos modelos e consultar e
-                            atribuir os existentes.</p>
-                        <a href="/manage-rule-models"
-                            class="inline-flex items-center px-3 py-2 text-sm font-medium text-center text-white bg-redshift-red rounded-lg hover:bg-redshift-hover focus:ring-4 focus:outline-none focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
+                        <p class="mb-3 font-normal text-gray-700 dark:text-gray-300">
+                            Nesta secção poderá efetuar a gestão relativa aos modelos de regra da plataforma, adicionar
+                            novos modelos e consultar e atribuir os existentes.
+                        </p>
+                        <a routerLink="/manage-rule-models"
+                            class="inline-flex items-center px-3 py-2 text-sm font-medium text-center text-white bg-redshift-red rounded-lg hover:bg-redshift-hover transition">
                             Aceder
                             <i class="fas fa-arrow-right ms-2"></i>
                         </a>
@@ -162,103 +171,90 @@
                 </div>
             </div>
 
-
+            <!-- Card Consultar Instâncias de Regra -->
             <div>
-
-
                 <div
                     class="max-w-sm bg-white border border-gray-200 rounded-lg shadow-md hover:drop-shadow-xl transition duration-300 dark:bg-gray-800 dark:border-gray-700">
-                    <a href="/manage-rules">
-                        <img class="rounded-t-lg" src="./assets/show3.png" alt="" />
+                    <a routerLink="/manage-rules">
+                        <img class="rounded-t-lg w-full" src="./assets/show3.png" alt="" />
                     </a>
                     <div class="p-5">
-                        <a href="/manage-rules">
+                        <a routerLink="/manage-rules">
                             <h5 class="mb-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-white">Consultar
                                 Instâncias de Regra</h5>
                         </a>
-                        <p class="mb-3 font-normal text-gray-700 dark:text-gray-400">Através deste módulo, poderá
-                            consultar e gerir instâncias de regra, atribuídas a determinado cliente, bem como proceder à
-                            sua personalização.</p>
-                        <a href="/manage-rules"
-                            class="inline-flex items-center px-3 py-2 text-sm font-medium text-center text-white bg-redshift-red rounded-lg hover:bg-redshift-hover focus:ring-4 focus:outline-none focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
+                        <p class="mb-3 font-normal text-gray-700 dark:text-gray-300">
+                            Através deste módulo, poderá consultar e gerir instâncias de regra, atribuídas a determinado
+                            cliente, bem como proceder à sua personalização.
+                        </p>
+                        <a routerLink="/manage-rules"
+                            class="inline-flex items-center px-3 py-2 text-sm font-medium text-center text-white bg-redshift-red rounded-lg hover:bg-redshift-hover transition">
                             Aceder
                             <i class="fas fa-arrow-right ms-2"></i>
                         </a>
                     </div>
                 </div>
             </div>
+
         </div>
     </div>
 </section>
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<section *ngIf="user.companies?.length !== 0 " class="bg-gray-100 dark:bg-gray-900">
+<!-- Secção: Atalhos Rápidos (Operador / Cliente) -->
+<section *ngIf="user.companies?.length !== 0"
+    class="bg-gray-100 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 transition-colors duration-200">
     <div class="py-8 px-4 mx-auto max-w-screen-xl sm:py-8 lg:px-6">
         <div class="mb-10">
             <h2 class="mb-4 text-2xl tracking-tight font-extrabold text-gray-800 dark:text-white">Atalhos Rápidos</h2>
-            <p class="text-gray-500 text-md dark:text-gray-400">Navegue agora, para aquelas que são as funcionalidades
-                mais comuns de utilização no RedUCM.</p>
+            <p class="text-gray-500 dark:text-gray-400 text-md">
+                Navegue agora, para aquelas que são as funcionalidades mais comuns de utilização no RedUCM.
+            </p>
         </div>
         <div class="space-y-8 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-12 md:space-y-0">
+
+            <!-- Card Consultar Use Cases -->
             <div>
-
-
                 <div
                     class="max-w-sm bg-white border border-gray-200 rounded-lg shadow-md hover:drop-shadow-xl transition duration-300 dark:bg-gray-800 dark:border-gray-700">
-                    <a href="/manage-use-cases">
-                        <img class="rounded-t-lg" src="./assets/show1.png" alt="" />
+                    <a routerLink="/manage-use-cases">
+                        <img class="rounded-t-lg w-full" src="./assets/show1.png" alt="" />
                     </a>
                     <div class="p-5">
-                        <a href="/manage-use-cases">
+                        <a routerLink="/manage-use-cases">
                             <h5 class="mb-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-white">Consultar
                                 Use Cases</h5>
                         </a>
-                        <p class="mb-3 font-normal text-gray-700 dark:text-gray-400">Aqui poderá consultar os Use Cases
-                            existentes no sistema, com recurso a diferentes dados e informações de frameworks. Poderá
-                            ainda consultar as regras associadas aos mesmos</p>
-                        <a href="/manage-use-cases"
-                            class="inline-flex items-center px-3 py-2 text-sm font-medium text-center text-white bg-redshift-red rounded-lg hover:bg-redshift-hover focus:ring-4 focus:outline-none focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
+                        <p class="mb-3 font-normal text-gray-700 dark:text-gray-300">
+                            Aqui poderá consultar os Use Cases existentes no sistema, com recurso a diferentes dados e
+                            informações de frameworks. Poderá ainda consultar as regras associadas aos mesmos.
+                        </p>
+                        <a routerLink="/manage-use-cases"
+                            class="inline-flex items-center px-3 py-2 text-sm font-medium text-center text-white bg-redshift-red rounded-lg hover:bg-redshift-hover transition">
                             Aceder
                             <i class="fas fa-arrow-right ms-2"></i>
                         </a>
                     </div>
                 </div>
             </div>
+
+            <!-- Card Consultar Modelos de Regra -->
             <div>
-
-
                 <div
                     class="max-w-sm bg-white border border-gray-200 rounded-lg shadow-md hover:drop-shadow-xl transition duration-300 dark:bg-gray-800 dark:border-gray-700">
-                    <a href="/read-rule-models">
-                        <img class="rounded-t-lg" src="./assets/show2.png" alt="" />
+                    <a routerLink="/read-rule-models">
+                        <img class="rounded-t-lg w-full" src="./assets/show2.png" alt="" />
                     </a>
                     <div class="p-5">
-                        <a href="/read-rule-models">
+                        <a routerLink="/read-rule-models">
                             <h5 class="mb-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-white">Consultar
-                                Modelos de regra</h5>
+                                Modelos de Regra</h5>
                         </a>
-                        <p class="mb-3 font-normal text-gray-700 dark:text-gray-400">Nesta secção poderá efetuar a
-                            consulta relativa aos modelos de regra da plataforma, podendo atribuir estas regras aos seus
-                            clientes.</p>
-                        <a href="/read-rule-models"
-                            class="inline-flex items-center px-3 py-2 text-sm font-medium text-center text-white bg-redshift-red rounded-lg hover:bg-redshift-hover focus:ring-4 focus:outline-none focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
+                        <p class="mb-3 font-normal text-gray-700 dark:text-gray-300">
+                            Nesta secção poderá efetuar a consulta relativa aos modelos de regra da plataforma, podendo
+                            atribuir estas regras aos seus clientes.
+                        </p>
+                        <a routerLink="/read-rule-models"
+                            class="inline-flex items-center px-3 py-2 text-sm font-medium text-center text-white bg-redshift-red rounded-lg hover:bg-redshift-hover transition">
                             Aceder
                             <i class="fas fa-arrow-right ms-2"></i>
                         </a>
@@ -266,31 +262,31 @@
                 </div>
             </div>
 
-
+            <!-- Card Consultar Instâncias de Regra (Operador) -->
             <div>
-
-
                 <div
                     class="max-w-sm bg-white border border-gray-200 rounded-lg shadow-md hover:drop-shadow-xl transition duration-300 dark:bg-gray-800 dark:border-gray-700">
-                    <a href="/my-instance-rules">
-                        <img class="rounded-t-lg" src="./assets/show3.png" alt="" />
+                    <a routerLink="/my-instance-rules">
+                        <img class="rounded-t-lg w-full" src="./assets/show3.png" alt="" />
                     </a>
                     <div class="p-5">
-                        <a href="/my-instance-rules">
+                        <a routerLink="/my-instance-rules">
                             <h5 class="mb-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-white">Consultar
                                 Instâncias de Regra</h5>
                         </a>
-                        <p class="mb-3 font-normal text-gray-700 dark:text-gray-400">Através deste módulo, poderá
-                            consultar e gerir instâncias de regra, atribuídas a determinado cliente, bem como proceder à
-                            sua personalização.</p>
-                        <a href="/my-instance-rules"
-                            class="inline-flex items-center px-3 py-2 text-sm font-medium text-center text-white bg-redshift-red rounded-lg hover:bg-redshift-hover focus:ring-4 focus:outline-none focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
+                        <p class="mb-3 font-normal text-gray-700 dark:text-gray-300">
+                            Através deste módulo, poderá consultar e gerir instâncias de regra, atribuídas a determinado
+                            cliente, bem como proceder à sua personalização.
+                        </p>
+                        <a routerLink="/my-instance-rules"
+                            class="inline-flex items-center px-3 py-2 text-sm font-medium text-center text-white bg-redshift-red rounded-lg hover:bg-redshift-hover transition">
                             Aceder
                             <i class="fas fa-arrow-right ms-2"></i>
                         </a>
                     </div>
                 </div>
             </div>
+
         </div>
     </div>
 </section>

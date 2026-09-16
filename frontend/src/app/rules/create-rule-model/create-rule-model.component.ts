@@ -58,6 +58,8 @@ export class CreateRuleModelComponent implements OnInit {
   selectedSyntax: string = 'AQL (QRadar)';
   selectedUseCase: any = '';
 
+  isAutoDetecting = false;
+
   createRuleModelForm = new FormGroup({
     title: new FormControl('', Validators.required),
     selectedUseCase: new FormControl('', Validators.required),
@@ -120,6 +122,8 @@ export class CreateRuleModelComponent implements OnInit {
   }
 
   applyExampleCode(syntax: string): void {
+    if (this.isAutoDetecting) return;
+
     const lang = this.getMonacoLanguage(syntax);
     this.options.language = lang;
     this.selectedModel = {
@@ -152,7 +156,101 @@ export class CreateRuleModelComponent implements OnInit {
     }, 100);
   }
 
-  onCodeChanged(value: any): void {}
+  onCodeChanged(value: string): void {
+    // 1. Previne a auto-deteção se for apenas o utilizador a carregar os exemplos predefinidos
+    if (this.isAutoDetecting) return;
+    if (!value || value.trim() === '') return;
+
+    // Remove case-sensitivity para a análise
+    const code = value.trim().toLowerCase();
+
+    let detectedType = '';
+    let detectedSyntax = '';
+
+    // 2. Motor de Regras de Deteção (Ordem de especificidade importa)
+    if (
+      code.startsWith('rule ') ||
+      (code.includes('strings:') && code.includes('condition:'))
+    ) {
+      detectedType = 'SOAR';
+      detectedSyntax = 'YARA Rule';
+    } else if (
+      code.includes('title:') &&
+      code.includes('logsource:') &&
+      code.includes('detection:')
+    ) {
+      detectedType = 'SIEM';
+      detectedSyntax = 'Sigma Rule';
+    } else if (code.startsWith('{') && code.includes('"query":')) {
+      detectedType = 'SIEM';
+      detectedSyntax = 'Elastic Lucene Rule';
+    } else if (
+      code.includes('sequence by') ||
+      code.includes('[process where')
+    ) {
+      detectedType = 'SIEM';
+      detectedSyntax = 'EQL (Elastic)';
+    } else if (code.includes('index=') || code.includes('sourcetype=')) {
+      detectedType = 'SIEM';
+      detectedSyntax = 'SPL (Splunk)';
+    } else if (
+      code.includes('$data =') ||
+      code.includes('into $target_dataset;')
+    ) {
+      detectedType = 'SIEM';
+      detectedSyntax = 'SPL2 (Splunk)';
+    } else if (
+      code.includes('| summarize') ||
+      code.includes('| project') ||
+      code.includes('timegenerated > ago')
+    ) {
+      detectedType = 'SIEM';
+      detectedSyntax = 'KQL (Sentinel)';
+    } else if (
+      code.includes('#event_simplename') ||
+      code.includes('groupby([')
+    ) {
+      detectedType = 'EDR';
+      detectedSyntax = 'CQL (CrowdStrike)';
+    } else if (
+      code.startsWith('select ') &&
+      code.includes('from ') &&
+      code.includes('where ')
+    ) {
+      detectedType = 'SIEM';
+      detectedSyntax = 'AQL (QRadar)';
+    }
+
+    // 3. Aplicação Segura ao Formulário
+    if (
+      detectedType &&
+      detectedSyntax &&
+      detectedSyntax !== this.selectedSyntax
+    ) {
+      // Bloqueia a reinjeção de código do applyExampleCode
+      this.isAutoDetecting = true;
+
+      // Atualiza o Reactive Form e as variáveis NgModel associadas ao UI
+      this.selectedType = detectedType;
+      this.selectedSyntax = detectedSyntax;
+
+      this.createRuleModelForm.patchValue(
+        {
+          selectedType: detectedType,
+          syntax: detectedSyntax,
+        },
+        { emitEvent: false }, // Evita que isto dispare validações ciclicas infinitas
+      );
+
+      // Ajusta o Syntax Highlighting do Editor (SQL, YAML, JSON)
+      this.options.language = this.getMonacoLanguage(detectedSyntax);
+
+      // Liberta o bloqueio após o ciclo de deteção
+      setTimeout(() => {
+        this.isAutoDetecting = false;
+      }, 100);
+    }
+  }
 
   createRuleModel(): void {
     if (this.createRuleModelForm.invalid) {
@@ -242,4 +340,17 @@ level: medium`,
         any of them
 }`,
   };
+
+  get isExampleCode(): boolean {
+    const currentVal = this.selectedModel.value;
+    const exampleVal = this.examples[this.selectedSyntax] || '';
+
+    // Função para remover diferenças de formatação (transforma quebras de linha e tabs em espaços simples)
+    const normalize = (text: string) => text.replace(/\s+/g, ' ').trim();
+
+    return (
+      currentVal.trim() !== '' &&
+      normalize(currentVal) === normalize(exampleVal)
+    );
+  }
 }

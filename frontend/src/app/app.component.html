@@ -1,30 +1,33 @@
 <!-- Overlay Global do Spinner com backdrop opaco -->
 @if (loaderService.isLoading()) {
-<div class="fixed inset-0 z-50 flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+<div
+  class="fixed inset-0 z-50 flex items-center justify-center bg-gray-50/80 dark:bg-gray-900/80 backdrop-blur-sm transition-colors duration-200">
   <app-spinner></app-spinner>
 </div>
 }
 
-<div class="flex flex-col min-h-screen bg-gray-50 dark:bg-gray-900">
+<div
+  class="flex flex-col min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white transition-colors duration-200">
   <main class="flex-grow flex flex-col">
     <router-outlet></router-outlet>
   </main>
 
   <!-- Só renderiza o footer quando o utilizador está autenticado -->
-  <footer *ngIf="!isLoginPage" class="mt-20 border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
+  <footer *ngIf="!isLoginPage"
+    class="mt-20 border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 transition-colors duration-200">
     <div class="mx-auto w-full max-w-screen-xl px-6 py-8 sm:flex sm:items-center sm:justify-between">
       <span class="text-sm text-gray-500 sm:text-center dark:text-gray-400">
         © 2024 - {{ currentYear }} <a href="https://redshift-consulting.com.pt/" target="_blank"
-          rel="noopener noreferrer" class="hover:underline">RedShift</a>
+          rel="noopener noreferrer" class="hover:underline text-redshift-red font-medium">RedShift</a>
       </span>
       <div class="flex mt-4 sm:justify-center sm:mt-0 space-x-6">
         <a href="https://www.facebook.com/redshiftglobal/?locale=pt_BR" target="_blank" rel="noopener noreferrer"
-          class="text-gray-500 hover:text-gray-900 dark:hover:text-white transition">
+          class="text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition">
           <i class="fab fa-facebook-f text-base"></i>
           <span class="sr-only">Facebook page</span>
         </a>
         <a href="https://pt.linkedin.com/company/redshiftglobal" target="_blank" rel="noopener noreferrer"
-          class="text-gray-500 hover:text-gray-900 dark:hover:text-white transition">
+          class="text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition">
           <i class="fab fa-linkedin-in text-base"></i>
           <span class="sr-only">LinkedIn</span>
         </a>
