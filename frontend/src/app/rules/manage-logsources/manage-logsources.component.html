@@ -1,98 +1,231 @@
 <app-header></app-header>
 <app-titlebanner title="Gerir Logsources" image="./assets/bannercover.jpg"></app-titlebanner>
 
-<div class="flex p-6 mx-14 dark:text-white">
-  <!-- Tabela de Log Sources -->
-  <div class="w-2/3 pr-6 mt-7">
-    <div
-      class="shadow-md rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 transition">
-      <table class="min-w-full leading-normal">
+<div class="page">
+  <div class="layout">
+
+    <section class="panel panel--main">
+      <header class="panel__toolbar">
+        <div class="panel__title-group">
+          <h3 class="panel__title">Fontes registadas</h3>
+          <span class="count-badge">{{ filteredLogsources.length }}</span>
+        </div>
+        <div class="search">
+          <i class="fas fa-search search__icon"></i>
+          <input
+            type="text"
+            class="search__input"
+            placeholder="Procurar por nome ou descrição"
+            [(ngModel)]="searchTerm"
+            name="search"
+          />
+        </div>
+      </header>
+
+      <table class="registry">
         <thead>
-          <tr
-            class="bg-gray-100 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 uppercase text-xs font-semibold tracking-wider">
-            <th class="py-3 px-6 text-left">Log Source</th>
-            <th class="py-3 px-9 text-left">Descrição</th>
-            <th class="py-3 px-4 text-center">Ações</th>
+          <tr>
+            <th class="registry__key">Log source</th>
+            <th>Tipo</th>
+            <th>Recolha</th>
+            <th>Descrição</th>
+            <th class="registry__action-col">Ações</th>
           </tr>
         </thead>
-        <tbody class="text-sm font-normal divide-y divide-gray-200 dark:divide-gray-700">
-          <tr *ngFor="let log of logsources; let i = index"
-            [ngClass]="i % 2 === 0 ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-900'"
-            class="hover:bg-gray-100 dark:hover:bg-gray-700 transition">
-            <td class="py-3.5 px-6 text-left font-medium text-gray-900 dark:text-white">{{ log.name }}</td>
-            <td class="py-3.5 px-9 text-left text-gray-700 dark:text-gray-300">{{ log.description }}</td>
-            <td class="py-3.5 px-4 text-center whitespace-nowrap">
-              <button data-modal-target="deleteModal" (click)="deleteLogSourceById(log.id)"
-                class="drop-shadow-sm bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-md transition">
-                <i class="fas fa-trash-alt text-xs"></i>
-              </button>
+        <tbody>
+          <tr *ngFor="let log of filteredLogsources" [class.registry__row--editing]="editingId === log.id">
+            <td class="registry__key">
+              <span class="key-tag">{{ log.name }}</span>
+            </td>
+            <td>
+              <span *ngIf="log.type" class="meta-tag">{{ typeLabel(log.type) }}</span>
+              <span *ngIf="!log.type" class="meta-empty">—</span>
+            </td>
+            <td>
+              <span *ngIf="log.collectionMethod" class="meta-tag">{{ collectionLabel(log.collectionMethod) }}</span>
+              <span *ngIf="!log.collectionMethod" class="meta-empty">—</span>
+            </td>
+            <td class="registry__desc">
+              <span class="desc-text">{{ log.description }}</span>
+              <div *ngIf="log.products?.length" class="products-row">
+                <span class="product-chip" *ngFor="let p of visibleProducts(log.products)">{{ p }}</span>
+                <span *ngIf="extraProductsCount(log.products) > 0" class="product-chip product-chip--more">
+                  +{{ extraProductsCount(log.products) }}
+                </span>
+              </div>
+            </td>
+            <td class="registry__action-col">
+              <div class="action-group">
+                <button (click)="viewDetails(log)" class="icon-btn" title="Ver detalhes" aria-label="Ver detalhes">
+                  <i class="fas fa-eye"></i>
+                </button>
+                <button (click)="startEdit(log)" class="icon-btn" title="Editar" aria-label="Editar logsource">
+                  <i class="fas fa-pen"></i>
+                </button>
+                <button (click)="confirmDelete(log)" class="icon-btn icon-btn--danger" title="Eliminar" aria-label="Eliminar logsource">
+                  <i class="fas fa-trash-alt"></i>
+                </button>
+              </div>
             </td>
           </tr>
-          <tr *ngIf="!logsources?.length">
-            <td colspan="3" class="py-6 px-6 text-center text-gray-500 dark:text-gray-400">
-              Nenhuma LogSource encontrada.
+
+          <tr *ngIf="logsources.length === 0">
+            <td colspan="5" class="empty-state">
+              Ainda nenhuma logsource registada. Adiciona a primeira no painel ao lado.
+            </td>
+          </tr>
+
+          <tr *ngIf="logsources.length > 0 && filteredLogsources.length === 0">
+            <td colspan="5" class="empty-state">
+              Nenhuma logsource corresponde a "{{ searchTerm }}".
             </td>
           </tr>
         </tbody>
       </table>
-    </div>
-  </div>
+    </section>
 
-  <!-- Formulário de Log Sources -->
-  <div class="w-1/3 pl-6 mt-7">
-    <div
-      class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 transition">
-      <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Adicionar LogSource</h2>
+    <aside class="panel panel--form">
+      <div class="panel__title--form-row">
+        <h3 class="panel__title panel__title--form">
+          {{ isEditing ? 'Editar fonte' : 'Registar nova fonte' }}
+        </h3>
+        <button *ngIf="isEditing" (click)="cancelEdit()" class="cancel-link" type="button">
+          Cancelar
+        </button>
+      </div>
 
-      <form #logForm="ngForm" (ngSubmit)="logForm.form.valid && createLogSource()">
+      <div *ngIf="successMessage" class="form-success">
+        {{ successMessage }}
+      </div>
 
-        <!-- Campo: Nome -->
-        <div class="mb-4">
-          <label class="block text-gray-700 dark:text-gray-300 text-sm font-medium mb-2" for="logName">
-            Nome da LogSource <span class="text-red-500">*</span>
+      <form #logForm="ngForm" (ngSubmit)="logForm.form.valid && submitForm()">
+        <div class="field">
+          <label class="field__label" for="logName">
+            Nome <span class="field__required">*</span>
           </label>
-          <input #logNameCtrl="ngModel" [ngClass]="{
-              'border-red-500 dark:border-red-500': logNameCtrl.invalid && logNameCtrl.touched,
-              'border-gray-300 dark:border-gray-600': !(logNameCtrl.invalid && logNameCtrl.touched)
-            }"
-            class="border rounded-lg w-full py-2 px-3 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-redshift-red text-sm transition"
-            id="logName" type="text" [(ngModel)]="newLog.name" name="logName" placeholder="Ex: Windows Security Events"
-            required />
-          <p *ngIf="logNameCtrl.invalid && logNameCtrl.touched" class="text-red-600 dark:text-red-400 text-xs mt-1">
-            Obrigatório.</p>
+          <input
+            #logNameCtrl="ngModel"
+            [class.field__input--error]="logNameCtrl.invalid && logNameCtrl.touched"
+            class="field__input field__input--mono"
+            id="logName"
+            type="text"
+            [(ngModel)]="newLog.name"
+            name="logName"
+            required
+            placeholder="windows"
+          />
+          <p *ngIf="logNameCtrl.invalid && logNameCtrl.touched" class="field__error">
+            Indica um nome.
+          </p>
         </div>
 
-        <!-- Campo: Descrição -->
-        <div class="mb-4">
-          <label class="block text-gray-700 dark:text-gray-300 text-sm font-medium mb-2" for="logDescription">
-            Descrição <span class="text-red-500">*</span>
-          </label>
-          <textarea #logDescCtrl="ngModel" [ngClass]="{
-              'border-red-500 dark:border-red-500': logDescCtrl.invalid && logDescCtrl.touched,
-              'border-gray-300 dark:border-gray-600': !(logDescCtrl.invalid && logDescCtrl.touched)
-            }"
-            class="border rounded-lg w-full py-2 px-3 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-redshift-red text-sm transition"
-            id="logDescription" rows="4" [(ngModel)]="newLog.description" name="logDescription"
-            placeholder="Breve resumo da fonte de registos..." required>
-          </textarea>
-          <p *ngIf="logDescCtrl.invalid && logDescCtrl.touched" class="text-red-600 dark:text-red-400 text-xs mt-1">
-            Obrigatório.</p>
+        <div class="field-row">
+          <div class="field">
+            <label class="field__label" for="logType">Tipo</label>
+            <select class="field__input" id="logType" [(ngModel)]="newLog.type" name="logType">
+              <option value="">—</option>
+              <option *ngFor="let opt of typeOptions" [value]="opt.value">{{ opt.label }}</option>
+            </select>
+            <!-- Só aparece se o Tipo for 'other' -->
+            <input *ngIf="newLog.type === 'other'"
+                   class="field__input mt-2"
+                   type="text"
+                   [(ngModel)]="customType"
+                   name="customType"
+                   placeholder="Especificar tipo..."
+                   required />
+          </div>
+          <div class="field">
+            <label class="field__label" for="logCollection">Recolha</label>
+            <select class="field__input" id="logCollection" [(ngModel)]="newLog.collectionMethod" name="logCollection">
+              <option value="">—</option>
+              <option *ngFor="let opt of collectionOptions" [value]="opt.value">{{ opt.label }}</option>
+            </select>
+            <!-- Só aparece se a Recolha for 'other' -->
+            <input *ngIf="newLog.collectionMethod === 'other'"
+                   class="field__input mt-2"
+                   type="text"
+                   [(ngModel)]="customCollection"
+                   name="customCollection"
+                   placeholder="Especificar recolha..."
+                   required />
+          </div>
         </div>
 
-        <!-- Mensagem de Erro Geral -->
-        <div *ngIf="errorMessage" class="mb-4 text-red-600 dark:text-red-400 text-sm">
+        <div class="field">
+          <label class="field__label" for="logProducts">Produtos</label>
+          <input
+            class="field__input"
+            id="logProducts"
+            type="text"
+            [(ngModel)]="productsInput"
+            name="logProducts"
+            placeholder="Sysmon, CrowdStrike Falcon"
+          />
+          <p class="field__hint">Separa por vírgula.</p>
+        </div>
+
+        <div class="field">
+          <label class="field__label" for="logDescription">
+            Descrição <span class="field__required">*</span>
+          </label>
+          <textarea
+            #logDescCtrl="ngModel"
+            [class.field__input--error]="logDescCtrl.invalid && logDescCtrl.touched"
+            class="field__input"
+            id="logDescription"
+            rows="3"
+            [(ngModel)]="newLog.description"
+            name="logDescription"
+            required
+            placeholder="Windows Event Logs"
+          ></textarea>
+          <p *ngIf="logDescCtrl.invalid && logDescCtrl.touched" class="field__error">
+            Indica uma descrição.
+          </p>
+        </div>
+
+        <div *ngIf="errorMessage" class="form-error">
           {{ errorMessage }}
         </div>
 
-        <!-- Botão Submeter -->
-        <div>
-          <button type="submit" [disabled]="!logForm.form.valid"
-            class="w-full h-10 bg-redshift-red hover:bg-redshift-hover text-white rounded-lg font-medium shadow-md transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
-            <i class="fas fa-plus"></i>
-            <span>Adicionar Novo</span>
-          </button>
-        </div>
+        <button type="submit" [disabled]="!logForm.form.valid" class="submit-btn">
+          <i class="fas" [class.fa-plus]="!isEditing" [class.fa-check]="isEditing"></i>
+          {{ isEditing ? 'Guardar alterações' : 'Registar fonte' }}
+        </button>
       </form>
+    </aside>
+
+  </div>
+    <div *ngIf="selectedLog" class="modal-overlay" (click)="closeDetails()">
+    <div class="modal-box" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <span class="key-tag key-tag--modal">{{ selectedLog.name }}</span>
+        <button class="modal-close" (click)="closeDetails()" aria-label="Fechar">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="modal-row modal-row--block">
+          <span class="modal-label">Tipo</span>
+          <span class="modal-desc">{{ selectedLog.type ? typeLabel(selectedLog.type) : '—' }}</span>
+        </div>
+        <div class="modal-row modal-row--block">
+          <span class="modal-label">Recolha</span>
+          <span class="modal-desc">{{ selectedLog.collectionMethod ? collectionLabel(selectedLog.collectionMethod) : '—' }}</span>
+        </div>
+        <div class="modal-row modal-row--block">
+          <span class="modal-label">Produtos</span>
+          <div class="products-row" *ngIf="selectedLog.products?.length">
+            <span class="product-chip" *ngFor="let p of selectedLog.products">{{ p }}</span>
+          </div>
+          <span *ngIf="!selectedLog.products?.length">—</span>
+        </div>
+        <div class="modal-row modal-row--block">
+          <span class="modal-label">Descrição</span>
+          <p class="modal-desc">{{ selectedLog.description }}</p>
+        </div>
+      </div>
     </div>
   </div>
 </div>

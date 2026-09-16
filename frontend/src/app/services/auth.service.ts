@@ -191,16 +191,14 @@ export class AuthService {
       );
   }
 
-  // Obter detalhes de uma empresa específica por ID
   getClientById(id: any): Observable<any> {
     const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
     return this.http.get<any>(`${AUTH_URL}getCompany/${id}`, { headers });
   }
 
-  // Atualizar dados da empresa (nome e logsources)
-  updateCompany(id: any, companyData: any): Observable<any> {
+  updateCompany(id: any, payload: any): Observable<any> {
     const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
-    return this.http.post<any>(`${AUTH_URL}updateCompany/${id}`, companyData, {
+    return this.http.post<any>(`${AUTH_URL}updateCompany/${id}`, payload, {
       headers,
     });
   }
