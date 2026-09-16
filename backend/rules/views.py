@@ -263,10 +263,15 @@ def updateLogSourceById(request, id):
 
         logsource.name = new_name
         logsource.description = request.data.get('description', logsource.description)
+        logsource.type = request.data.get('type', logsource.type)
+        logsource.collectionMethod = request.data.get('collectionMethod', logsource.collectionMethod)
+        logsource.products = request.data.get('products', logsource.products)
         logsource.save()
         return JsonResponse({'message': 'LogSource atualizada com sucesso'})
     except RegisteredLogSource.DoesNotExist:
         return JsonResponse({'error': 'LogSource não encontrada'}, status=404)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=400)
 
 @api_view(['POST'])
 def deleteLogSourceById(request, id):

@@ -315,8 +315,19 @@
 }
 
 select.field__input {
-  background: var(--surface);
+  background-color: var(--surface);
   cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23565c66%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 10px auto;
+  padding-right: 30px;
+}
+
+.mt-2 {
+  margin-top: 8px;
 }
 
 .field__hint {
@@ -363,4 +374,115 @@ select.field__input {
   color: #2e7d32;
   font-size: 11.5px;
   border-radius: 4px;
+}
+
+.registry__desc {
+  max-width: 280px;
+}
+
+.desc-text {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  color: var(--graphite);
+  /* As duas linhas abaixo forçam a quebra de palavras gigantes para o clamp funcionar */
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.product-chip--more {
+  color: var(--red);
+  font-weight: 500;
+}
+
+.key-tag {
+  display: inline-block;
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: bottom;
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(26, 29, 35, 0.5);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 3rem 0;
+  overflow-y: auto;
+  z-index: 100;
+}
+
+.modal-box {
+  background: var(--surface);
+  border-radius: 8px;
+  width: 90%;
+  max-width: 420px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.key-tag--modal {
+  max-width: none;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  color: var(--graphite);
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.modal-close:hover {
+  color: var(--red);
+}
+
+.modal-body {
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.modal-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12.5px;
+}
+
+.modal-row--block {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.modal-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--graphite);
+  text-transform: uppercase;
+}
+
+.modal-desc {
+  font-size: 12.5px;
+  color: var(--ink);
+  margin: 0;
+  line-height: 1.5;
+  /* As três linhas abaixo forçam o texto a descer em vez de vazar para os lados */
+  white-space: normal;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }

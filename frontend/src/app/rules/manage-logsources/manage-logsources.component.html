@@ -46,27 +46,23 @@
               <span *ngIf="!log.collectionMethod" class="meta-empty">—</span>
             </td>
             <td class="registry__desc">
-              {{ log.description }}
+              <span class="desc-text">{{ log.description }}</span>
               <div *ngIf="log.products?.length" class="products-row">
-                <span class="product-chip" *ngFor="let p of log.products">{{ p }}</span>
+                <span class="product-chip" *ngFor="let p of visibleProducts(log.products)">{{ p }}</span>
+                <span *ngIf="extraProductsCount(log.products) > 0" class="product-chip product-chip--more">
+                  +{{ extraProductsCount(log.products) }}
+                </span>
               </div>
             </td>
             <td class="registry__action-col">
               <div class="action-group">
-                <button
-                  (click)="startEdit(log)"
-                  class="icon-btn"
-                  title="Editar"
-                  aria-label="Editar logsource"
-                >
+                <button (click)="viewDetails(log)" class="icon-btn" title="Ver detalhes" aria-label="Ver detalhes">
+                  <i class="fas fa-eye"></i>
+                </button>
+                <button (click)="startEdit(log)" class="icon-btn" title="Editar" aria-label="Editar logsource">
                   <i class="fas fa-pen"></i>
                 </button>
-                <button
-                  (click)="confirmDelete(log)"
-                  class="icon-btn icon-btn--danger"
-                  title="Eliminar"
-                  aria-label="Eliminar logsource"
-                >
+                <button (click)="confirmDelete(log)" class="icon-btn icon-btn--danger" title="Eliminar" aria-label="Eliminar logsource">
                   <i class="fas fa-trash-alt"></i>
                 </button>
               </div>
@@ -130,6 +126,14 @@
               <option value="">—</option>
               <option *ngFor="let opt of typeOptions" [value]="opt.value">{{ opt.label }}</option>
             </select>
+            <!-- Só aparece se o Tipo for 'other' -->
+            <input *ngIf="newLog.type === 'other'"
+                   class="field__input mt-2"
+                   type="text"
+                   [(ngModel)]="customType"
+                   name="customType"
+                   placeholder="Especificar tipo..."
+                   required />
           </div>
           <div class="field">
             <label class="field__label" for="logCollection">Recolha</label>
@@ -137,6 +141,14 @@
               <option value="">—</option>
               <option *ngFor="let opt of collectionOptions" [value]="opt.value">{{ opt.label }}</option>
             </select>
+            <!-- Só aparece se a Recolha for 'other' -->
+            <input *ngIf="newLog.collectionMethod === 'other'"
+                   class="field__input mt-2"
+                   type="text"
+                   [(ngModel)]="customCollection"
+                   name="customCollection"
+                   placeholder="Especificar recolha..."
+                   required />
           </div>
         </div>
 
@@ -184,5 +196,36 @@
       </form>
     </aside>
 
+  </div>
+    <div *ngIf="selectedLog" class="modal-overlay" (click)="closeDetails()">
+    <div class="modal-box" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <span class="key-tag key-tag--modal">{{ selectedLog.name }}</span>
+        <button class="modal-close" (click)="closeDetails()" aria-label="Fechar">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="modal-row modal-row--block">
+          <span class="modal-label">Tipo</span>
+          <span class="modal-desc">{{ selectedLog.type ? typeLabel(selectedLog.type) : '—' }}</span>
+        </div>
+        <div class="modal-row modal-row--block">
+          <span class="modal-label">Recolha</span>
+          <span class="modal-desc">{{ selectedLog.collectionMethod ? collectionLabel(selectedLog.collectionMethod) : '—' }}</span>
+        </div>
+        <div class="modal-row modal-row--block">
+          <span class="modal-label">Produtos</span>
+          <div class="products-row" *ngIf="selectedLog.products?.length">
+            <span class="product-chip" *ngFor="let p of selectedLog.products">{{ p }}</span>
+          </div>
+          <span *ngIf="!selectedLog.products?.length">—</span>
+        </div>
+        <div class="modal-row modal-row--block">
+          <span class="modal-label">Descrição</span>
+          <p class="modal-desc">{{ selectedLog.description }}</p>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
