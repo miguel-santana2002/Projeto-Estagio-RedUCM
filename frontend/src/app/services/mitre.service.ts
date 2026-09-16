@@ -36,6 +36,9 @@ export class MitreService {
     return this.http.get<any>(`${AUTH_URL}getComponentsByTechniqueId/${id}`, { headers });
   }
 
-
+  getAllTechniques(): Observable<any> {
+    const headers = new HttpHeaders({'Content-Type': 'application/json'});
+    return this.http.get<any>(`${AUTH_URL}getAllTechniques/`, { headers });
+  }
 
 }
