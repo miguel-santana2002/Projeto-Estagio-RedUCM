@@ -30,19 +30,14 @@ export class HeaderComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    initFlowbite();
-
-    // 1. Carrega dados no arranque do componente
+    // 1. Carrega dados no arranque
     this.checkAndLoadUser();
 
-    // 2. Reavalia o estado de login a cada navegação de rota (ex: Landing -> Login -> Home)
+    // 2. Reavalia a cada navegação
     this.navSub = this.router.events
       .pipe(filter((event) => event instanceof NavigationEnd))
       .subscribe(() => {
         this.checkAndLoadUser();
-        setTimeout(() => {
-          initFlowbite();
-        }, 50);
       });
   }
 
@@ -53,7 +48,6 @@ export class HeaderComponent implements OnInit, OnDestroy {
   }
 
   checkAndLoadUser(): void {
-    // Se estiver explicitamente na rota raiz ('/') ou no login, não força pedido à API se não houver dados
     const isPublicRoute =
       this.router.url === '/' ||
       this.router.url === '/login' ||
@@ -63,7 +57,6 @@ export class HeaderComponent implements OnInit, OnDestroy {
       sessionStorage.getItem('token') ||
       localStorage.getItem('access_token');
 
-    // Se estiver numa rota protegida OU se detetar token armazenado
     if (!isPublicRoute || token) {
       this.authService.loggedInInfo().subscribe({
         next: (value: any) => {
@@ -79,13 +72,17 @@ export class HeaderComponent implements OnInit, OnDestroy {
           } else {
             this.user = null;
           }
+          // INICIA O FLOWBITE APENAS DEPOIS DO DOM ATUALIZAR
+          setTimeout(() => initFlowbite(), 50);
         },
         error: () => {
           this.user = null;
+          setTimeout(() => initFlowbite(), 50);
         },
       });
     } else {
       this.user = null;
+      setTimeout(() => initFlowbite(), 50);
     }
   }
 
