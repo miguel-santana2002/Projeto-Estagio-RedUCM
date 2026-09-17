@@ -18,10 +18,10 @@ from drf_spectacular.utils import OpenApiResponse
 attack = enterpriseattack.Attack()
 
 @extend_schema(description='Get technique by ID',
-                responses={
-                     200: OpenApiResponse(response=None, description='Technique retrieved successfully'),
-                     400: OpenApiResponse(response=None, description='Invalid request method')
-                })
+               responses={
+                    200: OpenApiResponse(response=None, description='Technique retrieved successfully'),
+                    400: OpenApiResponse(response=None, description='Invalid request method')
+               })
 @api_view(['GET'])
 def getTechniqueById(request, id):
     if request.method == 'GET':
@@ -104,10 +104,10 @@ def createUseCase(request):
     
 
 @extend_schema(description='Get all mitigations based on technique ID.',
-                responses={
-                     200: OpenApiResponse(response=None, description='Techniques retrieved successfully'),
-                     400: OpenApiResponse(response=None, description='Invalid request method')
-                })
+               responses={
+                    200: OpenApiResponse(response=None, description='Techniques retrieved successfully'),
+                    400: OpenApiResponse(response=None, description='Invalid request method')
+               })
 @api_view(['GET'])
 def getMitigationsByTechniqueId(request, id):
 
@@ -133,14 +133,15 @@ def getMitigationsByTechniqueId(request, id):
              
              
             
+         
     return JsonResponse(Mitigations, safe=False)
 
 
 @extend_schema(description='Get all data sources based on technique ID.',
-                responses={
-                     200: OpenApiResponse(response=None, description='Data sources retrieved successfully'),
-                     400: OpenApiResponse(response=None, description='Invalid request method')
-                })
+               responses={
+                    200: OpenApiResponse(response=None, description='Data sources retrieved successfully'),
+                    400: OpenApiResponse(response=None, description='Invalid request method')
+               })
 @api_view(['GET'])
 def getDataSourcesByTechniqueId(request, id):
     techniques = attack.techniques
@@ -165,10 +166,10 @@ def getDataSourcesByTechniqueId(request, id):
 
 
 @extend_schema(description='Get all components based on technique ID.',
-                responses={
+               responses={
                         200: OpenApiResponse(response=None, description='Components retrieved successfully'),
                         400: OpenApiResponse(response=None, description='Invalid request method')
-                })
+               })
 @api_view(['GET'])
 def getComponentsByTechniqueId(request, id):
     techniques = attack.techniques
@@ -192,10 +193,10 @@ def getComponentsByTechniqueId(request, id):
 
 
 @extend_schema(description='Get all UseCases.',
-                responses={
+               responses={
                         200: OpenApiResponse(response=None, description='Use Cases retrieved successfully'),
                         400: OpenApiResponse(response=None, description='Invalid request method')
-                })
+               })
 @api_view(['GET'])
 def getUseCases(request):
     if request.method == 'GET':
@@ -209,10 +210,10 @@ def getUseCases(request):
         return JsonResponse({'error': 'Invalid request method'})
 
 @extend_schema(description='Delete UseCase based on ID.',
-                responses={
+               responses={
                         200: OpenApiResponse(response=None, description='Use Case deleted successfully'),
                         400: OpenApiResponse(response=None, description='Invalid request method')
-                })
+               })
 @api_view(['POST'])
 def deleteUseCase(request, id):
     if request.method == 'POST':
@@ -224,10 +225,10 @@ def deleteUseCase(request, id):
     
 
 @extend_schema(description='Get UseCase based on ID.',
-                responses={
+               responses={
                         200: OpenApiResponse(response=None, description='Use Case retrieved successfully'),
                         400: OpenApiResponse(response=None, description='Invalid request method')
-                })
+               })
 @api_view(['GET'])
 def getUseCaseById(request, id):
     try:
@@ -285,4 +286,21 @@ def updateUseCase(request, id):
     else:
         return JsonResponse({'error': 'Invalid request method'})
     
-    
+
+@extend_schema(description='Get all MITRE techniques.',
+               responses={
+                    200: OpenApiResponse(response=None, description='All techniques retrieved successfully'),
+                    400: OpenApiResponse(response=None, description='Invalid request method')
+               })
+@api_view(['GET'])
+def getAllTechniques(request):
+    if request.method == 'GET':
+        techniques_list = []
+        for technique in attack.techniques:
+            techniques_list.append({
+                'id': technique.id,
+                'name': technique.name
+            })
+        return JsonResponse(techniques_list, safe=False)
+    else:
+        return JsonResponse({'error': 'Invalid request method'}, status=400)
