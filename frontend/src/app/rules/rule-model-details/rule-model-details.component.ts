@@ -88,21 +88,20 @@ export class RuleModelDetailsComponent implements OnInit {
   siemSintaxes = [
     'AQL (QRadar)',
     'SPL (Splunk)',
-    'SPL2 (Splunk)',
     'KQL (Sentinel)',
     'EQL (Elastic)',
     'Sigma Rule',
-    'Elastic Lucene Rule',
   ];
 
-  edrSintaxes = ['CQL (CrowdStrike)', 'Defender KQL', 'Sigma Rule'];
+  edrSintaxes = ['CQL (CrowdStrike)', 'Sigma Rule'];
 
+  // Atualizado: Removido Lucene, adicionado CQL (CrowdStrike) e EQL (Elastic)
   availableSyntaxes = [
     { id: 'SPL (Splunk)', name: 'SPL (Splunk)' },
     { id: 'KQL (Sentinel)', name: 'KQL (Sentinel)' },
     { id: 'AQL (QRadar)', name: 'AQL (QRadar)' },
-    { id: 'Elastic Lucene Rule', name: 'Elastic Lucene Rule' },
     { id: 'EQL (Elastic)', name: 'EQL (Elastic)' },
+    { id: 'CQL (CrowdStrike)', name: 'CQL (CrowdStrike)' },
     { id: 'Sigma Rule', name: 'Sigma Rule' },
   ];
 
@@ -114,6 +113,7 @@ export class RuleModelDetailsComponent implements OnInit {
   targetSyntax: string = '';
   isConverting: boolean = false;
   conversionError: string = '';
+  conversionSource: string = ''; // Adicionado para evitar erro de compilação no template
 
   createRuleForm = new FormGroup({
     modalCode: new FormControl(''),
@@ -196,12 +196,11 @@ export class RuleModelDetailsComponent implements OnInit {
 
   getMonacoLanguage(syntax: string): string {
     switch (syntax) {
-      case 'Elastic Lucene Rule':
-        return 'json';
       case 'SPL (Splunk)':
       case 'AQL (QRadar)':
       case 'KQL (Sentinel)':
       case 'EQL (Elastic)':
+      case 'CQL (CrowdStrike)':
         return 'sql';
       default:
         return 'yaml';
@@ -247,7 +246,7 @@ export class RuleModelDetailsComponent implements OnInit {
 
           setTimeout(() => (this.message = ''), 4000);
         },
-        error: (err) =>
+        error: (err: any) =>
           console.error('Erro ao atualizar código e sintaxe:', err),
       });
   }
@@ -271,6 +270,8 @@ export class RuleModelDetailsComponent implements OnInit {
     this.convertedRuleContent = '';
     this.targetSyntax = '';
     this.isConverting = false;
+    this.conversionError = '';
+    this.conversionSource = '';
     this.showConvertModal = true;
   }
 
@@ -281,9 +282,9 @@ export class RuleModelDetailsComponent implements OnInit {
   convertRule(): void {
     if (!this.targetSyntax || !this.sourceRuleContent) return;
 
-    // Se a sintaxe de destino for igual à atual, não precisa de conversão
     if (this.targetSyntax === this.ruleModel.syntax) {
       this.convertedRuleContent = this.sourceRuleContent;
+      this.conversionSource = 'pySigma (Original)';
       return;
     }
 
@@ -291,6 +292,7 @@ export class RuleModelDetailsComponent implements OnInit {
     this.convertedRuleContent = '';
     this.intermediateSigmaContent = '';
     this.conversionError = '';
+    this.conversionSource = '';
 
     const payload = {
       source_query: this.sourceRuleContent,
@@ -302,6 +304,8 @@ export class RuleModelDetailsComponent implements OnInit {
       next: (res: any) => {
         this.convertedRuleContent = res.target_query;
         this.intermediateSigmaContent = res.sigma_rule;
+        // Identifica quem converteu com base na resposta ou define por defeito IA + pySigma
+        this.conversionSource = this.engineLabel(res.source);
         this.isConverting = false;
       },
       error: (err: any) => {
@@ -398,7 +402,22 @@ export class RuleModelDetailsComponent implements OnInit {
         document.body.classList.remove('overflow-hidden');
         this.router.navigate(['/manage-rules']);
       },
-      error: (e) => console.error('Erro ao atribuir regra ao cliente:', e),
+      error: (e: any) => console.error('Erro ao atribuir regra ao cliente:', e),
     });
+  }
+
+  engineLabel(source: string): string {
+    switch (source) {
+      case 'pysigma':
+        return 'pySigma (determinístico)';
+      case 'pysigma+llm':
+        return 'pySigma + IA (agregação assistida)';
+      case 'llm':
+        return 'IA (não verificado)';
+      case 'llm+pysigma':
+        return 'IA + pySigma';
+      default:
+      return source || 'Desconhecido';
+    }
   }
 }

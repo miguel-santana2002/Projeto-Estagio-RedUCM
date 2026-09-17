@@ -50,12 +50,11 @@ export class RuleDetailsComponent {
   ) {}
 
   code: any = '';
-
   clients: any = [];
-
   selectClient: any;
-
   convertedCode: any = '';
+  conversionError: string = '';
+  conversionSource: string = '';
 
   rule: any = {};
   usecase: any = {};
@@ -102,7 +101,6 @@ export class RuleDetailsComponent {
 
   onCodeModelChanged(event: CodeModelChangedEvent) {
     console.log('code model changed', event);
-
     setTimeout(() => {
       event.sender.formatDocument();
     }, 100);
@@ -126,7 +124,6 @@ export class RuleDetailsComponent {
       };
 
       this.selectedModel = JSON.parse(JSON.stringify(newModel));
-
       this.onCodeChanged(this.rule.ruleCode);
 
       this.useCaseService
@@ -151,34 +148,63 @@ export class RuleDetailsComponent {
     saveAs(blob, this.rule.ruleModel.title + '.txt');
   }
 
+  private resetConversionState() {
+    this.conversionError = '';
+    this.convertedCode = '';
+    this.conversionSource = '';
+  }
+
   convertSigmaToSplunk() {
-    console.log(this.code);
-    this.sigmaConversionsService
-      .convertSigmaToSplunk(this.code)
-      .subscribe((data: any) => {
-        console.log(data);
-        this.convertedCode = data;
-      });
+    this.resetConversionState();
+    this.sigmaConversionsService.convertSigmaToSplunk(this.code).subscribe({
+      next: (data: any) => {
+        this.convertedCode = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+        this.conversionSource = 'pySigma';
+      },
+      error: (err: any) => {
+        this.conversionError = err.error?.error || err.message || 'Erro desconhecido ao converter para Splunk.';
+      }
+    });
   }
 
   convertSigmaToQRadar() {
-    console.log(this.code);
-    this.sigmaConversionsService
-      .convertSigmaToQRadar(this.code)
-      .subscribe((data: any) => {
-        console.log(data);
-        this.convertedCode = data;
-      });
+    this.resetConversionState();
+    this.sigmaConversionsService.convertSigmaToQRadar(this.code).subscribe({
+      next: (data: any) => {
+        this.convertedCode = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+        this.conversionSource = 'pySigma';
+      },
+      error: (err: any) => {
+        this.conversionError = err.error?.error || err.message || 'Erro desconhecido ao converter para QRadar.';
+      }
+    });
   }
 
-  convertSigmaToElasticLucena() {
-    console.log(this.code);
-    this.sigmaConversionsService
-      .convertSigmaToElasticLucena(this.code)
-      .subscribe((data: any) => {
-        console.log(data);
-        this.convertedCode = data;
-      });
+  convertSigmaToElasticEQL() {
+    this.resetConversionState();
+    // Atualizado para chamar o método correto no serviço
+    this.sigmaConversionsService.convertSigmaToElasticEQL(this.code).subscribe({
+      next: (data: any) => {
+        this.convertedCode = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+        this.conversionSource = 'pySigma';
+      },
+      error: (err: any) => {
+        this.conversionError = err.error?.error || err.message || 'Erro desconhecido ao converter para Elastic EQL.';
+      }
+    });
+  }
+
+  convertSigmaToCrowdStrike() {
+    this.resetConversionState();
+    this.sigmaConversionsService.convertSigmaToCrowdStrike(this.code).subscribe({
+      next: (data: any) => {
+        this.convertedCode = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+        this.conversionSource = 'pySigma';
+      },
+      error: (err: any) => {
+        this.conversionError = err.error?.error || err.message || 'Erro desconhecido ao converter para CrowdStrike (CQL).';
+      }
+    });
   }
 
   message: string = '';

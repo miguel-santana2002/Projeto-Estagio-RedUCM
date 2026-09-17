@@ -12,6 +12,16 @@ from sigma.backends.splunk import SplunkBackend
 from sigma.backends.kusto import KustoBackend
 from sigma.backends.elasticsearch import LuceneBackend, EqlBackend
 from sigma.backends.QRadarAQL import QRadarAQLBackend
+from sigma.pipelines.splunk import splunk_windows_pipeline
+from sigma.pipelines.elasticsearch import ecs_windows
+from sigma.pipelines.microsoft365defender import microsoft_365_defender_pipeline
+try:
+    from sigma.backends.crowdstrike import LogScaleBackend
+    from sigma.pipelines.crowdstrike import crowdstrike_falcon_pipeline
+except ImportError:
+    LogScaleBackend = None
+    crowdstrike_falcon_pipeline = None
+
 
 OLLAMA_HOST = os.environ.get("OLLAMA_HOST", "http://ollama:11434")
 MODEL_NAME = os.environ.get("OLLAMA_MODEL", "qwen2.5-coder:3b")
@@ -140,85 +150,173 @@ Task: Append aggregation/sorting pipes to the Base filter."""
 
     return compiled_base
 
+def enrich_correlation_with_llm(compiled_base: str, corr_hint: str, target_syntax: str) -> str:
+    """Pede ao LLM apenas os pipes de correlação a anexar ao filtro base."""
+    if "SPL" in target_syntax:
+        rules = "Use '| bin _time span=<timespan> | stats count by <group-by fields> | where count >= <threshold>'."
+    elif "KQL" in target_syntax:
+        rules = "Use '| summarize count() by bin(TimeGenerated, <timespan>), <group-by fields> | where count_ >= <threshold>'."
+    elif "AQL" in target_syntax:
+        rules = "Use 'GROUP BY <fields> HAVING COUNT(*) >= <threshold> LAST <timespan>'."
+    else:
+        rules = "Append the grouping, time-window and threshold clauses."
+
+    prompt = f"""Output ONLY the raw {target_syntax} query. No explanations, no markdown.
+
+Base filter (already correct, keep it):
+{compiled_base}
+
+Sigma correlation block to apply:
+{corr_hint}
+
+Rules: {rules}
+Task: return the base filter with the correlation (time window, group-by, threshold) appended."""
+
+    payload = {
+        "model": MODEL_NAME,
+        "prompt": prompt,
+        "stream": False,
+        "keep_alive": "1h",
+        "options": {"num_predict": 120, "num_ctx": 1024, "temperature": 0.0},
+    }
+
+    try:
+        response = requests.post(f"{OLLAMA_HOST}/api/generate", json=payload, timeout=30)
+        response.raise_for_status()
+        result = response.json().get("response", "").strip()
+        clean = re.sub(r"^```(?:[a-zA-Z]+)?\s*|\s*```$", "", result, flags=re.MULTILINE).strip()
+        clean = re.sub(r"^(?:Here is[^\n:]*:?|Result:?|Final query:?)\s*", "", clean, flags=re.IGNORECASE).strip()
+        return clean or compiled_base
+    except Exception:
+        return compiled_base
+
+
 
 def compile_sigma_to_target(sigma_yaml: str, target_syntax: str) -> str:
     try:
-        parsed = yaml.safe_load(sigma_yaml)
-        if not isinstance(parsed, dict):
-            raise ValueError("O conteúdo não é um YAML Sigma válido (deve conter campos como 'title', 'logsource' e 'detection').")
+        collection = SigmaCollection.from_yaml(sigma_yaml)
+        if not collection.rules:
+            raise ValueError("O conteúdo não contém regras Sigma válidas.")
+    except yaml.YAMLError as e:
+        raise ValueError(f"YAML inválido: {str(e)}")
+    except SigmaError as e:
+        raise ValueError(f"Regra Sigma inválida: {str(e)}")
 
-        collection = SigmaCollection.from_dicts([parsed])
-
-    except Exception as e:
-        raise ValueError(f"Falha ao validar a regra no motor pySigma: {str(e)}")
-
+ 
+    # IMPORTANTE: todos os backends abaixo recebem a pipeline correta.
+    # Sem isto, os campos ficam crus (ex: EventID em vez de EventCode no
+    # Splunk), e a query nunca encontra nada num SIEM real.
     match target_syntax:
         case "SPL (Splunk)":
-            backend = SplunkBackend()
+            backend = SplunkBackend(processing_pipeline=splunk_windows_pipeline())
         case "KQL (Sentinel)":
-            backend = KustoBackend()
+            backend = KustoBackend(processing_pipeline=microsoft_365_defender_pipeline())
         case "AQL (QRadar)":
             backend = QRadarAQLBackend()
-        case "Elastic Lucene Rule":
-            backend = LuceneBackend()
         case "EQL (Elastic)":
-            backend = EqlBackend()
+            backend = EqlBackend(processing_pipeline=ecs_windows())
+        case "CQL (CrowdStrike)":
+            if LogScaleBackend is None:
+                raise ValueError("Backend CrowdStrike LogScale não está instalado.")
+            backend = LogScaleBackend(processing_pipeline=crowdstrike_falcon_pipeline())
         case "Sigma Rule":
             return sigma_yaml
         case _:
             raise ValueError(f"Sintaxe de destino '{target_syntax}' não suportada.")
-
+ 
     try:
         result = backend.convert(collection)
         target_query = "\n".join(result) if isinstance(result, list) else str(result)
-
-        if target_syntax == "KQL (Sentinel)":
-            clean_query = target_query.strip()
-            if not clean_query.startswith(("SecurityEvent", "Device", "CommonSecurityLog", "SigninLogs", "AuditLogs")):
-                if clean_query.startswith("| where"):
-                    target_query = f"DeviceProcessEvents\n{clean_query}"
-                elif clean_query.startswith("|"):
-                    target_query = f"DeviceProcessEvents\n{clean_query}"
-                else:
-                    target_query = f"DeviceProcessEvents\n| where {clean_query}"
-
         return target_query
+    except NotImplementedError:
+        raise RuntimeError(f"O backend '{target_syntax}' não suporta este tipo de regra (ex: regras de correlação).")
     except SigmaError as e:
         raise RuntimeError(f"Erro de compilação pySigma ({target_syntax}): {str(e)}")
+    
+def split_sigma_documents(sigma_yaml: str):
+    """Separa o YAML em regras base e regras de correlação."""
+    docs = [d for d in yaml.safe_load_all(sigma_yaml) if isinstance(d, dict)]
+    base_docs = [d for d in docs if "correlation" not in d]
+    corr_docs = [d for d in docs if "correlation" in d]
+    return base_docs, corr_docs
+
+
+def convert_with_engine(sigma_yaml: str, target_syntax: str) -> tuple[str, str]:
+    """
+    Motor em 3 níveis. Devolve (query, origem).
+    origem: 'pysigma' | 'pysigma+llm' | 'llm'
+    """
+
+    # NÍVEL 1 — pySigma puro. É determinístico, por isso é sempre a 1ª escolha.
+    try:
+        return compile_sigma_to_target(sigma_yaml, target_syntax), "pysigma"
+    except (RuntimeError, ValueError) as e:
+        first_error = str(e)
+
+    base_docs, corr_docs = split_sigma_documents(sigma_yaml)
+
+    # NÍVEL 2 — o backend não suporta a correlação, mas suporta a regra base.
+    # Compilamos a base com pySigma (fiável) e pedimos ao LLM só os pipes
+    # de agregação (count/group by/timespan) que faltam.
+    if corr_docs and base_docs:
+        try:
+            base_yaml = yaml.dump_all(base_docs, sort_keys=False, allow_unicode=True)
+            compiled_base = compile_sigma_to_target(base_yaml, target_syntax)
+
+            corr = corr_docs[0].get("correlation", {}) or {}
+            corr_hint = yaml.dump(corr, sort_keys=False, allow_unicode=True)
+
+            enriched = enrich_correlation_with_llm(compiled_base, corr_hint, target_syntax)
+            if enriched and enriched != compiled_base:
+                return enriched, "pysigma+llm"
+            return compiled_base, "pysigma+llm"
+        except Exception:
+            pass
+
+    # NÍVEL 3 — último recurso: tradução completa pelo LLM.
+    llm_result = direct_llm_translation(sigma_yaml, "Sigma Rule", target_syntax)
+    if llm_result.startswith("Erro na tradução direta"):
+        raise ValueError(
+            f"Não foi possível converter para {target_syntax}. "
+            f"pySigma: {first_error}. LLM: {llm_result}"
+        )
+    return llm_result, "llm"
 
 
 def convert_rule_pipeline(source_query: str, source_syntax: str, target_syntax: str) -> dict:
     if not source_query:
         raise ValueError("A query original está vazia.")
-
-    # CENÁRIO 1: A Origem é Sigma.
-    # BYPASS TOTAL AO LLM. Usa apenas o pySigma para conversão instantânea e determinística.
+ 
+    # CENÁRIO 1: A Origem é Sigma. Bypass total ao LLM, pySigma puro.
     if source_syntax == "Sigma Rule":
-        final_query = compile_sigma_to_target(source_query, target_syntax)
+        final_query, engine = convert_with_engine(source_query, target_syntax)
         return {
             "sigma_rule": source_query,
             "target_query": final_query,
+            "source": engine,
+            "validated": False,
         }
 
-    # CENÁRIO 2: SIEM para SIEM (ex: AQL -> SPL). 
-    # Bypass ao pySigma. Usa apenas tradução direta via LLM.
+ 
+    # CENÁRIO 2: SIEM para SIEM direto via LLM (ex: AQL -> SPL sem passar por Sigma).
     if target_syntax in ["SPL (Splunk)", "KQL (Sentinel)", "AQL (QRadar)", "EQL (Elastic)"]:
         final_query = direct_llm_translation(source_query, source_syntax, target_syntax)
         return {
             "sigma_rule": "N/A - Conversão direta via LLM (Agregações detetadas)",
             "target_query": final_query,
+            "source": "llm",
+            "validated": False,
         }
-
-    # CENÁRIO 3: SIEM para Sigma (ex: AQL -> Sigma).
-    # Usa LLM para extrair o JSON/YAML, seguido de compilação de limpeza no pySigma.
+ 
+    # CENÁRIO 3: SIEM para Sigma via LLM, depois Sigma -> destino via pySigma (determinístico).
     sigma_rule = decompile_to_sigma(source_query, source_syntax)
-    
-    # O target_syntax aqui será obrigatoriamente "Sigma Rule" (retorna o próprio yaml formatado)
     final_query = compile_sigma_to_target(sigma_rule, target_syntax)
-
+ 
     return {
         "sigma_rule": sigma_rule,
         "target_query": final_query,
+        "source": "llm+pysigma",
+        "validated": False,
     }
 
 def get_decompilation_prompt(source_query: str, source_syntax: str) -> str:

@@ -39,10 +39,19 @@ export class SigmaConversionsService {
     return this.http.post(`${AUTH_URL}convertSigmaToQRadar`, { rule: rule });
   }
 
-  convertSigmaToElasticLucena(rule: any) {
-    return this.http.post(`${AUTH_URL}convertSigmaToElasticLucena`, {
+  // Substituído o antigo Lucene por EQL limpo em JSON
+  convertSigmaToElasticEQL(rule: any) {
+    return this.http.post(`${AUTH_URL}convertSigma`, {
       rule: rule,
+      backend: 'Elastic Rule',
     });
+  }
+
+  convertSigmaToCrowdStrike(ruleCode: string) {
+    const formData = new FormData();
+    formData.append('rule', ruleCode);
+    formData.append('backend', 'CrowdStrike Rule');
+    return this.http.post(`${AUTH_URL}convertSigma`, formData);
   }
 
   convertSigma(rule: any, backend: any) {

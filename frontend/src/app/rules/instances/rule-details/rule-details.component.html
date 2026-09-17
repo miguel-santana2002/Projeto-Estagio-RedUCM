@@ -23,10 +23,8 @@
 <div class="mx-16 pt-6 dark:text-white transition">
   <h1 class="font-inter font-semibold text-2xl text-gray-700 dark:text-white mb-4">{{rule.ruleModel.title}}</h1>
 
-  <!-- Barra de Metadados (Unificada com o Design do RuleModel) -->
+  <!-- Barra de Metadados -->
   <div class="flex items-center flex-wrap gap-7 ml-4 my-2">
-
-    <!-- Use Case -->
     <div class="flex items-center gap-3">
       <i class="fas fa-tag text-gray-500 dark:text-gray-400 text-2xl"></i>
       <div class="flex flex-col justify-center">
@@ -37,7 +35,6 @@
       </div>
     </div>
 
-    <!-- Técnicas MITRE -->
     <div class="flex items-center gap-3" *ngIf="usecase?.mitreTechniques?.length">
       <span class="bg-[#0b1b2b] text-white text-[11px] font-bold px-2 py-1 rounded">
         MITRE
@@ -53,7 +50,6 @@
       </div>
     </div>
 
-    <!-- Tipo -->
     <div class="flex items-center gap-3">
       <i class="fas fa-cubes text-gray-500 dark:text-gray-400 text-2xl"></i>
       <div class="flex flex-col justify-center">
@@ -62,7 +58,6 @@
       </div>
     </div>
 
-    <!-- Sintaxe -->
     <div class="flex items-center gap-3">
       <i class="fas fa-code text-redshift-red text-2xl"></i>
       <div class="flex flex-col justify-center">
@@ -71,27 +66,22 @@
       </div>
     </div>
 
-    <!-- LogSources -->
     <div class="flex items-center gap-3">
       <i class="fas fa-network-wired text-gray-500 dark:text-gray-400 text-2xl"></i>
       <div class="flex flex-col justify-center">
         <div class="flex items-center gap-2 max-w-xl">
-
-          <!-- Se logsources for string ou array, esta formatação garante visual limpo e consistente -->
           <span class="bg-[#0d2f52] text-white text-xs px-2.5 py-1 rounded font-medium truncate max-w-[220px]"
             [title]="rule.logsources">
             {{rule.logsources}}
           </span>
           <span *ngIf="!rule.logsources" class="text-sm text-gray-400 dark:text-gray-500">N/D</span>
-
         </div>
         <span class="text-xs text-gray-500 dark:text-gray-400 font-normal mt-0.5">LogSources</span>
       </div>
     </div>
-
   </div>
 
-  <!-- Botões de Conversão Sigma -->
+  <!-- Botões de Conversão Sigma (Atualizados com CQL e sem Lucene) -->
   <div class="mx-4 mt-10">
     <div class="flex flex-wrap gap-4" [class.hidden]="rule.syntax !== 'Sigma Rule'">
 
@@ -109,11 +99,19 @@
         Converter para QRadar
       </button>
 
-      <button type="submit" (click)="convertSigmaToElasticLucena()" data-modal-target="crud-modal"
+      <button type="submit" (click)="convertSigmaToElasticEQL()" data-modal-target="crud-modal"
         data-modal-toggle="crud-modal"
         class="text-gray-800 dark:text-gray-200 inline-flex items-center bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-200 dark:hover:bg-gray-700 transition duration-200 font-medium rounded-lg text-sm px-5 py-2.5 shadow-sm">
         <img class="h-6 w-6 mr-3" src="./assets/elasticlogo.png">
-        Converter para Elastic (Lucene)
+        Converter para Elastic (EQL)
+      </button>
+
+      <button type="submit" (click)="convertSigmaToCrowdStrike()" data-modal-target="crud-modal"
+        data-modal-toggle="crud-modal"
+        class="text-gray-800 dark:text-gray-200 inline-flex items-center bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-200 dark:hover:bg-gray-700 transition duration-200 font-medium rounded-lg text-sm px-5 py-2.5 shadow-sm">
+        <!-- Podes substituir por um ícone do CrowdStrike se tiveres nos assets -->
+        <i class="fas fa-shield-alt h-6 w-6 mr-3 text-red-500 flex items-center justify-center text-lg"></i>
+        Converter para CrowdStrike (CQL)
       </button>
 
     </div>
@@ -121,8 +119,6 @@
 
   <!-- Área Principal (Editor + Info) -->
   <div class="flex flex-col lg:flex-row gap-8 my-10 mx-4">
-
-    <!-- Editor Monaco -->
     <div class="w-full lg:w-[80%] border border-gray-300 dark:border-gray-700 rounded-lg overflow-hidden shadow-sm">
       <ngs-code-editor class="block h-[33rem] w-full" [codeModel]="selectedModel" [theme]="theme" [options]="options"
         (valueChanged)="onCodeChanged($event)" (loaded)="onEditorLoaded($event)"
@@ -130,9 +126,7 @@
       </ngs-code-editor>
     </div>
 
-    <!-- Painel Lateral -->
     <div class="w-full lg:w-[20%] flex flex-col gap-4">
-
       <div
         class="bg-gray-100 dark:bg-gray-800 rounded-xl drop-shadow-md border border-transparent dark:border-gray-700 p-5 transition">
         <h1
@@ -158,13 +152,11 @@
         </div>
       </div>
 
-      <!-- Botão Guardar Alterações -->
       <button type="button" (click)="updateRuleCode()"
         class="w-full inline-flex items-center justify-center gap-2 py-3 px-4 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-200 font-semibold rounded-xl drop-shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-redshift-red dark:hover:text-white transition duration-200 focus:ring-2 focus:ring-redshift-red focus:outline-none">
         <i class="fas fa-save text-base"></i>
         <span>Guardar alterações</span>
       </button>
-
     </div>
   </div>
 
@@ -172,11 +164,9 @@
   <div id="crud-modal" tabindex="-1" aria-hidden="true"
     class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full bg-black/60 backdrop-blur-sm">
     <div class="relative p-4 w-10/12 min-w-[300px] max-w-5xl max-h-full">
-      <!-- Modal content -->
       <div
         class="relative bg-white rounded-lg shadow-xl dark:bg-gray-800 border border-transparent dark:border-gray-700 transition">
 
-        <!-- Modal header -->
         <div
           class="flex items-center justify-between p-4 md:p-5 border-b border-gray-200 dark:border-gray-700 rounded-t">
           <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
@@ -194,16 +184,27 @@
 
         <!-- Modal body -->
         <form class="p-4 md:p-5">
+          
+          <!-- Mensagem de Erro (Garante que a página não crasha e mostra o motivo) -->
+          <div *ngIf="conversionError" class="mb-4 p-3 bg-red-100 dark:bg-red-900/40 border border-red-400 dark:border-red-600 text-red-700 dark:text-red-300 rounded-lg text-sm">
+            <span class="font-semibold"><i class="fas fa-exclamation-triangle mr-1"></i> Falha na conversão:</span> {{ conversionError }}
+          </div>
+
           <div class="mb-4">
-            <label for="Personalização" class="block mb-2 text-sm font-semibold text-gray-900 dark:text-white">
+            <label class="block mb-2 text-sm font-semibold text-gray-900 dark:text-white">
               Regra Convertida
             </label>
             <textarea rows="16" readonly
               class="w-full border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/60 rounded-lg p-3 text-sm font-mono text-gray-800 dark:text-gray-200 focus:ring-redshift-red focus:border-redshift-red resize-none">{{convertedCode}}</textarea>
           </div>
 
+          <!-- Frase pequena a indicar quem converteu -->
+          <div *ngIf="conversionSource" class="mb-4 text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
+            <i class="fas fa-robot text-redshift-red"></i> Conversão executada por: <span class="font-semibold text-gray-700 dark:text-gray-200 uppercase">{{ conversionSource }}</span>
+          </div>
+
           <div class="flex justify-end">
-            <button type="button" (click)="downloadFile()"
+            <button type="button" (click)="downloadFile()" *ngIf="!conversionError && convertedCode"
               class="inline-flex items-center px-5 py-2.5 text-sm font-medium text-white bg-redshift-red hover:bg-redshift-hover rounded-lg shadow-sm transition">
               <i class="fas fa-download mr-2"></i>
               Guardar Ficheiro
