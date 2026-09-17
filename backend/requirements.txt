@@ -5,7 +5,7 @@ djangorestframework-simplejwt==5.3.1
 django-cors-headers==4.3.1
 django-extensions==3.2.3
 dj-database-url==2.2.0
-psycopg2==2.9.9
+psycopg2-binary>=2.9.9
 pg8000==1.31.2
 
 # --- Documentação & API ---
@@ -31,7 +31,7 @@ pylint==3.2.2
 isort==5.13.2
 
 # --- Utilitários Básicos ---
-pillow==10.3.0
+pillow>=10.4.0
 qrcode==7.4.2
 pyotp==2.9.0
 python-dotenv==1.0.1
