@@ -1,7 +1,7 @@
 <app-header></app-header>
 <app-titlebanner title="RedUC{{usecase.id | number:'2.0'}}" image="./assets/bannercover.jpg"> </app-titlebanner>
 
-<div class="mx-16 pt-6 dark:text-white">
+<div class="px-20 pt-6 dark:text-white">
   <div class="flex">
     <h1 class="font-inter font-semibold text-2xl text-gray-700 dark:text-white mb-4">{{usecase.title}}</h1>
     <button [routerLink]="'/edit-usecase/'+usecase.id" *ngIf="user.companies?.length === 0"
