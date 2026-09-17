@@ -6,49 +6,54 @@
     <form class="space-y-8" [formGroup]="createUseCaseForm" (ngSubmit)="createUseCase()">
 
         <!-- BLOCO 1: Identificação & Classificação -->
-        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 space-y-6">
-            <h3 class="text-base font-semibold text-gray-900 border-b pb-3 flex items-center gap-2">
+        <div
+            class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 space-y-6 transition-colors duration-200">
+            <h3
+                class="text-base font-semibold text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700 pb-3 flex items-center gap-2">
                 1. Identificação & Classificação
             </h3>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <!-- Título -->
                 <div class="space-y-2 col-span-2">
-                    <label for="title" class="block text-sm font-medium leading-6 text-gray-900">Título</label>
+                    <label for="title"
+                        class="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">Título</label>
                     <input id="title" required name="title" placeholder="Título do Use Case" type="text"
                         autocomplete="title" formControlName="title"
-                        class="block w-full rounded-md border-0 px-3 py-2.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6">
+                        class="block w-full rounded-md border-0 bg-white dark:bg-gray-700 px-3 py-2.5 text-gray-900 dark:text-white shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-600 placeholder:text-gray-400 dark:placeholder-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 dark:focus:ring-indigo-500 sm:text-sm sm:leading-6">
                     <div *ngIf="createUseCaseForm.get('title')?.touched && createUseCaseForm.get('title')?.invalid"
-                        class="text-red-600 text-sm">
+                        class="text-red-600 dark:text-red-400 text-sm">
                         Título é obrigatório.
                     </div>
                 </div>
 
                 <!-- Classe CNCS -->
                 <div class="space-y-2">
-                    <label for="cncsClass" class="block text-sm font-medium leading-6 text-gray-900">Classe CNCS</label>
+                    <label for="cncsClass"
+                        class="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">Classe CNCS</label>
                     <select id="cncsClass" formControlName="cncsClass" (change)="updateCNCSValues()"
-                        class="block w-full py-2.5 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                        class="block w-full py-2.5 px-3 bg-white dark:bg-gray-700 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 dark:focus:ring-indigo-500 sm:text-sm">
                         <option value="" disabled selected>Selecione a Classe...</option>
                         <option *ngFor="let option of chavesTaxonomia" [value]="option">{{ option }}</option>
                     </select>
                     <div *ngIf="createUseCaseForm.get('cncsClass')?.touched && createUseCaseForm.get('cncsClass')?.invalid"
-                        class="text-red-600 text-sm">
+                        class="text-red-600 dark:text-red-400 text-sm">
                         Classe CNCS é obrigatória.
                     </div>
                 </div>
 
                 <!-- Tipo CNCS -->
                 <div class="space-y-2">
-                    <label for="cncsType" class="block text-sm font-medium leading-6 text-gray-900">Tipo CNCS</label>
+                    <label for="cncsType"
+                        class="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">Tipo CNCS</label>
                     <select id="cncsType" formControlName="cncsType"
-                        class="block w-full py-2.5 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                        class="block w-full py-2.5 px-3 bg-white dark:bg-gray-700 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 dark:focus:ring-indigo-500 sm:text-sm">
                         <option value="" disabled selected>Selecione o Tipo...</option>
                         <option *ngFor="let subcategory of selectedCategoryValues" [value]="subcategory">{{ subcategory
                             }}</option>
                     </select>
                     <div *ngIf="createUseCaseForm.get('cncsType')?.touched && createUseCaseForm.get('cncsType')?.invalid"
-                        class="text-red-600 text-sm">
+                        class="text-red-600 dark:text-red-400 text-sm">
                         Tipo CNCS é obrigatório.
                     </div>
                 </div>
@@ -56,70 +61,75 @@
         </div>
 
         <!-- BLOCO 2: Análise Técnica & Mapeamento -->
-        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 space-y-6">
-            <h3 class="text-base font-semibold text-gray-900 border-b pb-3 flex items-center gap-2">
+        <div
+            class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 space-y-6 transition-colors duration-200">
+            <h3
+                class="text-base font-semibold text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700 pb-3 flex items-center gap-2">
                 2. Análise Técnica & Mapeamento
             </h3>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <!-- Técnicas Mitre com Autocomplete Restrito -->
                 <div class="space-y-2">
-                    <label for="mitreTechniques" class="block text-sm font-medium leading-6 text-gray-900">Técnicas
-                        Mitre Associadas</label>
+                    <label for="mitreTechniques"
+                        class="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">Técnicas Mitre
+                        Associadas</label>
 
                     <tag-input theme='minimal' [secondaryPlaceholder]="'+ Selecionar Técnica'" [placeholder]="''"
                         formControlName="mitreTechniques" displayBy="display" identifyBy="id"
                         [onlyFromAutocomplete]="true"
-                        class="block w-full rounded-md border-0 px-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6">
+                        class="block w-full rounded-md border-0 bg-white dark:bg-gray-700 px-2 text-gray-900 dark:text-white shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-600 placeholder:text-gray-400 dark:placeholder-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 dark:focus:ring-indigo-500 sm:text-sm sm:leading-6">
 
                         <!-- Dropdown de Autocomplete ligado à lista do TS -->
                         <tag-input-dropdown [autocompleteItems]="mitreAutocompleteList" [showDropdownIfEmpty]="false"
                             [limitItemsTo]="10" displayBy="display" identifyBy="id">
                         </tag-input-dropdown>
-
                     </tag-input>
 
                     <div *ngIf="createUseCaseForm.get('mitreTechniques')?.touched && createUseCaseForm.get('mitreTechniques')?.invalid"
-                        class="text-red-600 text-sm">
+                        class="text-red-600 dark:text-red-400 text-sm">
                         Técnicas Mitre são obrigatórias.
                     </div>
                 </div>
 
                 <!-- Vetores de Ataque -->
                 <div class="space-y-2">
-                    <label for="attackVectors" class="block text-sm font-medium leading-6 text-gray-900">Vetores de
+                    <label for="attackVectors"
+                        class="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">Vetores de
                         Ataque</label>
                     <tag-input theme='minimal' [secondaryPlaceholder]="'+ Novo Vetor'" [placeholder]="''"
                         formControlName="attackVectors"
-                        class="block w-full rounded-md border-0 px-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"></tag-input>
+                        class="block w-full rounded-md border-0 bg-white dark:bg-gray-700 px-2 text-gray-900 dark:text-white shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-600 placeholder:text-gray-400 dark:placeholder-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 dark:focus:ring-indigo-500 sm:text-sm sm:leading-6"></tag-input>
                     <div *ngIf="createUseCaseForm.get('attackVectors')?.touched && createUseCaseForm.get('attackVectors')?.invalid"
-                        class="text-red-600 text-sm">
+                        class="text-red-600 dark:text-red-400 text-sm">
                         Vetores de Ataque são obrigatórios.
                     </div>
                 </div>
 
                 <!-- Descrição -->
                 <div class="space-y-2 col-span-2">
-                    <label for="description" class="block text-sm font-medium leading-6 text-gray-900">Descrição</label>
+                    <label for="description"
+                        class="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">Descrição</label>
                     <textarea id="description"
                         placeholder="Descrição do Use Case. Neste parágrafo poderão ser descritos propósito, objetivos, entre outros."
                         name="description" formControlName="description"
-                        class="block w-full rounded-md border-0 px-3 py-2.5 h-32 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"></textarea>
+                        class="block w-full rounded-md border-0 bg-white dark:bg-gray-700 px-3 py-2.5 h-32 text-gray-900 dark:text-white shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-600 placeholder:text-gray-400 dark:placeholder-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 dark:focus:ring-indigo-500 sm:text-sm sm:leading-6"></textarea>
                     <div *ngIf="createUseCaseForm.get('description')?.touched && createUseCaseForm.get('description')?.invalid"
-                        class="text-red-600 text-sm">
+                        class="text-red-600 dark:text-red-400 text-sm">
                         Descrição é obrigatória.
                     </div>
                 </div>
 
                 <!-- Mitigação -->
                 <div class="space-y-2 col-span-2">
-                    <label for="mitigation" class="block text-sm font-medium leading-6 text-gray-900">Mitigação</label>
+                    <label for="mitigation"
+                        class="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">Mitigação</label>
                     <textarea id="mitigation"
                         placeholder="Neste parágrafo, poderão ser descritas as estratégias de mitigação"
                         name="mitigation" formControlName="mitigation"
-                        class="block w-full rounded-md border-0 px-3 py-2.5 h-32 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"></textarea>
+                        class="block w-full rounded-md border-0 bg-white dark:bg-gray-700 px-3 py-2.5 h-32 text-gray-900 dark:text-white shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-600 placeholder:text-gray-400 dark:placeholder-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 dark:focus:ring-indigo-500 sm:text-sm sm:leading-6"></textarea>
                     <div *ngIf="createUseCaseForm.get('mitigation')?.touched && createUseCaseForm.get('mitigation')?.invalid"
-                        class="text-red-600 text-sm">
+                        class="text-red-600 dark:text-red-400 text-sm">
                         Mitigação é obrigatória.
                     </div>
                 </div>
@@ -127,27 +137,31 @@
         </div>
 
         <!-- BLOCO 3: Operacionalização & Submissão -->
-        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 space-y-6">
-            <h3 class="text-base font-semibold text-gray-900 border-b pb-3 flex items-center gap-2">
+        <div
+            class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 space-y-6 transition-colors duration-200">
+            <h3
+                class="text-base font-semibold text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700 pb-3 flex items-center gap-2">
                 3. Operacionalização & Recursos
             </h3>
 
             <div class="space-y-4">
                 <div class="space-y-2">
-                    <label for="playbook" class="block text-sm font-medium leading-6 text-gray-900">Playbook
+                    <label for="playbook"
+                        class="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">Playbook
                         (Ficheiro)</label>
                     <input id="playbook" type="file" (change)="onFileSelected($event)"
-                        class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100">
+                        class="block w-full text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 dark:file:bg-gray-700 file:text-indigo-700 dark:file:text-indigo-400 hover:file:bg-indigo-100 dark:hover:file:bg-gray-600 transition-colors">
                     <div *ngIf="createUseCaseForm.get('playbook')?.touched && createUseCaseForm.get('playbook')?.invalid"
-                        class="text-red-600 text-sm">
+                        class="text-red-600 dark:text-red-400 text-sm">
                         Playbook é obrigatório.
                     </div>
                 </div>
 
                 <div class="pt-4">
                     <button type="submit" [disabled]="!createUseCaseForm.valid"
-                        class="w-full disabled:opacity-55 md:w-auto py-2.5 px-8 text-white font-semibold bg-redshift-red rounded-md hover:bg-redshift-red-dark transition-colors">Registar
-                        Use Case</button>
+                        class="w-full disabled:opacity-55 md:w-auto py-2.5 px-8 text-white font-semibold bg-redshift-red rounded-md hover:bg-redshift-red-dark transition-colors">
+                        Registar Use Case
+                    </button>
                 </div>
             </div>
         </div>

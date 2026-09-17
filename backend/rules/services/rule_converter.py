@@ -10,7 +10,7 @@ from sigma.exceptions import SigmaError
 # Backends pySigma
 from sigma.backends.splunk import SplunkBackend
 from sigma.backends.kusto import KustoBackend
-from sigma.backends.elasticsearch import LuceneBackend, EqlBackend
+from sigma.backends.elasticsearch import EqlBackend
 from sigma.backends.QRadarAQL import QRadarAQLBackend
 
 OLLAMA_HOST = os.environ.get("OLLAMA_HOST", "http://ollama:11434")
@@ -159,8 +159,6 @@ def compile_sigma_to_target(sigma_yaml: str, target_syntax: str) -> str:
             backend = KustoBackend()
         case "AQL (QRadar)":
             backend = QRadarAQLBackend()
-        case "Elastic Lucene Rule":
-            backend = LuceneBackend()
         case "EQL (Elastic)":
             backend = EqlBackend()
         case "Sigma Rule":

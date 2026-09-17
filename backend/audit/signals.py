@@ -17,7 +17,7 @@ MODELS_TO_TRACK = [
     UseCase,
 ]
 
-def register_audit_signals(model_class):
+""" def register_audit_signals(model_class):
     @receiver(post_save, sender=model_class)
     def log_creation_or_update(sender, instance, created, **kwargs):
         action_type = 'CREATE' if created else 'UPDATE'
@@ -38,3 +38,4 @@ def register_audit_signals(model_class):
 # Registo automático para cada modelo listado
 for model in MODELS_TO_TRACK:
     register_audit_signals(model)
+"""

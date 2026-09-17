@@ -92,7 +92,6 @@ export class RuleModelDetailsComponent implements OnInit {
     'KQL (Sentinel)',
     'EQL (Elastic)',
     'Sigma Rule',
-    'Elastic Lucene Rule',
   ];
 
   edrSintaxes = ['CQL (CrowdStrike)', 'Defender KQL', 'Sigma Rule'];
@@ -101,8 +100,8 @@ export class RuleModelDetailsComponent implements OnInit {
     { id: 'SPL (Splunk)', name: 'SPL (Splunk)' },
     { id: 'KQL (Sentinel)', name: 'KQL (Sentinel)' },
     { id: 'AQL (QRadar)', name: 'AQL (QRadar)' },
-    { id: 'Elastic Lucene Rule', name: 'Elastic Lucene Rule' },
-    { id: 'EQL (Elastic)', name: 'EQL (Elastic)' },
+    { id: 'EQL (Elastic)', name: 'EQL (Elastic)' },    
+    { id: 'CQL (CrowdStrike)', name: 'CQL (CrowdStrike)' },
     { id: 'Sigma Rule', name: 'Sigma Rule' },
   ];
 
@@ -196,8 +195,6 @@ export class RuleModelDetailsComponent implements OnInit {
 
   getMonacoLanguage(syntax: string): string {
     switch (syntax) {
-      case 'Elastic Lucene Rule':
-        return 'json';
       case 'SPL (Splunk)':
       case 'AQL (QRadar)':
       case 'KQL (Sentinel)':

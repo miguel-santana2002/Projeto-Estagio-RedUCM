@@ -7,7 +7,6 @@ SUPPORTED_TARGET_SYNTAXES = [
     "SPL (Splunk)",
     "KQL (Sentinel)",
     "AQL (QRadar)",
-    "Elastic Lucene Rule",
     "EQL (Elastic)",
     "Sigma Rule",
 ]

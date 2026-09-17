@@ -52,7 +52,6 @@ export class EditRuleModelComponent implements OnInit {
       'KQL (Sentinel)',
       'EQL (Elastic)',
       'Sigma Rule',
-      'Elastic Lucene Rule',
     ],
     EDR: ['CQL (CrowdStrike)'],
     SOAR: ['YARA Rule'],
@@ -173,8 +172,6 @@ export class EditRuleModelComponent implements OnInit {
 
   getMonacoLanguage(syntax: string): string {
     switch (syntax) {
-      case 'Elastic Lucene Rule':
-        return 'json';
       case 'AQL (QRadar)':
       case 'SPL (Splunk)':
       case 'SPL2 (Splunk)':

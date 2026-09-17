@@ -48,7 +48,6 @@ export class CreateRuleModelComponent implements OnInit {
       'KQL (Sentinel)',
       'EQL (Elastic)',
       'Sigma Rule',
-      'Elastic Lucene Rule',
     ],
     EDR: ['CQL (CrowdStrike)'],
     SOAR: ['YARA Rule'],
@@ -135,8 +134,6 @@ export class CreateRuleModelComponent implements OnInit {
 
   getMonacoLanguage(syntax: string): string {
     switch (syntax) {
-      case 'Elastic Lucene Rule':
-        return 'json';
       case 'AQL (QRadar)':
       case 'SPL (Splunk)':
       case 'SPL2 (Splunk)':
@@ -181,9 +178,6 @@ export class CreateRuleModelComponent implements OnInit {
     ) {
       detectedType = 'SIEM';
       detectedSyntax = 'Sigma Rule';
-    } else if (code.startsWith('{') && code.includes('"query":')) {
-      detectedType = 'SIEM';
-      detectedSyntax = 'Elastic Lucene Rule';
     } else if (
       code.includes('sequence by') ||
       code.includes('[process where')
@@ -323,14 +317,6 @@ detection:
         CommandLine|contains: 'whoami'
     condition: selection
 level: medium`,
-
-    'Elastic Lucene Rule': `{
-  "name": "Falhas de Autenticação Repetidas",
-  "type": "query",
-  "language": "lucene",
-  "query": "event.category:authentication AND event.outcome:failure",
-  "severity": "medium"
-}`,
 
     'YARA Rule': `rule Suspicious_Process_Execution {
     strings:
