@@ -75,7 +75,7 @@
       <i class="fas fa-handshake text-xl"></i>
     </div>
     <div>
-      <span class="block text-xl font-bold text-gray-900 dark:text-white">{{filteredRules.length}}</span>
+      <span class="block text-xl font-bold text-gray-900 dark:text-white">{{filteredRules?.length || 0}}</span>
       <span class="block text-gray-500 dark:text-gray-400 text-sm">Regras Atribuídas</span>
     </div>
   </div>
@@ -83,14 +83,14 @@
 </div>
 
 <!-- Gráficos Secundários -->
-<div class="flex justify-center space-x-12 my-12">
+<div *ngIf="filteredRules?.length > 0" class="flex justify-center space-x-12 my-12">
   <app-rules-per-syntax [rules]="filteredRules"></app-rules-per-syntax>
   <app-rules-per-logsource [rules]="filteredRules"></app-rules-per-logsource>
   <app-rules-per-type [rules]="filteredRules"></app-rules-per-type>
 </div>
 
 <!-- Painéis Informativos e Gráficos -->
-<div class="flex justify-center space-x-8 my-12 min-h-80">
+<div *ngIf="filteredRules?.length > 0" class="flex justify-center space-x-8 my-12 min-h-80">
 
   <!-- Painel 1: Use Cases por Técnica -->
   <div

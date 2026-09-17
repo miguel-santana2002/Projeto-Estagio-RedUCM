@@ -1,5 +1,12 @@
 import { CommonModule } from '@angular/common';
-import { Component, ElementRef, Input, OnDestroy, SimpleChanges, ViewChild } from '@angular/core';
+import {
+  Component,
+  ElementRef,
+  Input,
+  OnDestroy,
+  SimpleChanges,
+  ViewChild,
+} from '@angular/core';
 import ApexCharts from 'apexcharts';
 
 @Component({
@@ -7,7 +14,7 @@ import ApexCharts from 'apexcharts';
   standalone: true,
   imports: [CommonModule],
   templateUrl: './rules-per-type.component.html',
-  styleUrl: './rules-per-type.component.css'
+  styleUrl: './rules-per-type.component.css',
 })
 export class RulesPerTypeComponent implements OnDestroy {
   @Input() rules: any;
@@ -16,7 +23,11 @@ export class RulesPerTypeComponent implements OnDestroy {
 
   ngOnChanges(changes: SimpleChanges) {
     if (changes['rules'] && changes['rules'].currentValue) {
-      this.renderChart(changes['rules'].currentValue);
+      setTimeout(() => {
+        if (this.chartElement && this.chartElement.nativeElement) {
+          this.renderChart(changes['rules'].currentValue);
+        }
+      }, 0);
     }
   }
 
@@ -27,58 +38,62 @@ export class RulesPerTypeComponent implements OnDestroy {
         acc[curr] = (acc[curr] || 0) + 1;
         return acc;
       }, {});
-      var rulesTypePercentageArray = Object.keys(rulesTypePercentage).map((key) => {
-        return rulesTypePercentage[key];
-      });
-      var rulesTypePercentageArrayLabels = Object.keys(rulesTypePercentage).map((key) => {
-        return key;
-      });
+      var rulesTypePercentageArray = Object.keys(rulesTypePercentage).map(
+        (key) => {
+          return rulesTypePercentage[key];
+        },
+      );
+      var rulesTypePercentageArrayLabels = Object.keys(rulesTypePercentage).map(
+        (key) => {
+          return key;
+        },
+      );
 
       var options = {
         series: rulesTypePercentageArray,
-        colors: ["#1C64F2", "#16BDCA", "#05c5a4","6ac669","ffa600"],
+        colors: ['#1C64F2', '#16BDCA', '#05c5a4', '6ac669', 'ffa600'],
         chart: {
           height: 420,
-          width: "100%",
-          type: "pie",
+          width: '100%',
+          type: 'pie',
         },
         stroke: {
-          colors: ["white"],
-          lineCap: "",
+          colors: ['white'],
+          lineCap: '',
         },
         plotOptions: {
           pie: {
             labels: {
               show: true,
             },
-            size: "100%",
+            size: '100%',
             dataLabels: {
-              offset: -25
-            }
+              offset: -25,
+            },
           },
         },
         labels: rulesTypePercentageArrayLabels,
         dataLabels: {
           enabled: true,
           style: {
-            fontFamily: "Inter, sans-serif",
+            fontFamily: 'Inter, sans-serif',
           },
         },
         legend: {
-          position: "bottom",
-          fontFamily: "Inter, sans-serif",
+          position: 'bottom',
+          fontFamily: 'Inter, sans-serif',
         },
         yaxis: {
           labels: {
-            formatter: function (value : any) {
-              return value + "%"
+            formatter: function (value: any) {
+              return value + '%';
             },
           },
         },
         xaxis: {
           labels: {
             formatter: function (value: string) {
-              return value  + "%"
+              return value + '%';
             },
           },
           axisTicks: {

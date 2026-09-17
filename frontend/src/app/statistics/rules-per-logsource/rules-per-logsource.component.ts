@@ -1,5 +1,12 @@
 import { CommonModule } from '@angular/common';
-import { Component, ElementRef, Input, OnDestroy, SimpleChanges, ViewChild } from '@angular/core';
+import {
+  Component,
+  ElementRef,
+  Input,
+  OnDestroy,
+  SimpleChanges,
+  ViewChild,
+} from '@angular/core';
 import ApexCharts from 'apexcharts';
 
 @Component({
@@ -7,7 +14,7 @@ import ApexCharts from 'apexcharts';
   standalone: true,
   imports: [CommonModule],
   templateUrl: './rules-per-logsource.component.html',
-  styleUrl: './rules-per-logsource.component.css'
+  styleUrl: './rules-per-logsource.component.css',
 })
 export class RulesPerLogsourceComponent implements OnDestroy {
   @Input() rules: any;
@@ -16,35 +23,55 @@ export class RulesPerLogsourceComponent implements OnDestroy {
 
   ngOnChanges(changes: SimpleChanges) {
     if (changes['rules'] && changes['rules'].currentValue) {
-      this.renderChart(changes['rules'].currentValue);
+      setTimeout(() => {
+        if (this.chartElement && this.chartElement.nativeElement) {
+          this.renderChart(changes['rules'].currentValue);
+        }
+      }, 0);
     }
   }
 
   renderChart(rulesData: any) {
     if (rulesData) {
-      const rulesLogsource = rulesData.flatMap((rule: any) => rule.ruleModel.logsources);
-      var rulesLogsourcePercentage = rulesLogsource.reduce((acc: any, curr: any) => {
-        acc[curr] = (acc[curr] || 0) + 1;
-        return acc;
-      }, {});
-      var rulesLogsourcePercentageArray = Object.keys(rulesLogsourcePercentage).map((key) => {
+      const rulesLogsource = rulesData.flatMap(
+        (rule: any) => rule.ruleModel.logsources,
+      );
+      var rulesLogsourcePercentage = rulesLogsource.reduce(
+        (acc: any, curr: any) => {
+          acc[curr] = (acc[curr] || 0) + 1;
+          return acc;
+        },
+        {},
+      );
+      var rulesLogsourcePercentageArray = Object.keys(
+        rulesLogsourcePercentage,
+      ).map((key) => {
         return rulesLogsourcePercentage[key];
       });
-      var rulesLogsourcePercentageArrayLabels = Object.keys(rulesLogsourcePercentage).map((key) => {
+      var rulesLogsourcePercentageArrayLabels = Object.keys(
+        rulesLogsourcePercentage,
+      ).map((key) => {
         return key;
       });
 
       var options = {
         series: rulesLogsourcePercentageArray,
-        colors: ["#1C64F2", "#16BDCA", "#05c5a4","#6ac669","#ffa600","#006400"],
+        colors: [
+          '#1C64F2',
+          '#16BDCA',
+          '#05c5a4',
+          '#6ac669',
+          '#ffa600',
+          '#006400',
+        ],
         chart: {
           height: 420,
-          width: "100%",
-          type: "pie",
+          width: '100%',
+          type: 'pie',
         },
         stroke: {
-          colors: ["white"],
-          lineCap: "",
+          colors: ['white'],
+          lineCap: '',
         },
         plotOptions: {
           pie: {
@@ -55,7 +82,7 @@ export class RulesPerLogsourceComponent implements OnDestroy {
         },
         labels: rulesLogsourcePercentageArrayLabels,
         legend: {
-          position: "bottom",
+          position: 'bottom',
         },
       };
 
