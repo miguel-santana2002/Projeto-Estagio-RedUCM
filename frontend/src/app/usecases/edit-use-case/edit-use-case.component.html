@@ -2,15 +2,15 @@
 
 <app-titlebanner title="Editar Use Case" image="./assets/bannercover.jpg"></app-titlebanner>
 
-<form class="grid grid-cols-2 gap-12 px-32 pt-12 dark:text-white" [formGroup]="editUseCaseForm"
-    (ngSubmit)="updateUseCase()">
+<form class="grid grid-cols-2 gap-12 px-32 pt-12 dark:bg-gray-900 transition-colors duration-200"
+    [formGroup]="editUseCaseForm" (ngSubmit)="updateUseCase()">
 
     <!-- Título -->
     <div class="space-y-4 col-span-2 md:col-span-1">
         <label for="title" class="block text-sm font-medium leading-6 text-gray-900 dark:text-white">Título</label>
         <input id="title" required name="title" placeholder="Título do Use Case" type="text" autocomplete="title"
             formControlName="title"
-            class="block w-full rounded-md border-0 px-2 py-2.5 text-gray-900 bg-white dark:bg-gray-700 dark:text-white shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-600 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 dark:focus:ring-indigo-500 sm:text-sm sm:leading-6 transition">
+            class="block w-full rounded-md border-0 px-3 py-2.5 text-gray-900 bg-white dark:bg-gray-700 dark:text-white shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-600 placeholder:text-gray-400 dark:placeholder-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 dark:focus:ring-indigo-500 sm:text-sm sm:leading-6 transition">
         <div *ngIf="editUseCaseForm.get('title')?.touched && editUseCaseForm.get('title')?.invalid"
             class="text-red-600 dark:text-red-400 text-sm">
             Título é obrigatório.
@@ -35,7 +35,7 @@
         <label for="cncsClass" class="block text-sm font-medium leading-6 text-gray-900 dark:text-white">Classe
             CNCS</label>
         <select id="cncsClass" formControlName="cncsClass" (change)="updateCNCSValues()"
-            class="mt-1 block w-full py-2 px-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 dark:focus:ring-indigo-500 sm:text-sm transition">
+            class="mt-1 block w-full py-2.5 px-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 dark:focus:ring-indigo-500 sm:text-sm transition">
             <option *ngFor="let option of chavesTaxonomia" [value]="option">{{ option }}</option>
         </select>
         <div *ngIf="editUseCaseForm.get('cncsClass')?.touched && editUseCaseForm.get('cncsClass')?.invalid"
@@ -49,7 +49,7 @@
         <label for="cncsType" class="block text-sm font-medium leading-6 text-gray-900 dark:text-white">Tipo
             CNCS</label>
         <select id="cncsType" formControlName="cncsType"
-            class="mt-1 block w-full py-2 px-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 dark:focus:ring-indigo-500 sm:text-sm transition">
+            class="mt-1 block w-full py-2.5 px-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 dark:focus:ring-indigo-500 sm:text-sm transition">
             <option *ngFor="let subcategory of selectedCategoryValues" [value]="subcategory">{{ subcategory }}</option>
         </select>
         <div *ngIf="editUseCaseForm.get('cncsType')?.touched && editUseCaseForm.get('cncsType')?.invalid"
@@ -75,7 +75,7 @@
     <div class="space-y-4 col-span-2 md:col-span-1">
         <label for="playbook" class="block text-sm font-medium leading-6 text-gray-900 dark:text-white">Playbook</label>
         <input id="playbook" type="file" (change)="onFileSelected($event)"
-            class="block w-full text-gray-900 dark:text-gray-300 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200 dark:file:bg-gray-600 dark:file:text-white dark:hover:file:bg-gray-500 transition">
+            class="block w-full text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-gray-100 dark:file:bg-gray-600 file:text-gray-700 dark:file:text-white hover:file:bg-gray-200 dark:hover:file:bg-gray-500 transition">
         <div *ngIf="editUseCaseForm.get('playbook')?.touched && editUseCaseForm.get('playbook')?.invalid"
             class="text-red-600 dark:text-red-400 text-sm">
             Playbook é obrigatório.
@@ -89,7 +89,7 @@
         <textarea id="description"
             placeholder="Descrição do Use Case. Neste parágrafo poderão ser descritos propósito, objetivos, entre outros."
             name="description" formControlName="description"
-            class="block w-full rounded-md border-0 px-2 py-2 h-32 text-gray-900 bg-white dark:bg-gray-700 dark:text-white shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-600 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 dark:focus:ring-indigo-500 sm:text-sm sm:leading-6 transition"></textarea>
+            class="block w-full rounded-md border-0 px-3.5 py-2.5 h-32 text-gray-900 bg-white dark:bg-gray-700 dark:text-white shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-600 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 dark:focus:ring-indigo-500 sm:text-sm sm:leading-6 transition"></textarea>
         <div *ngIf="editUseCaseForm.get('description')?.touched && editUseCaseForm.get('description')?.invalid"
             class="text-red-600 dark:text-red-400 text-sm">
             Descrição é obrigatória.
@@ -102,7 +102,7 @@
             class="block text-sm font-medium leading-6 text-gray-900 dark:text-white">Mitigação</label>
         <textarea id="mitigation" placeholder="Neste parágrafo, poderão ser descritas as estratégias de mitigação"
             name="mitigation" formControlName="mitigation"
-            class="block w-full rounded-md border-0 px-2 py-2 h-32 text-gray-900 bg-white dark:bg-gray-700 dark:text-white shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-600 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 dark:focus:ring-indigo-500 sm:text-sm sm:leading-6 transition"></textarea>
+            class="block w-full rounded-md border-0 px-3.5 py-2.5 h-32 text-gray-900 bg-white dark:bg-gray-700 dark:text-white shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-600 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 dark:focus:ring-indigo-500 sm:text-sm sm:leading-6 transition"></textarea>
         <div *ngIf="editUseCaseForm.get('mitigation')?.touched && editUseCaseForm.get('mitigation')?.invalid"
             class="text-red-600 dark:text-red-400 text-sm">
             Mitigação é obrigatória.

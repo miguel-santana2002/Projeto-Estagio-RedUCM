@@ -29,16 +29,16 @@ export class EditUseCaseComponent {
 ) {}
 
 taxonomiaCNCS : any = [
-  {"Código Malicioso": ["Sistema Infetado", "Distribuição de Malware", "Servidor C2", "Configuração de Malware"]},
-  {"Disponibilidade": ["Negação de Serviço", "Abuso de Recursos", "Outros"]},
-  {"Recolha de Informação": ["Scanners de Vulnerabilidades", "Falsificação de Identidade"]},
-  {"Intrusão": ["Exploração de Vulnerabilidades", "Comprometimento de Contas", "Obtenção de Credenciais"]},
-  {"Tentativa de Intrusão": ["Tentativa de Exploração de Vulnerabilidades"]},
-  {"Segurança da Informação": ["Roubo de Informação", "Exfiltração de Dados", "Alteração de Informação"]},
-  {"Fraude": ["Burlas"]},
-  {"Conteúdo Abusivo": ["SPAM", "Phishing"]},
-  {"Vulnerabilidade": ["Sistema Vulnerável", "Aplicação Vulnerável"]},
-  {"Outro": ["Outro"]}
+        {"Código Malicioso": ["Sistema Infetado", "Distribuição de Malware", "Servidor C2", "Configuração de Malware"]},
+        {"Disponibilidade": ["Negação de Serviço", "Abuso de Recursos", "Outage / Indisponibilidade"]},
+        {"Recolha de Informação": ["Scanners de Vulnerabilidades", "Social Engineering", "Scanning / Probing"]},
+        {"Intrusão": ["Exploração de Vulnerabilidades", "Comprometimento de Contas", "Obtenção de Credenciais"]},
+        {"Tentativa de Intrusão": ["Tentativa de Exploração de Vulnerabilidades", "Força Bruta / Password Spraying"]},
+        {"Segurança da Informação": ["Roubo de Informação", "Exfiltração de Dados", "Alteração de Informação"]},
+        {"Fraude": ["Burlas", "Roubo de Identidade / Falsificação", "Uso Indevido de Recursos"]},
+        {"Conteúdo Abusivo": ["SPAM", "Phishing", "Alojamento Indevido de Conteúdos"]},
+        {"Vulnerabilidade": ["Sistema Vulnerável", "Aplicação Vulnerável"]},
+        {"Outro": ["Outro"]}
 ];
 
 

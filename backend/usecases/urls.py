@@ -1,13 +1,12 @@
-from usecases.views import createUseCase, deleteUseCase, getComponentsByTechniqueId, getDataSourcesByTechniqueId, getMitigationsByTechniqueId, getTechniqueById, getTechniqueTacticBasedOnListIds, getTechniqueTacticById, getUseCaseById, getUseCases, updatePhaseTasks, updateUseCase
+from usecases.views import createUseCase, deleteUseCase, getAllTechniques, getComponentsByTechniqueId, getDataSourcesByTechniqueId, getMitigationsByTechniqueId, getTechniqueById, getTechniqueTacticBasedOnListIds, getTechniqueTacticById, getUseCaseById, getUseCases, updatePhaseTasks, updateUseCase
 from django.urls import path
 from rest_framework.urlpatterns import format_suffix_patterns
 
-
-
 urlpatterns = [
     path('getTechniqueById/<str:id>', getTechniqueById, name='getTechniqueById'),
+    path('getAllTechniques/', getAllTechniques, name='getAllTechniques'),
     path('createUseCase', createUseCase, name='createUseCase'),
-    path('getMitigationsByTechniqueId/<str:id>',getMitigationsByTechniqueId, name='getMitigationsByTechniqueId'),
+    path('getMitigationsByTechniqueId/<str:id>', getMitigationsByTechniqueId, name='getMitigationsByTechniqueId'),
     path('getDataSourcesByTechniqueId/<str:id>', getDataSourcesByTechniqueId, name='getDataSourcesByTechniqueId'),
     path('getComponentsByTechniqueId/<str:id>', getComponentsByTechniqueId, name='getComponentsByTechniqueId'),
     path('getUseCases', getUseCases, name='getUseCases'),

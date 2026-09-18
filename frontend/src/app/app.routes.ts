@@ -28,6 +28,7 @@ import { UpdateUserComponent } from './users/update-user/update-user.component';
 import { EditClientComponent } from './clients/edit-client/edit-client.component';
 import { EditRuleModelComponent } from './rules/edit-rule-model/edit-rule-model.component';
 import { numericIdGuard } from './guards/numeric-id.guard';
+import { AuditListComponent } from './audit/audit-list.component';
 
 export const routes: Routes = [
   { path: '', component: LandingpageComponent, pathMatch: 'full' },
@@ -89,6 +90,12 @@ export const routes: Routes = [
   { path: 'read-use-cases', component: ReadUseCasesComponent },
   { path: 'my-instance-rules', component: MyInstanceRulesComponent },
   { path: 'statistics', component: StatisticsPageComponent },
+  // Rota de Auditoria atualizada com o AuditListComponent
+  {
+    path: 'audit',
+    component: AuditListComponent,
+    canActivate: [isAdminGuard],
+  },
   {
     path: 'edit-usecase/:id',
     component: EditUseCaseComponent,

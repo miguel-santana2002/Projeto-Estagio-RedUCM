@@ -23,6 +23,8 @@ import { UsecasesService } from '../../services/usecases.service';
 import { AuthService } from '../../services/auth.service';
 import { SigmaConversionsService } from '../../services/sigma-conversions.service';
 
+import { AppCodeEditorComponent } from '../../shared/components/app-code-editor/app-code-editor.component';
+
 @Component({
   selector: 'app-rule-model-details',
   standalone: true,
@@ -36,6 +38,7 @@ import { SigmaConversionsService } from '../../services/sigma-conversions.servic
     RouterModule,
     FormsModule,
     ReactiveFormsModule,
+    AppCodeEditorComponent,
   ],
 })
 export class RuleModelDetailsComponent implements OnInit {
@@ -92,7 +95,6 @@ export class RuleModelDetailsComponent implements OnInit {
     'KQL (Sentinel)',
     'EQL (Elastic)',
     'Sigma Rule',
-    'Elastic Lucene Rule',
   ];
 
   edrSintaxes = ['CQL (CrowdStrike)', 'Defender KQL', 'Sigma Rule'];
@@ -101,8 +103,8 @@ export class RuleModelDetailsComponent implements OnInit {
     { id: 'SPL (Splunk)', name: 'SPL (Splunk)' },
     { id: 'KQL (Sentinel)', name: 'KQL (Sentinel)' },
     { id: 'AQL (QRadar)', name: 'AQL (QRadar)' },
-    { id: 'Elastic Lucene Rule', name: 'Elastic Lucene Rule' },
     { id: 'EQL (Elastic)', name: 'EQL (Elastic)' },
+    { id: 'CQL (CrowdStrike)', name: 'CQL (CrowdStrike)' },
     { id: 'Sigma Rule', name: 'Sigma Rule' },
   ];
 
@@ -111,6 +113,7 @@ export class RuleModelDetailsComponent implements OnInit {
   sourceRuleContent: string = '';
   convertedRuleContent: string = '';
   intermediateSigmaContent: string = '';
+  conversionEngine: 'pysigma' | 'hybrid' | 'llm' | null = null;
   targetSyntax: string = '';
   isConverting: boolean = false;
   conversionError: string = '';
@@ -196,8 +199,6 @@ export class RuleModelDetailsComponent implements OnInit {
 
   getMonacoLanguage(syntax: string): string {
     switch (syntax) {
-      case 'Elastic Lucene Rule':
-        return 'json';
       case 'SPL (Splunk)':
       case 'AQL (QRadar)':
       case 'KQL (Sentinel)':
@@ -269,6 +270,7 @@ export class RuleModelDetailsComponent implements OnInit {
     this.sourceRuleContent =
       this.selectedModel.value || this.ruleModel.ruleCode || '';
     this.convertedRuleContent = '';
+    this.conversionEngine = null;
     this.targetSyntax = '';
     this.isConverting = false;
     this.showConvertModal = true;
@@ -290,6 +292,7 @@ export class RuleModelDetailsComponent implements OnInit {
     this.isConverting = true;
     this.convertedRuleContent = '';
     this.intermediateSigmaContent = '';
+    this.conversionEngine = null;
     this.conversionError = '';
 
     const payload = {
@@ -302,6 +305,7 @@ export class RuleModelDetailsComponent implements OnInit {
       next: (res: any) => {
         this.convertedRuleContent = res.target_query;
         this.intermediateSigmaContent = res.sigma_rule;
+        this.conversionEngine = res.engine || null;
         this.isConverting = false;
       },
       error: (err: any) => {
