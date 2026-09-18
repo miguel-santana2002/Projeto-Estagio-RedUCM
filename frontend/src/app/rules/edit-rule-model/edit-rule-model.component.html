@@ -52,7 +52,7 @@
     <!-- Sintaxe -->
     <div class="space-y-4 col-span-2 md:col-span-1">
         <label for="syntax" class="block text-sm font-medium leading-6 text-gray-900 dark:text-white">Sintaxe</label>
-        <select id="syntax" formControlName="syntax" [(ngModel)]="selectedSyntax" (change)="onSyntaxChange()"
+        <select id="syntax" formControlName="syntax" [(ngModel)]="selectedSyntax"
             class="mt-1 block w-full py-2.5 px-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 dark:focus:ring-indigo-500 sm:text-sm">
             <option *ngFor="let option of getAvailableSyntaxes()" [value]="option">{{ option }}</option>
         </select>
@@ -80,14 +80,11 @@
 
     <!-- Editor de Código -->
     <div class="space-y-4 col-span-2">
-        <label class="block text-sm font-medium leading-6 text-gray-900 dark:text-white">Regra ({{ selectedSyntax
-            }})</label>
-        <div
-            class="w-full border border-gray-300 dark:border-gray-700 mx-auto rounded-md overflow-hidden bg-white dark:bg-gray-800">
-            <ngs-code-editor [codeModel]="selectedModel" [theme]="theme" [options]="options"
-                (valueChanged)="onCodeChanged($event)">
-            </ngs-code-editor>
-        </div>
+        <label class="block text-sm font-medium leading-6 text-gray-900 dark:text-white">
+            Regra ({{ selectedSyntax }})
+        </label>
+        <app-code-editor [code]="code" [language]="selectedSyntax" height="450px" (codeChange)="onCodeChanged($event)">
+        </app-code-editor>
     </div>
 
     <!-- Botões de Ação -->

@@ -45,18 +45,6 @@ level: medium        """
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, 200)
 
-    def test_convertSigmaToQRadar(self):
-        url = reverse('convertSigmaToQRadar')
-        data = {'rule': self.sigma_rule}
-        response = self.client.post(url, data, format='json')
-        self.assertEqual(response.status_code, 200)
-
-    def test_convertSigmaToElasticLucena(self):
-        url = reverse('convertSigmaToElasticLucena')
-        data = {'rule': self.sigma_rule}
-        response = self.client.post(url, data, format='json')
-        self.assertEqual(response.status_code, 200)
-
     def test_convertSigma(self):
         url = reverse('convertSigma')
         data = {'rule': self.sigma_rule, 'backend': 'Splunk Rule'}

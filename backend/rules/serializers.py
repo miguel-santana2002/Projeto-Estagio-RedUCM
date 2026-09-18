@@ -9,6 +9,7 @@ SUPPORTED_TARGET_SYNTAXES = [
     "AQL (QRadar)",
     "EQL (Elastic)",
     "Sigma Rule",
+    "CQL (CrowdStrike)",
 ]
 
 
