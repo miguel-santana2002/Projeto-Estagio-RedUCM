@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { TitlebannerComponent } from "../../layout/titlebanner/titlebanner.component";
 import { HeaderComponent } from "../../layout/header/header.component";
 import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -20,7 +20,7 @@ import { MatIconModule } from '@angular/material/icon';
     styleUrl: './edit-use-case.component.css',
     imports: [TitlebannerComponent, HeaderComponent, MatFormFieldModule, MatSelectModule, MatIconModule, TagInputModule, TitlebannerComponent, HeaderComponent, ReactiveFormsModule, FormsModule, CommonModule]
 })
-export class EditUseCaseComponent {
+export class EditUseCaseComponent implements OnInit {
   constructor(
     private route: ActivatedRoute,
     private mitreService: MitreService,
@@ -47,6 +47,10 @@ chavesTaxonomia = ["Código Malicioso", "Disponibilidade", "Recolha de Informaç
 selectedCategory: string = '';
 selectedSubcategory: string = '';
 selectedCategoryValues: string[] = [];
+
+// Lista para alimentar o autocomplete do MITRE ATT&CK
+mitreAutocompleteList: string[] = [];
+
 editUseCaseForm = new FormGroup({
   title: new FormControl('', Validators.required),
   description: new FormControl('', Validators.required),
@@ -60,6 +64,8 @@ editUseCaseForm = new FormGroup({
 selectedFile: File | null = null;
 
 ngOnInit(): void {
+
+  this.loadMitreTechniques();
 
   const useCaseId = this.route.snapshot.paramMap.get('id');
     if (useCaseId) {
@@ -86,6 +92,19 @@ ngOnInit(): void {
       });
     }
 }
+
+loadMitreTechniques() {
+    this.mitreService.getAllTechniques().subscribe({
+        next: (data: any[]) => {
+            // Mapeia para o formato "ID: Nome" ou "ID - Nome" para facilitar a correspondência no input
+            this.mitreAutocompleteList = data.map((t: any) => `${t.id} - ${t.name}`);
+        },
+        error: (error) => {
+            console.error('Erro ao carregar as técnicas do MITRE do backend', error);
+        }
+    });
+}
+
 updateCNCSValues() {
   this.selectedCategory = this.editUseCaseForm.get('cncsClass')?.value || '';
   this.selectedCategoryValues = this.taxonomiaCNCS.find((entry: { [x: string]: any; }) => entry[this.selectedCategory])?.[this.selectedCategory] || [];
@@ -154,4 +173,3 @@ useCaseData.append('mitreTechniques', `{${formattedMitreTechniques.join(',')}}`)
 
 }
 }
-
