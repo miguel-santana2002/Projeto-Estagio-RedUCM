@@ -1,6 +1,6 @@
 <app-header></app-header>
 
-<app-titlebanner title="Gestão de Clientes" image="./assets/bannercover.jpg"> </app-titlebanner>
+<app-titlebanner title="Gestão de Clientes" image="./assets/bannercover.jpg"></app-titlebanner>
 
 <div class="container mx-auto px-4 sm:px-8">
   <div class="py-8">
@@ -8,7 +8,7 @@
       <div
         class="inline-block min-w-full shadow-md p-5 rounded-lg overflow-hidden bg-white dark:bg-gray-800 transition">
 
-        <!-- Barra de Pesquisa e Botão Criar -->
+        <!-- Barra de Pesquisa e Botões de Ação -->
         <div class="mb-4 relative">
           <label for="nameSearch" class="sr-only">Procurar por nome</label>
           <div class="flex items-center">
@@ -22,9 +22,76 @@
             <button (click)="openCreateModal()" type="button"
               class="ml-5 w-48 h-10 bg-redshift-red text-white rounded hover:bg-redshift-hover shadow-md transition flex items-center justify-center gap-2 flex-shrink-0">
               <i class="fas fa-plus"></i>
-              Adicionar Novo
+              <span>Adicionar Novo</span>
+            </button>
+
+            <!-- Botão Toggle Filtros -->
+            <div class="text-center flex-shrink-0">
+              <button (click)="showFilters = !showFilters"
+                [ngClass]="{'ring-2 ring-offset-2 ring-redshift-red': showFilters}"
+                class="ml-5 w-28 h-10 bg-redshift-red text-white rounded hover:bg-redshift-hover shadow-md flex items-center justify-center gap-2 transition"
+                type="button">
+                <i class="fas fa-filter"></i>
+                <span>Filtros</span>
+                <span *ngIf="selectedLogsources.length > 0" class="w-2 h-2 rounded-full bg-white"></span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Painel de Filtros Expansível -->
+        <div *ngIf="showFilters"
+          class="mb-6 p-5 rounded-xl bg-gray-50 dark:bg-[#1a2234] border border-gray-200 dark:border-gray-700 shadow-sm transition-all duration-200">
+
+          <!-- Cabeçalho do Painel -->
+          <div class="flex items-center justify-between pb-3 mb-4 border-b border-gray-200 dark:border-gray-700/60">
+            <div class="flex items-center gap-2">
+              <div class="w-2 h-2 rounded-full bg-redshift-red animate-pulse"></div>
+              <span class="text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-200">
+                Filtrar Clientes
+              </span>
+              <span *ngIf="selectedLogsources.length > 0"
+                class="ml-2 px-2 py-0.5 text-[11px] font-semibold rounded-full bg-redshift-red/10 text-redshift-red dark:bg-redshift-red/20 border border-redshift-red/30">
+                {{ selectedLogsources.length }} ativo(s)
+              </span>
+            </div>
+
+            <button *ngIf="selectedLogsources.length > 0" (click)="clearAllFilters()"
+              class="text-xs text-redshift-red hover:text-redshift-hover font-medium flex items-center gap-1.5 transition">
+              <i class="fas fa-trash-can text-[11px]"></i>
+              <span>Limpar filtros</span>
             </button>
           </div>
+
+          <!-- Grelha de Filtros: Logsources -->
+          <div class="flex flex-col">
+            <div class="flex items-center justify-between mb-2">
+              <label class="text-xs font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-1.5">
+                <i class="fas fa-file-lines text-redshift-red"></i>
+                <span>Logsources Suportadas</span>
+              </label>
+              <span class="text-[11px] text-gray-400">
+                {{ selectedLogsources.length }} de {{ uniqueLogsources.length }} selecionada(s)
+              </span>
+            </div>
+
+            <div class="flex flex-wrap gap-2 max-h-36 overflow-y-auto pr-1">
+              <button *ngFor="let log of uniqueLogsources" type="button" (click)="toggleLogsource(log)" [ngClass]="{
+                  'bg-redshift-red text-white border-redshift-red shadow-sm': isLogsourceSelected(log),
+                  'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-700 hover:border-redshift-red dark:hover:border-redshift-red': !isLogsourceSelected(log)
+                }"
+                class="px-3 py-1.5 rounded-lg border text-xs font-medium transition flex items-center gap-2 select-none">
+                <i
+                  [class]="isLogsourceSelected(log) ? 'fas fa-check text-[10px]' : 'fas fa-plus text-[10px] opacity-40'"></i>
+                <span>{{ log }}</span>
+              </button>
+
+              <span *ngIf="uniqueLogsources.length === 0" class="text-xs text-gray-400 italic">
+                Nenhuma logsource registada nos clientes.
+              </span>
+            </div>
+          </div>
+
         </div>
 
         <!-- Tabela de Clientes -->
@@ -32,24 +99,24 @@
           <thead>
             <tr>
               <th (click)="sortTable('pk')"
-                class="px-5 py-3 border-b-2 border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-700 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider cursor-pointer">
+                class="px-5 py-3 border-b-2 border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-700 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider cursor-pointer select-none">
                 ID Cliente
                 <span [class]="sortType === 'pk' ? (sortReverse ? 'fas fa-caret-up' : 'fas fa-caret-down') : ''"></span>
               </th>
               <th (click)="sortTable('name')"
-                class="px-5 py-3 border-b-2 border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-700 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider cursor-pointer">
+                class="px-5 py-3 border-b-2 border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-700 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider cursor-pointer select-none">
                 Nome
                 <span
                   [class]="sortType === 'name' ? (sortReverse ? 'fas fa-caret-up' : 'fas fa-caret-down') : ''"></span>
               </th>
               <th (click)="sortTable('logsources')"
-                class="px-5 py-3 border-b-2 border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-700 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider cursor-pointer">
+                class="px-5 py-3 border-b-2 border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-700 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider cursor-pointer select-none">
                 Logsources
                 <span
                   [class]="sortType === 'logsources' ? (sortReverse ? 'fas fa-caret-up' : 'fas fa-caret-down') : ''"></span>
               </th>
               <th (click)="sortTable('date')"
-                class="px-5 py-3 border-b-2 border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-700 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider cursor-pointer">
+                class="px-5 py-3 border-b-2 border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-700 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider cursor-pointer select-none">
                 Data de Registo
                 <span
                   [class]="sortType === 'date' ? (sortReverse ? 'fas fa-caret-up' : 'fas fa-caret-down') : ''"></span>
@@ -67,22 +134,22 @@
 
               <td (click)="openDetailsModal(c)"
                 class="px-5 py-5 text-left cursor-pointer border-b border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-200">
-                {{ c.pk }}</td>
+                {{ c.pk }}
+              </td>
               <td (click)="openDetailsModal(c)"
                 class="px-5 py-5 text-left cursor-pointer border-b border-gray-200 dark:border-gray-700 font-medium text-gray-900 dark:text-white">
-                {{ c.name }}</td>
+                {{ c.name }}
+              </td>
 
               <td (click)="openDetailsModal(c)"
                 class="px-5 py-5 text-left cursor-pointer border-b border-gray-200 dark:border-gray-700">
                 <div class="flex flex-wrap items-center gap-1">
-                  <!-- Primeiras 4 tags -->
-                  <div *ngFor="let logsource of c.logsources.slice(0, 4)"
+                  <div *ngFor="let logsource of (c.logsources || []).slice(0, 4)"
                     class="bg-[#0d2f52] text-white text-center text-[12px] rounded-md px-2 py-1 h-auto min-w-[60px] max-w-[150px] whitespace-normal break-words">
                     {{ logsource }}
                   </div>
 
-                  <!-- Badge estático com o número restante -->
-                  <span *ngIf="c.logsources.length > 4"
+                  <span *ngIf="c.logsources?.length > 4"
                     class="bg-[#0d2f52] text-white text-[12px] rounded-full w-8 h-8 flex items-center justify-center font-medium select-none pointer-events-none">
                     +{{ c.logsources.length - 4 }}
                   </span>
@@ -94,7 +161,8 @@
                 {{ c.date | date: 'dd/MM/yyyy' }}
               </td>
 
-              <td class="px-5 py-5 border-b border-gray-200 dark:border-gray-700 whitespace-nowrap">
+              <td class="px-5 py-5 border-b border-gray-200 dark:border-gray-700 whitespace-nowrap"
+                (click)="$event.stopPropagation()">
                 <button (click)="updateSelectDelete(c.pk); openModal()"
                   class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-md hover:shadow-lg transition duration-300">
                   <i class="fas fa-trash-alt"></i>
@@ -248,7 +316,7 @@
 
         <div>
           <label class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider font-semibold">
-            Todas as LogSources ({{ selectedClient.logsources.length }})
+            Todas as LogSources ({{ selectedClient.logsources?.length || 0 }})
           </label>
           <div class="flex flex-wrap gap-2 mt-2 max-h-48 overflow-y-auto p-1">
             <span *ngFor="let log of selectedClient.logsources"

@@ -1,6 +1,4 @@
-import { Component, ViewChild, ElementRef } from '@angular/core';
-import { HeaderComponent } from '../../layout/header/header.component';
-import { TitlebannerComponent } from '../../layout/titlebanner/titlebanner.component';
+import { Component, ViewChild, ElementRef, OnInit } from '@angular/core';
 import {
   FormControl,
   FormGroup,
@@ -10,8 +8,11 @@ import {
 } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
-import { AuthService } from '../../services/auth.service';
 import { TagInputModule } from 'ngx-chips';
+
+import { HeaderComponent } from '../../layout/header/header.component';
+import { TitlebannerComponent } from '../../layout/titlebanner/titlebanner.component';
+import { AuthService } from '../../services/auth.service';
 import { RulesService } from '../../services/rules.service';
 
 @Component({
@@ -29,7 +30,7 @@ import { RulesService } from '../../services/rules.service';
     TagInputModule,
   ],
 })
-export class ManageClientsComponent {
+export class ManageClientsComponent implements OnInit {
   @ViewChild('modal') modal!: ElementRef;
 
   sortType = 'name';
@@ -37,12 +38,27 @@ export class ManageClientsComponent {
   nameSearch: string = '';
   selectDelete: number = 9999999;
   errorMessage: string = '';
-  clients: any = [];
+  clients: any[] = [];
+  registeredLogsources: string[] = [];
 
+  // Controlo do Painel de Filtros
+  showFilters: boolean = false;
+  selectedLogsources: string[] = [];
+  uniqueLogsources: string[] = [];
+
+  // Modais
   isCreateModalOpen: boolean = false;
-
   selectedClient: any = null;
   isDetailsModalOpen: boolean = false;
+
+  createClientForm = new FormGroup({
+    name: new FormControl('', [Validators.required]),
+    logsources: new FormControl(null, [Validators.required]),
+  });
+
+  get name() {
+    return this.createClientForm.get('name');
+  }
 
   constructor(
     private authService: AuthService,
@@ -50,34 +66,96 @@ export class ManageClientsComponent {
     private router: Router,
   ) {}
 
-  registeredLogsources: any = [];
+  ngOnInit(): void {
+    this.loadClients();
+    this.loadRegisteredLogSources();
+  }
 
-  ngOnInit() {
-    this.authService.getClients().subscribe((data: any) => {
-      this.clients = data;
-
-      console.log(data);
-
-      this.rulesService.getRegisteredLogSources().subscribe((data: any) => {
-        console.log(data);
-        this.registeredLogsources = data.map(
-          (logsource: any) => logsource.name,
-        );
-      });
+  loadClients(): void {
+    this.authService.getClients().subscribe({
+      next: (data: any) => {
+        this.clients = Array.isArray(data) ? data : [];
+        this.startFilters();
+      },
+      error: (err) => console.error('Erro ao carregar clientes:', err),
     });
   }
 
-  openModal() {
+  loadRegisteredLogSources(): void {
+    this.rulesService.getRegisteredLogSources().subscribe({
+      next: (data: any) => {
+        if (Array.isArray(data)) {
+          this.registeredLogsources = data.map(
+            (logsource: any) => logsource.name,
+          );
+        }
+      },
+      error: (err) => console.error('Erro ao carregar logsources:', err),
+    });
+  }
+
+  startFilters(): void {
+    this.uniqueLogsources = Array.from(
+      new Set(
+        this.clients
+          .flatMap((c: any) => c.logsources || [])
+          .filter((l: string): l is string => Boolean(l)),
+      ),
+    ).sort();
+  }
+
+  // Toggles de Seleção (Pills)
+  toggleLogsource(log: string): void {
+    if (this.selectedLogsources.includes(log)) {
+      this.selectedLogsources = this.selectedLogsources.filter(
+        (l) => l !== log,
+      );
+    } else {
+      this.selectedLogsources = [...this.selectedLogsources, log];
+    }
+  }
+
+  isLogsourceSelected(log: string): boolean {
+    return this.selectedLogsources.includes(log);
+  }
+
+  clearAllFilters(): void {
+    this.selectedLogsources = [];
+  }
+
+  // Filtragem Reativa
+  get filteredClients(): any[] {
+    const term = this.nameSearch.trim().toLowerCase();
+
+    return this.clients.filter((c: any) => {
+      // 1. Pesquisa por Nome
+      const matchesName =
+        !term || (c.name && c.name.toLowerCase().includes(term));
+
+      // 2. Filtro por Logsources
+      const matchesLogs =
+        this.selectedLogsources.length === 0 ||
+        (Array.isArray(c.logsources) &&
+          c.logsources.some((log: string) =>
+            this.selectedLogsources.includes(log),
+          ));
+
+      return matchesName && matchesLogs;
+    });
+  }
+
+  // Modais de Criação e Detalhes
+  openModal(): void {
     this.modal.nativeElement.classList.remove('hidden');
     this.modal.nativeElement.classList.add('flex');
   }
 
-  closeModal() {
+  closeModal(): void {
     this.modal.nativeElement.classList.add('hidden');
     this.modal.nativeElement.classList.remove('flex');
   }
 
-  openCreateModal() {
+  openCreateModal(): void {
     this.isCreateModalOpen = true;
   }
 
@@ -89,29 +167,53 @@ export class ManageClientsComponent {
     }
   }
 
-  openDetailsModal(client: any) {
+  openDetailsModal(client: any): void {
     this.selectedClient = client;
     this.isDetailsModalOpen = true;
   }
 
-  closeDetailsModal() {
+  closeDetailsModal(): void {
     this.isDetailsModalOpen = false;
     this.selectedClient = null;
   }
 
-  editClient(client: any) {
+  editClient(client: any): void {
     this.closeDetailsModal();
     this.router.navigate(['/edit-client', client.pk]);
   }
 
-  deleteClient() {
+  createClient(): void {
+    this.errorMessage = '';
+    const logsourcesArray: any = this.createClientForm.get('logsources')?.value;
+    const logsources = Array.isArray(logsourcesArray)
+      ? logsourcesArray.map(
+          (ls: any) => ls?.value || ls?.id || ls?.display || ls,
+        )
+      : [];
+
+    const clientData = {
+      name: this.name!.value!,
+      logsources: logsources,
+    };
+
+    this.authService.createClient(clientData).subscribe({
+      next: () => {
+        this.loadClients();
+        this.createClientForm.reset();
+        this.closeCreateModal();
+      },
+      error: (err: any) => {
+        console.error('Erro na API:', err);
+        this.errorMessage =
+          err.error?.error || 'Erro ao comunicar com o servidor.';
+      },
+    });
+  }
+
+  deleteClient(): void {
     this.authService.deleteCompany(this.selectDelete).subscribe({
-      next: (response) => {
-        console.log('Cliente apagado:', response);
-        // Atualiza a tabela
-        this.authService.getClients().subscribe((data: any) => {
-          this.clients = data;
-        });
+      next: () => {
+        this.loadClients();
       },
       error: (err) => {
         console.error('Erro ao apagar o cliente no backend:', err);
@@ -120,55 +222,11 @@ export class ManageClientsComponent {
     });
   }
 
-  updateSelectDelete(id: number) {
+  updateSelectDelete(id: number): void {
     this.selectDelete = id;
   }
 
-  client: any = {
-    name: '',
-  };
-
-  createClientForm = new FormGroup({
-    name: new FormControl('', [Validators.required]),
-    logsources: new FormControl(null, [Validators.required]),
-  });
-
-  get name() {
-    return this.createClientForm.get('name');
-  }
-
-  createClient() {
-    this.errorMessage = '';
-    var logsourcesArray: any = this.createClientForm.get('logsources')?.value;
-    var logsources = logsourcesArray?.map((logsource: any) => logsource.value);
-
-    const clientData = {
-      name: this.name!.value!,
-      logsources: logsources,
-    };
-
-    console.log(clientData);
-
-    this.authService.createClient(clientData).subscribe({
-      next: (response) => {
-        console.log(response);
-        this.authService.getClients().subscribe((data: any) => {
-          this.clients = data;
-        });
-        this.createClientForm.reset();
-
-        this.closeCreateModal();
-      },
-      error: (err: any) => {
-        console.error('Erro na API:', err);
-
-        // Extrai a mensagem de erro formatada enviada pelo Django
-        this.errorMessage =
-          err.error?.error || 'Erro ao comunicar com o servidor.';
-      },
-    });
-  }
-
+  // Ordenação
   sortTable(column: string): void {
     if (this.sortType === column) {
       this.sortReverse = !this.sortReverse;
@@ -181,32 +239,25 @@ export class ManageClientsComponent {
       const valueA = a[column];
       const valueB = b[column];
 
-      // 1. Tratar arrays (Logsources) ordenando pela quantidade de itens
+      if (valueA == null && valueB != null) return this.sortReverse ? -1 : 1;
+      if (valueA != null && valueB == null) return this.sortReverse ? 1 : -1;
+      if (valueA == null && valueB == null) return 0;
+
       if (Array.isArray(valueA) && Array.isArray(valueB)) {
         return this.sortNumeric(valueA.length, valueB.length);
-      }
-      // 2. Tratar Strings (Nome, Data)
-      else if (typeof valueA === 'string') {
+      } else if (typeof valueA === 'string') {
         return this.sortString(valueA, valueB);
-      }
-      // 3. Tratar Números (ID / pk)
-      else {
+      } else {
         return this.sortNumeric(valueA, valueB);
       }
     });
   }
 
-  private sortString(a: string, b: string): number {
+  private sortString(a: string = '', b: string = ''): number {
     return a.localeCompare(b) * (this.sortReverse ? -1 : 1);
   }
 
-  private sortNumeric(a: number, b: number): number {
+  private sortNumeric(a: number = 0, b: number = 0): number {
     return (a - b) * (this.sortReverse ? -1 : 1);
-  }
-
-  get filteredClients() {
-    return this.clients.filter((u: any) =>
-      u.name.toLowerCase().includes(this.nameSearch.toLowerCase()),
-    );
   }
 }
