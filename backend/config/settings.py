@@ -74,6 +74,7 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "audit.middleware.CurrentUserMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
@@ -116,10 +117,6 @@ DATABASES = {
         'PORT': os.getenv('POSTGRES_PORT', '5432'),
     }
 }
-
-
-
-
 
 
 # Password validation
@@ -171,8 +168,6 @@ EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", "antonio.g.magro@gmail.com")
 EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", "nhldicpqfjrnvrjk")
 
 
-
-
 # =======================================================
 # REST_FRAMEWORK
 # =======================================================
@@ -202,8 +197,6 @@ This documentation aims to describe the REST API that supports the application, 
 The API is made up of different endpoints, each with a specific purpose, allowing interaction with the application in different ways.
 
 """
-    
-    
     ,
     'VERSION': '1.0.0',
     'SERVE_INCLUDE_SCHEMA': False,
