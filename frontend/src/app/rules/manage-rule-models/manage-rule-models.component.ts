@@ -41,6 +41,11 @@ export class ManageRuleModelsComponent implements OnInit, AfterViewInit {
 
   ruleModels: any[] = [];
 
+  // Paginação
+  page: number = 1;
+  pageSize: number = 10;
+  pageSizeOptions: number[] = [5, 10, 25, 50];
+
   // Controlo do Painel de Filtros
   showFilters: boolean = false;
 
@@ -74,27 +79,28 @@ export class ManageRuleModelsComponent implements OnInit, AfterViewInit {
       next: (data: any) => {
         this.ruleModels = Array.isArray(data) ? data : [];
         this.startFilters();
+        this.ruleModels.sort((a: any, b: any) => this.sortNumeric(a.id, b.id));
       },
       error: (err) => console.error('Erro ao carregar modelos de regra:', err),
     });
   }
 
   startFilters(): void {
-    this.uniqueSintaxes = [
-      ...new Set(
+    this.uniqueSintaxes = Array.from(
+      new Set(
         this.ruleModels
           .map((item: any) => item.syntax)
           .filter((s): s is string => Boolean(s)),
       ),
-    ].sort();
+    ).sort();
 
-    this.uniqueTypes = [
-      ...new Set(
+    this.uniqueTypes = Array.from(
+      new Set(
         this.ruleModels
           .map((item: any) => item.type)
           .filter((t): t is string => Boolean(t)),
       ),
-    ].sort();
+    ).sort();
 
     this.uniqueLogSources = Array.from(
       new Set(
@@ -105,8 +111,9 @@ export class ManageRuleModelsComponent implements OnInit, AfterViewInit {
     ).sort();
   }
 
-  // Toggles de Seleção (Pills)
+  // Toggles de Filtro com Reset de Página
   toggleType(type: string): void {
+    this.page = 1;
     if (this.selectedTypes.includes(type)) {
       this.selectedTypes = this.selectedTypes.filter((t) => t !== type);
     } else {
@@ -119,6 +126,7 @@ export class ManageRuleModelsComponent implements OnInit, AfterViewInit {
   }
 
   toggleSyntax(syntax: string): void {
+    this.page = 1;
     if (this.selectedSintaxes.includes(syntax)) {
       this.selectedSintaxes = this.selectedSintaxes.filter((s) => s !== syntax);
     } else {
@@ -131,6 +139,7 @@ export class ManageRuleModelsComponent implements OnInit, AfterViewInit {
   }
 
   toggleLogSource(logSource: string): void {
+    this.page = 1;
     if (this.selectedLogSources.includes(logSource)) {
       this.selectedLogSources = this.selectedLogSources.filter(
         (l) => l !== logSource,
@@ -146,52 +155,32 @@ export class ManageRuleModelsComponent implements OnInit, AfterViewInit {
 
   // Ações de Limpeza
   clearSelectedSyntax(): void {
+    this.page = 1;
     this.selectedSintaxes = [];
   }
 
   clearSelectedTypes(): void {
+    this.page = 1;
     this.selectedTypes = [];
   }
 
   clearSelectedLogSources(): void {
+    this.page = 1;
     this.selectedLogSources = [];
   }
 
   clearAllFilters(): void {
+    this.page = 1;
     this.selectedSintaxes = [];
     this.selectedTypes = [];
     this.selectedLogSources = [];
   }
 
-  // Ordenação
-  sortTable(column: string): void {
-    if (this.sortType === column) {
-      this.sortReverse = !this.sortReverse;
-    } else {
-      this.sortType = column;
-      this.sortReverse = false;
-    }
-
-    this.ruleModels.sort((a: any, b: any) => {
-      const valA = a[column];
-      const valB = b[column];
-
-      if (!valA && valB) return this.sortReverse ? -1 : 1;
-      if (valA && !valB) return this.sortReverse ? 1 : -1;
-      if (!valA && !valB) return 0;
-
-      if (Array.isArray(valA) && Array.isArray(valB)) {
-        return (valA.length - valB.length) * (this.sortReverse ? -1 : 1);
-      }
-
-      if (typeof valA === 'string') {
-        return valA.localeCompare(valB) * (this.sortReverse ? -1 : 1);
-      }
-
-      return (Number(valA) - Number(valB)) * (this.sortReverse ? -1 : 1);
-    });
+  onSearchChange(): void {
+    this.page = 1;
   }
 
+  // Filtragem Reativa
   get filteredRuleModels(): any[] {
     const term = this.nameSearch.trim().toLowerCase();
 
@@ -216,6 +205,64 @@ export class ManageRuleModelsComponent implements OnInit, AfterViewInit {
     });
   }
 
+  // Segmentação Paginada
+  get pagedRuleModels(): any[] {
+    const start = (this.page - 1) * this.pageSize;
+    return this.filteredRuleModels.slice(start, start + this.pageSize);
+  }
+
+  get totalPages(): number {
+    return Math.ceil(this.filteredRuleModels.length / this.pageSize) || 1;
+  }
+
+  setPage(newPage: number): void {
+    if (newPage >= 1 && newPage <= this.totalPages) {
+      this.page = newPage;
+    }
+  }
+
+  onPageSizeChange(newSize: number): void {
+    this.pageSize = Number(newSize);
+    this.page = 1;
+  }
+
+  // Ordenação
+  sortTable(column: string): void {
+    if (this.sortType === column) {
+      this.sortReverse = !this.sortReverse;
+    } else {
+      this.sortType = column;
+      this.sortReverse = false;
+    }
+
+    this.ruleModels.sort((a: any, b: any) => {
+      const valA = a[column];
+      const valB = b[column];
+
+      if (valA == null && valB != null) return this.sortReverse ? -1 : 1;
+      if (valA != null && valB == null) return this.sortReverse ? 1 : -1;
+      if (valA == null && valB == null) return 0;
+
+      if (Array.isArray(valA) && Array.isArray(valB)) {
+        return (valA.length - valB.length) * (this.sortReverse ? -1 : 1);
+      }
+
+      if (typeof valA === 'string') {
+        return this.sortString(valA, valB);
+      }
+
+      return this.sortNumeric(valA, valB);
+    });
+  }
+
+  private sortString(a: string = '', b: string = ''): number {
+    return a.localeCompare(b) * (this.sortReverse ? -1 : 1);
+  }
+
+  private sortNumeric(a: number = 0, b: number = 0): number {
+    return (a - b) * (this.sortReverse ? -1 : 1);
+  }
+
   // Gestão de Modal Eliminar
   updateSelectDelete(event: Event, id: number): void {
     event.stopPropagation();
@@ -234,6 +281,9 @@ export class ManageRuleModelsComponent implements OnInit, AfterViewInit {
     this.rulesService.deleteRuleModelById(this.selectDelete).subscribe({
       next: () => {
         this.loadRuleModels();
+        if (this.page > this.totalPages) {
+          this.page = this.totalPages;
+        }
       },
       error: (err) => console.error('Erro ao eliminar modelo de regra:', err),
     });

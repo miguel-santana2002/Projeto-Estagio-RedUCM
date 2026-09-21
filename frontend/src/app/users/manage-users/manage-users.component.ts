@@ -46,6 +46,11 @@ export class ManageUsersComponent implements OnInit, AfterViewInit {
   showAllCompanies: boolean = false;
   showCompanies: { [key: number]: boolean } = {};
 
+  // Paginação
+  page: number = 1;
+  pageSize: number = 10;
+  pageSizeOptions: number[] = [5, 10, 25, 50];
+
   // Controlo do Painel de Filtros
   showFilters: boolean = false;
 
@@ -93,60 +98,59 @@ export class ManageUsersComponent implements OnInit, AfterViewInit {
       new Set(
         this.users
           .flatMap((item: any) => item.companies || [])
-          .filter((c: any) => Boolean(c)),
+          .filter((c: any): c is string => Boolean(c)),
       ),
-    );
+    ).sort();
   }
 
-  // Ordenação
-  sortTable(column: string): void {
-    if (this.sortType === column) {
-      this.sortReverse = !this.sortReverse;
+  // Toggles de Filtro com Reset de Página
+  toggleClient(client: string): void {
+    this.page = 1;
+    if (this.selectedClients.includes(client)) {
+      this.selectedClients = this.selectedClients.filter((c) => c !== client);
     } else {
-      this.sortType = column;
-      this.sortReverse = false;
+      this.selectedClients = [...this.selectedClients, client];
     }
-
-    this.users.sort((a: any, b: any) => {
-      let valueA = a[column];
-      let valueB = b[column];
-
-      // 1. Trata a coluna 'company' (com base no primeiro cliente associado)
-      if (column === 'company') {
-        valueA = a.companies?.[0] || '';
-        valueB = b.companies?.[0] || '';
-      }
-
-      // 2. Trata a coluna 'role' (Administrador vs Operador)
-      if (column === 'role') {
-        valueA =
-          a.companies && a.companies.length > 0 ? 'Operador' : 'Administrador';
-        valueB =
-          b.companies && b.companies.length > 0 ? 'Operador' : 'Administrador';
-      }
-
-      // 3. Trata nulos / indefinidos
-      if (valueA == null && valueB != null) return this.sortReverse ? -1 : 1;
-      if (valueA != null && valueB == null) return this.sortReverse ? 1 : -1;
-      if (valueA == null && valueB == null) return 0;
-
-      // 4. Ordenação String vs Numérica
-      if (typeof valueA === 'string') {
-        return this.sortString(valueA, valueB);
-      }
-      return this.sortNumeric(valueA, valueB);
-    });
   }
 
-  private sortString(a: string = '', b: string = ''): number {
-    return a.localeCompare(b) * (this.sortReverse ? -1 : 1);
+  isClientSelected(client: string): boolean {
+    return this.selectedClients.includes(client);
   }
 
-  private sortNumeric(a: number = 0, b: number = 0): number {
-    return (a - b) * (this.sortReverse ? -1 : 1);
+  toggleRole(role: string): void {
+    this.page = 1;
+    if (this.selectedRoles.includes(role)) {
+      this.selectedRoles = this.selectedRoles.filter((r) => r !== role);
+    } else {
+      this.selectedRoles = [...this.selectedRoles, role];
+    }
   }
 
-  // Filtragem Reativa
+  isRoleSelected(role: string): boolean {
+    return this.selectedRoles.includes(role);
+  }
+
+  clearSelectedClients(): void {
+    this.page = 1;
+    this.selectedClients = [];
+  }
+
+  clearSelectedRoles(): void {
+    this.page = 1;
+    this.selectedRoles = [];
+  }
+
+  clearAllFilters(): void {
+    this.page = 1;
+    this.selectedClients = [];
+    this.selectedRoles = [];
+  }
+
+  onSearchChange(): void {
+    this.page = 1;
+  }
+
+  // Filtragem Reativa Completa
   get filteredUsers(): any[] {
     const term = this.nameSearch.trim().toLowerCase();
 
@@ -163,7 +167,7 @@ export class ManageUsersComponent implements OnInit, AfterViewInit {
         (user.companies &&
           user.companies.some((c: string) => this.selectedClients.includes(c)));
 
-      // 3. Filtro por Role (Operador tem clientes, Administrador não tem)
+      // 3. Filtro por Role
       let matchesRole = true;
       const hasCompanies = user.companies && user.companies.length > 0;
 
@@ -185,28 +189,69 @@ export class ManageUsersComponent implements OnInit, AfterViewInit {
     });
   }
 
-  toggleClient(client: string): void {
-    if (this.selectedClients.includes(client)) {
-      this.selectedClients = this.selectedClients.filter((c) => c !== client);
-    } else {
-      this.selectedClients = [...this.selectedClients, client];
+  // Segmentação Paginada
+  get pagedUsers(): any[] {
+    const start = (this.page - 1) * this.pageSize;
+    return this.filteredUsers.slice(start, start + this.pageSize);
+  }
+
+  get totalPages(): number {
+    return Math.ceil(this.filteredUsers.length / this.pageSize) || 1;
+  }
+
+  setPage(newPage: number): void {
+    if (newPage >= 1 && newPage <= this.totalPages) {
+      this.page = newPage;
     }
   }
 
-  isClientSelected(client: string): boolean {
-    return this.selectedClients.includes(client);
+  onPageSizeChange(newSize: number): void {
+    this.pageSize = Number(newSize);
+    this.page = 1;
   }
 
-  toggleRole(role: string): void {
-    if (this.selectedRoles.includes(role)) {
-      this.selectedRoles = this.selectedRoles.filter((r) => r !== role);
+  // Ordenação
+  sortTable(column: string): void {
+    if (this.sortType === column) {
+      this.sortReverse = !this.sortReverse;
     } else {
-      this.selectedRoles = [...this.selectedRoles, role];
+      this.sortType = column;
+      this.sortReverse = false;
     }
+
+    this.users.sort((a: any, b: any) => {
+      let valueA = a[column];
+      let valueB = b[column];
+
+      if (column === 'company') {
+        valueA = a.companies?.[0] || '';
+        valueB = b.companies?.[0] || '';
+      }
+
+      if (column === 'role') {
+        valueA =
+          a.companies && a.companies.length > 0 ? 'Operador' : 'Administrador';
+        valueB =
+          b.companies && b.companies.length > 0 ? 'Operador' : 'Administrador';
+      }
+
+      if (valueA == null && valueB != null) return this.sortReverse ? -1 : 1;
+      if (valueA != null && valueB == null) return this.sortReverse ? 1 : -1;
+      if (valueA == null && valueB == null) return 0;
+
+      if (typeof valueA === 'string') {
+        return this.sortString(valueA, valueB);
+      }
+      return this.sortNumeric(valueA, valueB);
+    });
   }
 
-  isRoleSelected(role: string): boolean {
-    return this.selectedRoles.includes(role);
+  private sortString(a: string = '', b: string = ''): number {
+    return a.localeCompare(b) * (this.sortReverse ? -1 : 1);
+  }
+
+  private sortNumeric(a: number = 0, b: number = 0): number {
+    return (a - b) * (this.sortReverse ? -1 : 1);
   }
 
   // Modal Eliminar
@@ -243,19 +288,5 @@ export class ManageUsersComponent implements OnInit, AfterViewInit {
 
   toggleCompanies(): void {
     this.showAllCompanies = !this.showAllCompanies;
-  }
-
-  // Limpeza de Filtros
-  clearSelectedClients(): void {
-    this.selectedClients = [];
-  }
-
-  clearSelectedRoles(): void {
-    this.selectedRoles = [];
-  }
-
-  clearAllFilters(): void {
-    this.selectedClients = [];
-    this.selectedRoles = [];
   }
 }

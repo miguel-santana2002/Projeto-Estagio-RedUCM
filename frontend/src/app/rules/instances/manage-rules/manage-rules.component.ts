@@ -40,6 +40,11 @@ export class ManageRulesComponent implements OnInit, AfterViewInit {
 
   rules: any[] = [];
 
+  // Paginação
+  page: number = 1;
+  pageSize: number = 10;
+  pageSizeOptions: number[] = [5, 10, 25, 50];
+
   // Controlo do Painel de Filtros
   showFilters: boolean = false;
 
@@ -129,32 +134,37 @@ export class ManageRulesComponent implements OnInit, AfterViewInit {
     ).sort();
   }
 
-  // Toggles de Seleção (Pills)
+  // Toggles de Seleção com Reset de Página
   toggleClient(client: string): void {
+    this.page = 1;
     this.selectedClients = this.selectedClients.includes(client)
       ? this.selectedClients.filter((c) => c !== client)
       : [...this.selectedClients, client];
   }
 
   toggleType(type: string): void {
+    this.page = 1;
     this.selectedTypes = this.selectedTypes.includes(type)
       ? this.selectedTypes.filter((t) => t !== type)
       : [...this.selectedTypes, type];
   }
 
   toggleSyntax(syntax: string): void {
+    this.page = 1;
     this.selectedSintaxes = this.selectedSintaxes.includes(syntax)
       ? this.selectedSintaxes.filter((s) => s !== syntax)
       : [...this.selectedSintaxes, syntax];
   }
 
   toggleUseCase(uc: string | number): void {
+    this.page = 1;
     this.selectedUseCases = this.selectedUseCases.includes(uc)
       ? this.selectedUseCases.filter((u) => u !== uc)
       : [...this.selectedUseCases, uc];
   }
 
   toggleLogsource(log: string): void {
+    this.page = 1;
     this.selectedLogsources = this.selectedLogsources.includes(log)
       ? this.selectedLogsources.filter((l) => l !== log)
       : [...this.selectedLogsources, log];
@@ -162,11 +172,16 @@ export class ManageRulesComponent implements OnInit, AfterViewInit {
 
   // Limpeza
   clearAllFilters(): void {
+    this.page = 1;
     this.selectedClients = [];
     this.selectedTypes = [];
     this.selectedSintaxes = [];
     this.selectedUseCases = [];
     this.selectedLogsources = [];
+  }
+
+  onSearchChange(): void {
+    this.page = 1;
   }
 
   // Ordenação com suporte para campos aninhados e nulos
@@ -205,8 +220,8 @@ export class ManageRulesComponent implements OnInit, AfterViewInit {
           valB = b.syntax || b.ruleModel?.syntax || '';
           break;
         case 'logsources':
-          valA = (a.logsources ?? []).length;
-          valB = (b.logsources ?? []).length;
+          valA = (a.logsources ?? a.ruleModel?.logsources ?? []).length;
+          valB = (b.logsources ?? b.ruleModel?.logsources ?? []).length;
           break;
         default:
           valA = a[column];
@@ -283,6 +298,27 @@ export class ManageRulesComponent implements OnInit, AfterViewInit {
     });
   }
 
+  // Segmentação Paginada
+  get pagedRules(): any[] {
+    const start = (this.page - 1) * this.pageSize;
+    return this.filteredRules.slice(start, start + this.pageSize);
+  }
+
+  get totalPages(): number {
+    return Math.ceil(this.filteredRules.length / this.pageSize) || 1;
+  }
+
+  setPage(newPage: number): void {
+    if (newPage >= 1 && newPage <= this.totalPages) {
+      this.page = newPage;
+    }
+  }
+
+  onPageSizeChange(newSize: number): void {
+    this.pageSize = Number(newSize);
+    this.page = 1;
+  }
+
   // Modal Eliminar
   updateSelectDelete(event: Event, id: number): void {
     event.stopPropagation();
@@ -301,6 +337,9 @@ export class ManageRulesComponent implements OnInit, AfterViewInit {
     this.rulesService.deleteRuleById(this.selectDelete).subscribe({
       next: () => {
         this.loadRules();
+        if (this.page > this.totalPages) {
+          this.page = this.totalPages;
+        }
       },
       error: (err) => console.error('Erro ao eliminar regra:', err),
     });

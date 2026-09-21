@@ -41,6 +41,11 @@ export class ManageUseCasesComponent implements OnInit, AfterViewInit {
   nameSearch: string = '';
   selectDelete: number = 999999;
 
+  // Paginação
+  page: number = 1;
+  pageSize: number = 10;
+  pageSizeOptions: number[] = [5, 10, 25, 50];
+
   // Controlo do Painel de Filtros
   showFilters: boolean = false;
 
@@ -91,16 +96,14 @@ export class ManageUseCasesComponent implements OnInit, AfterViewInit {
   }
 
   startFilters(): void {
-    // Extrai classes CNCS únicas e válidas
     this.uniqueCNCSClasses = Array.from(
       new Set(
         this.useCases
           .map((u: any) => u.cncsClass)
-          .filter((c: any) => Boolean(c)),
+          .filter((c: any): c is string => Boolean(c)),
       ),
     ).sort();
 
-    // Extrai técnicas MITRE únicas e válidas
     const mitreSet = new Set<string>();
     this.useCases.forEach((u: any) => {
       if (Array.isArray(u.mitreTechniques)) {
@@ -112,8 +115,9 @@ export class ManageUseCasesComponent implements OnInit, AfterViewInit {
     this.uniqueMitreTechniques = Array.from(mitreSet).sort();
   }
 
-  // Métodos Pills: Técnicas MITRE
+  // Toggles de Filtro com Reset de Página
   toggleMitreTechnique(technique: string): void {
+    this.page = 1;
     if (this.selectedMitreTechniques.includes(technique)) {
       this.selectedMitreTechniques = this.selectedMitreTechniques.filter(
         (t) => t !== technique,
@@ -130,8 +134,8 @@ export class ManageUseCasesComponent implements OnInit, AfterViewInit {
     return this.selectedMitreTechniques.includes(technique);
   }
 
-  // Métodos Pills: Classes CNCS
   toggleCNCSClass(cncs: string): void {
+    this.page = 1;
     if (this.selectedCNCSClass.includes(cncs)) {
       this.selectedCNCSClass = this.selectedCNCSClass.filter((c) => c !== cncs);
     } else {
@@ -143,18 +147,68 @@ export class ManageUseCasesComponent implements OnInit, AfterViewInit {
     return this.selectedCNCSClass.includes(cncs);
   }
 
-  // Limpeza de Filtros
   clearMitreTechniques(): void {
+    this.page = 1;
     this.selectedMitreTechniques = [];
   }
 
   clearCNCSClass(): void {
+    this.page = 1;
     this.selectedCNCSClass = [];
   }
 
   clearAllFilters(): void {
+    this.page = 1;
     this.selectedMitreTechniques = [];
     this.selectedCNCSClass = [];
+  }
+
+  onSearchChange(): void {
+    this.page = 1;
+  }
+
+  // Filtragem Reativa
+  get filteredUseCases(): any[] {
+    const term = this.nameSearch.trim().toLowerCase();
+
+    return this.useCases.filter((u: any) => {
+      const matchesSearch =
+        !term || (u.title && u.title.toLowerCase().includes(term));
+
+      const matchesMitre =
+        this.selectedMitreTechniques.length === 0 ||
+        (Array.isArray(u.mitreTechniques) &&
+          this.selectedMitreTechniques.some((tech: string) =>
+            u.mitreTechniques.includes(tech),
+          ));
+
+      const matchesCNCS =
+        this.selectedCNCSClass.length === 0 ||
+        this.selectedCNCSClass.includes(u.cncsClass);
+
+      return matchesSearch && matchesMitre && matchesCNCS;
+    });
+  }
+
+  // Segmentação Paginada
+  get pagedUseCases(): any[] {
+    const start = (this.page - 1) * this.pageSize;
+    return this.filteredUseCases.slice(start, start + this.pageSize);
+  }
+
+  get totalPages(): number {
+    return Math.ceil(this.filteredUseCases.length / this.pageSize) || 1;
+  }
+
+  setPage(newPage: number): void {
+    if (newPage >= 1 && newPage <= this.totalPages) {
+      this.page = newPage;
+    }
+  }
+
+  onPageSizeChange(newSize: number): void {
+    this.pageSize = Number(newSize);
+    this.page = 1;
   }
 
   // Ordenação
@@ -189,32 +243,6 @@ export class ManageUseCasesComponent implements OnInit, AfterViewInit {
     return (a - b) * (this.sortReverse ? -1 : 1);
   }
 
-  // Filtragem Reativa
-  get filteredUseCases(): any[] {
-    const term = this.nameSearch.trim().toLowerCase();
-
-    return this.useCases.filter((u: any) => {
-      // 1. Pesquisa por Nome
-      const matchesSearch =
-        !term || (u.title && u.title.toLowerCase().includes(term));
-
-      // 2. Filtro por Técnicas MITRE
-      const matchesMitre =
-        this.selectedMitreTechniques.length === 0 ||
-        (Array.isArray(u.mitreTechniques) &&
-          this.selectedMitreTechniques.some((tech: string) =>
-            u.mitreTechniques.includes(tech),
-          ));
-
-      // 3. Filtro por Classe CNCS
-      const matchesCNCS =
-        this.selectedCNCSClass.length === 0 ||
-        this.selectedCNCSClass.includes(u.cncsClass);
-
-      return matchesSearch && matchesMitre && matchesCNCS;
-    });
-  }
-
   // Modal Eliminar
   updateSelectDelete(event: Event, id: number): void {
     event.stopPropagation();
@@ -235,6 +263,9 @@ export class ManageUseCasesComponent implements OnInit, AfterViewInit {
         this.useCases = this.useCases.filter(
           (u: any) => u.id !== this.selectDelete,
         );
+        if (this.page > this.totalPages) {
+          this.page = this.totalPages;
+        }
       },
       error: (err) => console.error('Erro ao eliminar use case:', err),
     });

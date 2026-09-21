@@ -41,7 +41,12 @@ export class ManageClientsComponent implements OnInit {
   clients: any[] = [];
   registeredLogsources: string[] = [];
 
-  // Controlo do Painel de Filtros
+  // Paginação
+  page: number = 1;
+  pageSize: number = 10;
+  pageSizeOptions: number[] = [5, 10, 25, 50];
+
+  // Filtros
   showFilters: boolean = false;
   selectedLogsources: string[] = [];
   uniqueLogsources: string[] = [];
@@ -85,9 +90,7 @@ export class ManageClientsComponent implements OnInit {
     this.rulesService.getRegisteredLogSources().subscribe({
       next: (data: any) => {
         if (Array.isArray(data)) {
-          this.registeredLogsources = data.map(
-            (logsource: any) => logsource.name,
-          );
+          this.registeredLogsources = data.map((ls: any) => ls.name);
         }
       },
       error: (err) => console.error('Erro ao carregar logsources:', err),
@@ -104,8 +107,9 @@ export class ManageClientsComponent implements OnInit {
     ).sort();
   }
 
-  // Toggles de Seleção (Pills)
+  // Toggles de Filtro
   toggleLogsource(log: string): void {
+    this.page = 1;
     if (this.selectedLogsources.includes(log)) {
       this.selectedLogsources = this.selectedLogsources.filter(
         (l) => l !== log,
@@ -120,7 +124,12 @@ export class ManageClientsComponent implements OnInit {
   }
 
   clearAllFilters(): void {
+    this.page = 1;
     this.selectedLogsources = [];
+  }
+
+  onSearchChange(): void {
+    this.page = 1;
   }
 
   // Filtragem Reativa
@@ -128,11 +137,8 @@ export class ManageClientsComponent implements OnInit {
     const term = this.nameSearch.trim().toLowerCase();
 
     return this.clients.filter((c: any) => {
-      // 1. Pesquisa por Nome
       const matchesName =
         !term || (c.name && c.name.toLowerCase().includes(term));
-
-      // 2. Filtro por Logsources
       const matchesLogs =
         this.selectedLogsources.length === 0 ||
         (Array.isArray(c.logsources) &&
@@ -144,7 +150,55 @@ export class ManageClientsComponent implements OnInit {
     });
   }
 
-  // Modais de Criação e Detalhes
+  // Segmentação Paginada (Dados que a tabela efetivamente renderiza)
+  get pagedClients(): any[] {
+    const start = (this.page - 1) * this.pageSize;
+    return this.filteredClients.slice(start, start + this.pageSize);
+  }
+
+  get totalPages(): number {
+    return Math.ceil(this.filteredClients.length / this.pageSize) || 1;
+  }
+
+  setPage(newPage: number): void {
+    if (newPage >= 1 && newPage <= this.totalPages) {
+      this.page = newPage;
+    }
+  }
+
+  onPageSizeChange(newSize: number): void {
+    this.pageSize = Number(newSize);
+    this.page = 1;
+  }
+
+  // Ordenação
+  sortTable(column: string): void {
+    if (this.sortType === column) {
+      this.sortReverse = !this.sortReverse;
+    } else {
+      this.sortType = column;
+      this.sortReverse = false;
+    }
+
+    this.clients.sort((a: any, b: any) => {
+      const valueA = a[column];
+      const valueB = b[column];
+
+      if (valueA == null && valueB != null) return this.sortReverse ? -1 : 1;
+      if (valueA != null && valueB == null) return this.sortReverse ? 1 : -1;
+      if (valueA == null && valueB == null) return 0;
+
+      if (Array.isArray(valueA) && Array.isArray(valueB)) {
+        return (valueA.length - valueB.length) * (this.sortReverse ? -1 : 1);
+      } else if (typeof valueA === 'string') {
+        return valueA.localeCompare(valueB) * (this.sortReverse ? -1 : 1);
+      } else {
+        return (Number(valueA) - Number(valueB)) * (this.sortReverse ? -1 : 1);
+      }
+    });
+  }
+
+  // Modais
   openModal(): void {
     this.modal.nativeElement.classList.remove('hidden');
     this.modal.nativeElement.classList.add('flex');
@@ -203,7 +257,6 @@ export class ManageClientsComponent implements OnInit {
         this.closeCreateModal();
       },
       error: (err: any) => {
-        console.error('Erro na API:', err);
         this.errorMessage =
           err.error?.error || 'Erro ao comunicar com o servidor.';
       },
@@ -216,48 +269,13 @@ export class ManageClientsComponent implements OnInit {
         this.loadClients();
       },
       error: (err) => {
-        console.error('Erro ao apagar o cliente no backend:', err);
-        alert('Erro ao apagar. Vê a consola (F12) para mais detalhes.');
+        console.error('Erro ao apagar o cliente:', err);
+        alert('Erro ao apagar.');
       },
     });
   }
 
   updateSelectDelete(id: number): void {
     this.selectDelete = id;
-  }
-
-  // Ordenação
-  sortTable(column: string): void {
-    if (this.sortType === column) {
-      this.sortReverse = !this.sortReverse;
-    } else {
-      this.sortType = column;
-      this.sortReverse = false;
-    }
-
-    this.clients.sort((a: any, b: any) => {
-      const valueA = a[column];
-      const valueB = b[column];
-
-      if (valueA == null && valueB != null) return this.sortReverse ? -1 : 1;
-      if (valueA != null && valueB == null) return this.sortReverse ? 1 : -1;
-      if (valueA == null && valueB == null) return 0;
-
-      if (Array.isArray(valueA) && Array.isArray(valueB)) {
-        return this.sortNumeric(valueA.length, valueB.length);
-      } else if (typeof valueA === 'string') {
-        return this.sortString(valueA, valueB);
-      } else {
-        return this.sortNumeric(valueA, valueB);
-      }
-    });
-  }
-
-  private sortString(a: string = '', b: string = ''): number {
-    return a.localeCompare(b) * (this.sortReverse ? -1 : 1);
-  }
-
-  private sortNumeric(a: number = 0, b: number = 0): number {
-    return (a - b) * (this.sortReverse ? -1 : 1);
   }
 }

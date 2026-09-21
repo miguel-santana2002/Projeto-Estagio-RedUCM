@@ -8,35 +8,43 @@
       <div
         class="inline-block min-w-full shadow-md p-5 rounded-lg overflow-hidden bg-white dark:bg-gray-800 transition">
 
-        <!-- Barra de Ações: Pesquisa e Botões -->
-        <div class="mb-4 relative">
-          <label for="nameSearch" class="sr-only">Procurar por nome</label>
-          <div class="flex items-center">
+        <!-- Barra Superior: Pesquisa, Contador e Botões -->
+        <div class="mb-5 flex flex-col md:flex-row gap-4 items-center justify-between">
+
+          <div class="relative w-full md:w-96">
             <i
-              class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400 dark:text-gray-500 pointer-events-none">
-              <span class="fas fa-search"></span>
+              class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-gray-400 dark:text-gray-500 pointer-events-none">
+              <span class="fas fa-search text-sm"></span>
             </i>
-            <input type="text" id="nameSearch" [(ngModel)]="nameSearch" placeholder="Procurar por nome"
-              class="pl-10 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-redshift-red transition">
+            <input type="text" id="nameSearch" [(ngModel)]="nameSearch" (ngModelChange)="onSearchChange()"
+              placeholder="Procurar por modelo"
+              class="pl-10 px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-redshift-red transition text-sm">
+          </div>
+
+          <div class="flex items-center gap-4 w-full md:w-auto justify-end">
+            <!-- Contador de Registos -->
+            <span class="text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">
+              Mostrando <strong class="text-gray-900 dark:text-white font-semibold">{{ filteredRuleModels.length
+                }}</strong> de <strong class="text-gray-900 dark:text-white font-semibold">{{ ruleModels.length
+                }}</strong>
+            </span>
 
             <button [routerLink]="'/create-rule-model'"
-              class="ml-5 w-48 h-10 bg-redshift-red text-white rounded hover:bg-redshift-hover shadow-md flex items-center justify-center gap-2 flex-shrink-0 transition">
-              <i class="fas fa-plus"></i>
+              class="h-10 px-5 bg-redshift-red text-white rounded-lg hover:bg-redshift-hover shadow-md transition flex items-center justify-center gap-2 text-sm font-medium flex-shrink-0">
+              <i class="fas fa-plus text-xs"></i>
               <span>Adicionar Novo</span>
             </button>
 
-            <!-- Botão Toggle Filtros -->
-            <div class="text-center flex-shrink-0">
-              <button (click)="showFilters = !showFilters"
-                [ngClass]="{'ring-2 ring-offset-2 ring-redshift-red': showFilters}"
-                class="ml-5 w-28 h-10 bg-redshift-red text-white rounded hover:bg-redshift-hover shadow-md flex items-center justify-center gap-2 transition"
-                type="button">
-                <i class="fas fa-filter"></i>
-                <span>Filtros</span>
-                <span *ngIf="selectedTypes.length > 0 || selectedSintaxes.length > 0 || selectedLogSources.length > 0"
-                  class="w-2 h-2 rounded-full bg-white"></span>
-              </button>
-            </div>
+            <!-- Botão Filtros -->
+            <button (click)="showFilters = !showFilters"
+              [ngClass]="{'ring-2 ring-offset-2 ring-redshift-red': showFilters}"
+              class="h-10 px-4 bg-redshift-red text-white rounded-lg hover:bg-redshift-hover shadow-md flex items-center justify-center gap-2 transition text-sm font-medium flex-shrink-0"
+              type="button">
+              <i class="fas fa-filter text-xs"></i>
+              <span>Filtros</span>
+              <span *ngIf="selectedTypes.length > 0 || selectedSintaxes.length > 0 || selectedLogSources.length > 0"
+                class="w-2 h-2 rounded-full bg-white animate-pulse"></span>
+            </button>
           </div>
         </div>
 
@@ -154,117 +162,181 @@
           </div>
         </div>
 
-        <!-- Tabela -->
-        <table
-          class="min-w-full table-fixed divide-y divide-gray-200 dark:divide-gray-700 leading-normal border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
-          <thead>
-            <tr>
-              <th (click)="sortTable('id')"
-                class="w-28 px-5 py-3 border-b-2 border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-700 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider cursor-pointer select-none">
-                ID
-                <i [class]="sortType === 'id' ? (sortReverse ? 'fas fa-caret-up' : 'fas fa-caret-down') : ''"></i>
-              </th>
-              <th (click)="sortTable('title')"
-                class="w-44 px-5 py-3 border-b-2 border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-700 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider cursor-pointer select-none">
-                Título
-                <i [class]="sortType === 'title' ? (sortReverse ? 'fas fa-caret-up' : 'fas fa-caret-down') : ''"></i>
-              </th>
-              <th (click)="sortTable('useCaseId')"
-                class="w-36 px-5 py-3 border-b-2 border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-700 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider cursor-pointer select-none">
-                Use Case Associado
-                <i
-                  [class]="sortType === 'useCaseId' ? (sortReverse ? 'fas fa-caret-up' : 'fas fa-caret-down') : ''"></i>
-              </th>
-              <th (click)="sortTable('type')"
-                class="w-24 px-5 py-3 border-b-2 border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-700 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider cursor-pointer select-none">
-                Tipo
-                <i [class]="sortType === 'type' ? (sortReverse ? 'fas fa-caret-up' : 'fas fa-caret-down') : ''"></i>
-              </th>
-              <th (click)="sortTable('syntax')"
-                class="w-36 px-5 py-3 border-b-2 border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-700 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider cursor-pointer select-none">
-                Sintaxe
-                <i [class]="sortType === 'syntax' ? (sortReverse ? 'fas fa-caret-up' : 'fas fa-caret-down') : ''"></i>
-              </th>
-              <th (click)="sortTable('logsources')"
-                class="px-5 py-3 border-b-2 border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-700 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider cursor-pointer select-none">
-                Logsources
-                <i
-                  [class]="sortType === 'logsources' ? (sortReverse ? 'fas fa-caret-up' : 'fas fa-caret-down') : ''"></i>
-              </th>
-              <th
-                class="w-28 px-5 py-3 border-b-2 border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-700 text-center text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
-                Ação
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let u of filteredRuleModels"
-              [class]="(filteredRuleModels.indexOf(u) % 2 === 0 ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-900')"
-              [routerLink]="'/ruleModelDetails/' + u.id"
-              class="hover:bg-gray-100 dark:hover:bg-gray-700 transition duration-100 cursor-pointer h-16">
+        <!-- Tabela (Estrutura table-fixed com tipografia ampliada) -->
+        <div class="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+          <table class="min-w-full table-fixed divide-y divide-gray-200 dark:divide-gray-700 leading-normal">
+            <thead>
+              <tr>
+                <th (click)="sortTable('id')"
+                  class="w-32 px-5 py-3.5 bg-gray-100 dark:bg-gray-700 text-left text-xs font-bold text-gray-700 dark:text-gray-200 uppercase tracking-wider cursor-pointer select-none">
+                  ID
+                  <i
+                    [class]="sortType === 'id' ? (sortReverse ? 'fas fa-caret-up ml-1' : 'fas fa-caret-down ml-1') : ''"></i>
+                </th>
+                <th (click)="sortTable('title')"
+                  class="w-64 px-5 py-3.5 bg-gray-100 dark:bg-gray-700 text-left text-xs font-bold text-gray-700 dark:text-gray-200 uppercase tracking-wider cursor-pointer select-none">
+                  Título
+                  <i
+                    [class]="sortType === 'title' ? (sortReverse ? 'fas fa-caret-up ml-1' : 'fas fa-caret-down ml-1') : ''"></i>
+                </th>
+                <th (click)="sortTable('useCaseId')"
+                  class="w-40 px-5 py-3.5 bg-gray-100 dark:bg-gray-700 text-left text-xs font-bold text-gray-700 dark:text-gray-200 uppercase tracking-wider cursor-pointer select-none">
+                  Use Case
+                  <i
+                    [class]="sortType === 'useCaseId' ? (sortReverse ? 'fas fa-caret-up ml-1' : 'fas fa-caret-down ml-1') : ''"></i>
+                </th>
+                <th (click)="sortTable('type')"
+                  class="w-28 px-5 py-3.5 bg-gray-100 dark:bg-gray-700 text-left text-xs font-bold text-gray-700 dark:text-gray-200 uppercase tracking-wider cursor-pointer select-none">
+                  Tipo
+                  <i
+                    [class]="sortType === 'type' ? (sortReverse ? 'fas fa-caret-up ml-1' : 'fas fa-caret-down ml-1') : ''"></i>
+                </th>
+                <th (click)="sortTable('syntax')"
+                  class="w-40 px-5 py-3.5 bg-gray-100 dark:bg-gray-700 text-left text-xs font-bold text-gray-700 dark:text-gray-200 uppercase tracking-wider cursor-pointer select-none">
+                  Sintaxe
+                  <i
+                    [class]="sortType === 'syntax' ? (sortReverse ? 'fas fa-caret-up ml-1' : 'fas fa-caret-down ml-1') : ''"></i>
+                </th>
+                <th (click)="sortTable('logsources')"
+                  class="px-5 py-3.5 bg-gray-100 dark:bg-gray-700 text-left text-xs font-bold text-gray-700 dark:text-gray-200 uppercase tracking-wider cursor-pointer select-none">
+                  Logsources
+                  <i
+                    [class]="sortType === 'logsources' ? (sortReverse ? 'fas fa-caret-up ml-1' : 'fas fa-caret-down ml-1') : ''"></i>
+                </th>
+                <th
+                  class="w-28 px-5 py-3.5 bg-gray-100 dark:bg-gray-700 text-center text-xs font-bold text-gray-700 dark:text-gray-200 uppercase tracking-wider">
+                  Ação
+                </th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
 
-              <td
-                class="px-5 py-3 text-left font-medium text-gray-700 dark:text-gray-300 border-b border-gray-200 dark:border-gray-700">
-                RedModel{{ u.id }}</td>
-              <td class="px-5 py-3 text-left truncate border-b border-gray-200 dark:border-gray-700" [title]="u.title">
-                <p class="font-medium text-gray-900 dark:text-white truncate">{{ u.title }}</p>
-              </td>
-              <td class="px-5 py-3 text-left whitespace-nowrap border-b border-gray-200 dark:border-gray-700">
-                <div class="flex items-center">
-                  <span class="text-redshift-red font-semibold">Red</span><span
-                    class="font-medium text-gray-900 dark:text-white">UC{{ u.useCaseId }}</span>
-                </div>
-              </td>
-              <td
-                class="px-5 py-3 text-left font-medium text-gray-800 dark:text-gray-200 border-b border-gray-200 dark:border-gray-700">
-                {{ u.type }}</td>
+              <!-- Linhas Paginadas -->
+              <tr *ngFor="let u of pagedRuleModels; let i = index"
+                [ngClass]="i % 2 === 0 ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-900'"
+                [routerLink]="'/ruleModelDetails/' + u.id"
+                class="hover:bg-gray-100 dark:hover:bg-gray-700 transition duration-150 h-16 cursor-pointer">
 
-              <!-- Coluna Sintaxe -->
-              <td class="px-5 py-3 text-left border-b border-gray-200 dark:border-gray-700">
-                <span
-                  class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800 border border-gray-200 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600">
-                  <i class="fas fa-code mr-1.5 text-redshift-red text-[10px]"></i>
-                  <span class="truncate max-w-[100px]" [title]="u.syntax">{{ u.syntax || 'N/D' }}</span>
-                </span>
-              </td>
+                <!-- ID -->
+                <td class="px-5 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-300">
+                  RedModel{{ u.id }}
+                </td>
 
-              <!-- Coluna Logsources -->
-              <td class="px-5 py-3 text-left border-b border-gray-200 dark:border-gray-700">
-                <div class="flex items-center gap-1.5 flex-nowrap overflow-hidden">
-                  <div *ngFor="let logsource of u.logsources?.slice(0, 2)" [title]="logsource"
-                    class="bg-[#0d2f52] text-white text-[11px] rounded px-2 py-0.5 max-w-[150px] truncate">
-                    {{ logsource }}
+                <!-- Título -->
+                <td class="px-5 py-3 text-left truncate" [title]="u.title">
+                  <span class="text-base font-semibold text-gray-900 dark:text-white truncate block">{{ u.title
+                    }}</span>
+                </td>
+
+                <!-- Use Case Associado -->
+                <td class="px-5 py-3 text-left whitespace-nowrap">
+                  <div class="flex items-center text-sm" *ngIf="u.useCaseId">
+                    <span class="text-redshift-red font-bold">Red</span>
+                    <span class="font-semibold text-gray-900 dark:text-white">UC{{ u.useCaseId }}</span>
                   </div>
+                  <span *ngIf="!u.useCaseId" class="text-sm text-gray-400 dark:text-gray-500">N/A</span>
+                </td>
 
-                  <span *ngIf="u.logsources?.length > 2" [title]="u.logsources.slice(2).join(', ')"
-                    class="bg-[#0d2f52] hover:bg-[#15467a] text-white text-[10px] rounded px-1.5 py-0.5 font-bold cursor-help whitespace-nowrap">
-                    +{{ u.logsources.length - 2 }}
+                <!-- Tipo -->
+                <td class="px-5 py-3 text-left text-sm font-medium text-gray-800 dark:text-gray-200">
+                  {{ u.type || 'N/A' }}
+                </td>
+
+                <!-- Sintaxe -->
+                <td class="px-5 py-3 text-left">
+                  <span
+                    class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-gray-100 text-gray-800 border border-gray-200 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600">
+                    <i class="fas fa-code mr-1.5 text-redshift-red text-[10px]"></i>
+                    <span class="truncate max-w-[110px]" [title]="u.syntax">{{ u.syntax || 'N/D' }}</span>
                   </span>
+                </td>
 
-                  <span *ngIf="!u.logsources || u.logsources.length === 0"
-                    class="text-xs text-gray-400 dark:text-gray-500">
-                    Nenhuma
-                  </span>
-                </div>
-              </td>
+                <!-- Logsources (Badges uniformizadas com truncagem e tooltip) -->
+                <td class="px-5 py-3 text-left">
+                  <div class="flex items-center gap-1.5 flex-nowrap overflow-hidden">
+                    <div *ngFor="let logsource of (u.logsources || []).slice(0, 2)" [title]="logsource"
+                      class="bg-[#0d2f52] text-white text-xs font-medium rounded px-2.5 py-0.5 max-w-[150px] truncate shadow-sm">
+                      {{ logsource }}
+                    </div>
 
-              <!-- Ações -->
-              <td class="px-5 py-3 text-center whitespace-nowrap border-b border-gray-200 dark:border-gray-700"
-                (click)="$event.stopPropagation()">
-                <div class="flex items-center justify-center space-x-2">
-                  <button [routerLink]="'/ruleModelDetails/' + u.id" title="Ver Detalhes"
-                    class="drop-shadow-xl bg-gray-400 hover:bg-gray-500 text-white px-3 py-1 rounded-md transition">
-                    <i class="fas fa-right-to-bracket text-xs"></i>
-                  </button>
-                  <button (click)="updateSelectDelete($event, u.id); openModal()" title="Eliminar Regra"
-                    class="drop-shadow-xl bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-md transition">
-                    <i class="fas fa-trash-alt text-xs"></i>
-                  </button>
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+                    <span *ngIf="u.logsources?.length > 2" [title]="u.logsources.slice(2).join(', ')"
+                      class="bg-[#0d2f52] hover:bg-[#15467a] text-white text-xs rounded px-1.5 py-0.5 font-bold whitespace-nowrap shadow-sm">
+                      +{{ u.logsources.length - 2 }}
+                    </span>
+
+                    <span *ngIf="!u.logsources || u.logsources.length === 0"
+                      class="text-sm text-gray-400 dark:text-gray-500 italic">
+                      Nenhuma
+                    </span>
+                  </div>
+                </td>
+
+                <!-- Ações -->
+                <td class="px-5 py-3 text-center whitespace-nowrap" (click)="$event.stopPropagation()">
+                  <div class="flex items-center justify-center space-x-2">
+                    <button [routerLink]="'/ruleModelDetails/' + u.id" title="Ver Detalhes"
+                      class="bg-gray-400 hover:bg-gray-500 text-white w-8 h-8 rounded-md shadow transition inline-flex items-center justify-center">
+                      <i class="fas fa-right-to-bracket text-xs"></i>
+                    </button>
+
+                    <button (click)="updateSelectDelete($event, u.id); openModal()" title="Eliminar Regra"
+                      class="bg-red-500 hover:bg-red-600 text-white w-8 h-8 rounded-md shadow transition inline-flex items-center justify-center">
+                      <i class="fas fa-trash-alt text-xs"></i>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+
+              <!-- Empty State -->
+              <tr *ngIf="filteredRuleModels.length === 0">
+                <td colspan="7" class="py-12 text-center bg-white dark:bg-gray-800">
+                  <div class="flex flex-col items-center justify-center text-gray-400 dark:text-gray-500">
+                    <i class="fas fa-filter-circle-xmark text-4xl mb-3 opacity-40"></i>
+                    <p class="text-base font-semibold text-gray-700 dark:text-gray-300">Nenhum modelo de regra
+                      encontrado</p>
+                    <p class="text-sm mt-1">Tenta alterar o termo de pesquisa ou limpar os filtros aplicados.</p>
+                    <button
+                      *ngIf="nameSearch || selectedTypes.length > 0 || selectedSintaxes.length > 0 || selectedLogSources.length > 0"
+                      (click)="nameSearch = ''; clearAllFilters()"
+                      class="mt-3 text-sm text-redshift-red hover:underline font-medium">
+                      Limpar todos os critérios
+                    </button>
+                  </div>
+                </td>
+              </tr>
+
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Rodapé da Tabela: Paginação -->
+        <div *ngIf="filteredRuleModels.length > 0"
+          class="flex flex-col sm:flex-row items-center justify-between pt-4 mt-2 gap-3 text-sm text-gray-600 dark:text-gray-400">
+
+          <div class="flex items-center gap-2.5">
+            <span>Registos por página:</span>
+            <select [ngModel]="pageSize" (ngModelChange)="onPageSizeChange($event)"
+              class="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-2.5 py-1 text-sm text-gray-900 dark:text-white focus:ring-redshift-red focus:border-redshift-red">
+              <option *ngFor="let size of pageSizeOptions" [value]="size">{{ size }}</option>
+            </select>
+          </div>
+
+          <div class="flex items-center gap-3">
+            <span>Página <strong class="text-gray-900 dark:text-white">{{ page }}</strong> de <strong
+                class="text-gray-900 dark:text-white">{{ totalPages }}</strong></span>
+
+            <div class="inline-flex rounded-lg shadow-sm">
+              <button (click)="setPage(page - 1)" [disabled]="page === 1"
+                class="px-3 py-1.5 text-sm font-medium bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-l-lg hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-40 disabled:cursor-not-allowed transition">
+                <i class="fas fa-chevron-left text-xs"></i>
+              </button>
+              <button (click)="setPage(page + 1)" [disabled]="page === totalPages"
+                class="px-3 py-1.5 text-sm font-medium bg-white dark:bg-gray-700 border-t border-b border-r border-gray-300 dark:border-gray-600 rounded-r-lg hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-40 disabled:cursor-not-allowed transition">
+                <i class="fas fa-chevron-right text-xs"></i>
+              </button>
+            </div>
+          </div>
+        </div>
 
       </div>
     </div>
@@ -288,7 +360,7 @@
         <i class="fas fa-trash-alt text-4xl"></i>
       </div>
 
-      <p class="mb-4 text-gray-500 dark:text-gray-300">
+      <p class="mb-4 text-gray-500 dark:text-gray-300 text-sm">
         Tem a certeza que quer eliminar o Modelo de Regra #{{ selectDelete }}?
       </p>
 

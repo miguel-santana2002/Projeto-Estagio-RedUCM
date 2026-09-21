@@ -114,7 +114,7 @@
                   <a [routerLink]="['/manage-rules']"
                     routerLinkActive="bg-gray-100 text-redshift-red font-semibold border-l-4 border-redshift-red dark:bg-gray-600 dark:text-white"
                     class="block px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-600 dark:hover:text-white transition-colors">
-                    Instâncias de Regra
+                    Gerir Regras
                   </a>
                 </li>
 
@@ -122,7 +122,7 @@
                   <a [routerLink]="['/my-instance-rules']"
                     routerLinkActive="bg-gray-100 text-redshift-red font-semibold border-l-4 border-redshift-red dark:bg-gray-600 dark:text-white"
                     class="block px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-600 dark:hover:text-white transition-colors">
-                    Instâncias de Regra
+                    Gerir Regras
                   </a>
                 </li>
 
@@ -148,7 +148,7 @@
           </li>
 
           <!-- Auditoria Global -->
-          <li>
+          <li *ngIf="user?.companies?.length === 0">
             <a [routerLink]="['/audit']" routerLinkActive="text-redshift-red font-semibold"
               class="block py-2 text-gray-700 dark:text-gray-400 lg:dark:hover:text-white hover:text-redshift-hover transition-colors">
               Auditoria
