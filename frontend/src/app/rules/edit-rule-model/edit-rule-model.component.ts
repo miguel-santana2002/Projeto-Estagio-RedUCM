@@ -155,7 +155,7 @@ export class EditRuleModelComponent implements OnInit {
 
     this.rulesService.updateRuleModel(this.ruleModelId, payload).subscribe({
       next: () => {
-        this.router.navigate(['/ruleModelDetails', this.ruleModelId]);
+        this.router.navigate(['/ruleModel-Details', this.ruleModelId]);
       },
       error: (err) => console.error('Erro ao atualizar modelo de regra:', err),
     });

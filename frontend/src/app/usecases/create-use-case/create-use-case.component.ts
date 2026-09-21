@@ -1,6 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { TitlebannerComponent } from '../../layout/titlebanner/titlebanner.component';
-import { HeaderComponent } from '../../layout/header/header.component';
+import { CommonModule } from '@angular/common';
 import {
   FormControl,
   FormGroup,
@@ -8,16 +7,16 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
-import { MitreService } from '../../services/mitre.service';
-import { CommonModule } from '@angular/common';
-import { UsecasesService } from '../../services/usecases.service';
-import { CdkPortal } from '@angular/cdk/portal';
 import { Router } from '@angular/router';
 import { TagInputModule } from 'ngx-chips';
-import { Binary } from '@angular/compiler';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
 import { MatIconModule } from '@angular/material/icon';
+
+import { TitlebannerComponent } from '../../layout/titlebanner/titlebanner.component';
+import { HeaderComponent } from '../../layout/header/header.component';
+import { MitreService } from '../../services/mitre.service';
+import { UsecasesService } from '../../services/usecases.service';
 
 @Component({
   selector: 'app-create-use-case',
@@ -59,29 +58,9 @@ export class CreateUseCaseComponent implements OnInit {
   selectedSubcategory: string = '';
   selectedCategoryValues: string[] = [];
 
-  // Lista para alimentar o autocomplete do MITRE ATT&CK
   mitreAutocompleteList: string[] = [];
-
-  ngOnInit(): void {
-    this.loadMitreTechniques();
-  }
-
-  loadMitreTechniques() {
-    this.mitreService.getAllTechniques().subscribe({
-      next: (data: any[]) => {
-        // Mapeia para o formato "ID: Nome" ou "ID - Nome" para facilitar a correspondência no input
-        this.mitreAutocompleteList = data.map(
-          (t: any) => `${t.id} - ${t.name}`,
-        );
-      },
-      error: (error) => {
-        console.error(
-          'Erro ao carregar as técnicas do MITRE do backend',
-          error,
-        );
-      },
-    });
-  }
+  selectedFile: File | null = null;
+  errorMessage: string = '';
 
   createUseCaseForm = new FormGroup({
     title: new FormControl('', Validators.required),
@@ -155,7 +134,24 @@ export class CreateUseCaseComponent implements OnInit {
     { Outro: ['Outro'] },
   ];
 
-  updateCNCSValues() {
+  ngOnInit(): void {
+    this.loadMitreTechniques();
+  }
+
+  loadMitreTechniques(): void {
+    this.mitreService.getAllTechniques().subscribe({
+      next: (data: any[]) => {
+        this.mitreAutocompleteList = data.map(
+          (t: any) => `${t.id} - ${t.name}`,
+        );
+      },
+      error: (error) => {
+        console.error('Erro ao carregar técnicas MITRE:', error);
+      },
+    });
+  }
+
+  updateCNCSValues(): void {
     this.selectedCategory =
       this.createUseCaseForm.get('cncsClass')?.value || '';
     this.selectedCategoryValues =
@@ -164,18 +160,20 @@ export class CreateUseCaseComponent implements OnInit {
       )?.[this.selectedCategory] || [];
   }
 
-  selectedFile: File | null = null;
   onFileSelected(event: Event): void {
-    console.log('File selected');
     const input = event.target as HTMLInputElement;
     if (input.files && input.files.length > 0) {
       this.selectedFile = input.files[0];
-      console.log('File selected:', this.selectedFile);
     }
   }
 
-  createUseCase() {
-    var useCase: any = this.createUseCaseForm.value;
+  createUseCase(): void {
+    if (this.createUseCaseForm.invalid) {
+      this.createUseCaseForm.markAllAsTouched();
+      return;
+    }
+
+    const useCase: any = this.createUseCaseForm.value;
 
     useCase.rules = [];
     useCase.phaseTasks = [
@@ -185,52 +183,71 @@ export class CreateUseCaseComponent implements OnInit {
       { phase: 'Post-Event Activity', tasks: [] },
     ];
 
-    // 1. Extração segura do ID (ex: "T1047")
+    // 1. Extração segura de ID + Nome da Técnica MITRE
     if (useCase.mitreTechniques != null) {
       useCase.mitreTechniques = useCase.mitreTechniques.map(
         (technique: any) => {
-          const raw =
-            technique?.id ||
-            technique?.value ||
+          let val =
             technique?.display ||
-            technique;
-          return typeof raw === 'string' ? raw.split(' - ')[0].trim() : raw;
+            technique?.value ||
+            technique?.name ||
+            (typeof technique === 'string' ? technique : technique?.id);
+
+          if (typeof val === 'string') {
+            val = val.trim();
+            // Se porventura vier apenas o ID (ex: "T1047"), recupera a string completa da lista
+            if (!val.includes(' - ')) {
+              const match = this.mitreAutocompleteList.find(
+                (item: string) => item.startsWith(val + ' - ') || item === val,
+              );
+              if (match) {
+                val = match;
+              }
+            }
+          }
+          return val;
         },
       );
     }
 
-    // 2. Extração segura dos vetores de ataque
+    // 2. Extração limpa dos vetores de ataque
     if (useCase.attackVectors != null) {
       useCase.attackVectors = useCase.attackVectors.map((vector: any) => {
         return vector?.value || vector?.display || vector?.id || vector;
       });
     }
 
-    if (this.selectedFile != null) {
-      useCase.playbook = this.selectedFile;
-    }
-
+    // 3. Montagem do FormData
     const useCaseData = new FormData();
     useCaseData.append('title', useCase.title);
     useCaseData.append('description', useCase.description);
     useCaseData.append('mitigation', useCase.mitigation);
-    useCaseData.append('playbook', useCase.playbook);
+    useCaseData.append('cncsClass', useCase.cncsClass);
+    useCaseData.append('cncsType', useCase.cncsType);
+
+    // Anexa o ficheiro apenas se existir (evita erros de FileField no Django)
+    if (this.selectedFile) {
+      useCaseData.append('playbook', this.selectedFile);
+    }
+
     useCaseData.append(
       'mitreTechniques',
       JSON.stringify(useCase.mitreTechniques),
     );
-    useCaseData.append('cncsClass', useCase.cncsClass);
-    useCaseData.append('cncsType', useCase.cncsType);
     useCaseData.append('attackVectors', JSON.stringify(useCase.attackVectors));
     useCaseData.append('rules', JSON.stringify(useCase.rules));
     useCaseData.append('phaseTasks', JSON.stringify(useCase.phaseTasks));
 
     this.usecasesService.createUseCase(useCaseData).subscribe({
       next: () => {
-        this.router.navigate(['/manage-use-cases']);
+        this.router.navigate(['/manage-usecases']);
       },
       error: (error) => {
-        console.error('Erro ao criar o Use Case', error);
+        console.error('Erro ao criar o Use Case:', error);
+        this.errorMessage =
+          error.error?.detail ||
+          error.error?.error ||
+          'Erro ao criar Use Case no servidor.';
       },
     });
   }

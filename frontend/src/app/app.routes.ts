@@ -54,9 +54,9 @@ export const routes: Routes = [
     component: CreateUseCaseComponent,
     canActivate: [isAdminGuard],
   },
-  { path: 'manage-use-cases', component: ManageUseCasesComponent },
+  { path: 'manage-usecases', component: ManageUseCasesComponent },
   {
-    path: 'usecaseDetails/:id',
+    path: 'usecase-Details/:id',
     component: UsecaseDetailsComponent,
     canActivate: [numericIdGuard],
   },
@@ -72,7 +72,7 @@ export const routes: Routes = [
     canActivate: [isAdminGuard],
   },
   {
-    path: 'ruleModelDetails/:id',
+    path: 'ruleModel-Details/:id',
     component: RuleModelDetailsComponent,
     canActivate: [numericIdGuard],
   },
@@ -82,7 +82,7 @@ export const routes: Routes = [
     canActivate: [isAdminGuard],
   },
   {
-    path: 'ruleDetails/:id',
+    path: 'rule-Details/:id',
     component: RuleDetailsComponent,
     canActivate: [numericIdGuard],
   },

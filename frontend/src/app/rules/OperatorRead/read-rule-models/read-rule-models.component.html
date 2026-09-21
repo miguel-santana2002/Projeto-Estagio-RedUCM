@@ -108,7 +108,7 @@
           <tbody>
             <tr *ngFor="let u of filteredRuleModels"
               [class]="(filteredRuleModels.indexOf(u) % 2 === 0 ? 'bg-white' : 'bg-gray-100')"
-              [routerLink]="'/ruleModelDetails/' + u.id" class="hover:drop-shadow-md transition duration-100">
+              [routerLink]="'/ruleModel-Details/' + u.id" class="hover:drop-shadow-md transition duration-100">
 
               <td class="px-5 py-5 text-left cursor-pointer">RedModel{{ u.id }}</td>
               <td class="px-5 py-5 text-left cursor-pointer ">

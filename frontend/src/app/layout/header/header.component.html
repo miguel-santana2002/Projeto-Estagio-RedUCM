@@ -41,8 +41,8 @@
           <li class="relative">
             <button id="dropdownUseCasesButton" data-dropdown-toggle="dropdownUseCases"
               data-dropdown-placement="bottom-start" type="button"
-              [class.text-redshift-red]="isRouteActive(['/manage-use-cases', '/create-usecase', '/usecase-details'])"
-              [class.font-semibold]="isRouteActive(['/manage-use-cases', '/create-usecase', '/usecase-details'])"
+              [class.text-redshift-red]="isRouteActive(['/manage-usecases', '/create-usecase', '/usecase-details'])"
+              [class.font-semibold]="isRouteActive(['/manage-usecases', '/create-usecase', '/usecase-details'])"
               class="flex items-center justify-between w-full py-2 text-gray-700 hover:text-redshift-hover dark:text-gray-400 dark:hover:text-white transition-colors">
               Use Cases
               <i class="fas fa-chevron-down text-xs ml-1.5"></i>
@@ -52,7 +52,7 @@
               class="z-30 hidden font-normal bg-white divide-y divide-gray-100 rounded-lg shadow-lg w-52 border border-gray-100 dark:bg-gray-700 dark:divide-gray-600 dark:border-gray-600">
               <ul class="py-2 text-sm text-gray-700 dark:text-gray-200" aria-labelledby="dropdownUseCasesButton">
                 <li>
-                  <a [routerLink]="['/manage-use-cases']"
+                  <a [routerLink]="['/manage-usecases']"
                     routerLinkActive="bg-gray-100 text-redshift-red font-semibold border-l-4 border-redshift-red dark:bg-gray-600 dark:text-white"
                     class="block px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-600 dark:hover:text-white transition-colors">
                     Gerir Use Cases
@@ -73,8 +73,8 @@
           <li class="relative">
             <button id="dropdownRulesButton" data-dropdown-toggle="dropdownRules" data-dropdown-placement="bottom-start"
               type="button"
-              [class.text-redshift-red]="isRouteActive(['/manage-rule-models', '/create-rule-model', '/read-rule-models', '/ruleModelDetails', '/manage-rules', '/ruleDetails', '/my-instance-rules', '/manage-logsources'])"
-              [class.font-semibold]="isRouteActive(['/manage-rule-models', '/create-rule-model', '/read-rule-models', '/ruleModelDetails', '/manage-rules', '/ruleDetails', '/my-instance-rules', '/manage-logsources'])"
+              [class.text-redshift-red]="isRouteActive(['/manage-rule-models', '/create-rule-model', '/read-rule-models', '/ruleModel-Details', '/manage-rules', '/rule-Details', '/my-instance-rules', '/manage-logsources'])"
+              [class.font-semibold]="isRouteActive(['/manage-rule-models', '/create-rule-model', '/read-rule-models', '/ruleModel-Details', '/manage-rules', '/rule-Details', '/my-instance-rules', '/manage-logsources'])"
               class="flex items-center justify-between w-full py-2 text-gray-700 hover:text-redshift-hover dark:text-gray-400 dark:hover:text-white transition-colors">
               Regras
               <i class="fas fa-chevron-down text-xs ml-1.5"></i>

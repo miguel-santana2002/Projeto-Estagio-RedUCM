@@ -211,7 +211,7 @@ export class ManageUseCasesComponent implements OnInit, AfterViewInit {
     this.page = 1;
   }
 
-  // Ordenação
+  // Ordenação com suporte para cncsType
   sortTable(column: string): void {
     if (this.sortType === column) {
       this.sortReverse = !this.sortReverse;

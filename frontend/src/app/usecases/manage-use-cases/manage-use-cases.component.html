@@ -137,7 +137,7 @@
           </div>
         </div>
 
-        <!-- Tabela (Estrutura table-fixed com tipografia e espaçamentos uniformizados) -->
+        <!-- Tabela (Estrutura table-fixed com a coluna Tipo CNCS) -->
         <div class="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
           <table class="min-w-full table-fixed divide-y divide-gray-200 dark:divide-gray-700 leading-normal">
             <thead>
@@ -149,20 +149,27 @@
                     [class]="sortType === 'id' ? (sortReverse ? 'fas fa-caret-up ml-1' : 'fas fa-caret-down ml-1') : ''"></i>
                 </th>
                 <th
-                  class="w-96 px-5 py-3.5 bg-gray-100 dark:bg-gray-700 text-left text-xs font-bold text-gray-700 dark:text-gray-200 uppercase tracking-wider select-none">
-                  Técnicas Mitre Associadas
+                  class="w-72 px-5 py-3.5 bg-gray-100 dark:bg-gray-700 text-left text-xs font-bold text-gray-700 dark:text-gray-200 uppercase tracking-wider select-none">
+                  Técnicas Mitre
                 </th>
                 <th (click)="sortTable('title')"
-                  class="px-5 py-3.5 bg-gray-100 dark:bg-gray-700 text-left text-xs font-bold text-gray-700 dark:text-gray-200 uppercase tracking-wider cursor-pointer select-none">
+                  class="w-64 px-5 py-3.5 bg-gray-100 dark:bg-gray-700 text-left text-xs font-bold text-gray-700 dark:text-gray-200 uppercase tracking-wider cursor-pointer select-none">
                   Nome
                   <i
                     [class]="sortType === 'title' ? (sortReverse ? 'fas fa-caret-up ml-1' : 'fas fa-caret-down ml-1') : ''"></i>
                 </th>
                 <th (click)="sortTable('cncsClass')"
-                  class="w-48 px-5 py-3.5 bg-gray-100 dark:bg-gray-700 text-left text-xs font-bold text-gray-700 dark:text-gray-200 uppercase tracking-wider cursor-pointer select-none">
+                  class="w-44 px-5 py-3.5 bg-gray-100 dark:bg-gray-700 text-left text-xs font-bold text-gray-700 dark:text-gray-200 uppercase tracking-wider cursor-pointer select-none">
                   Classe CNCS
                   <i
                     [class]="sortType === 'cncsClass' ? (sortReverse ? 'fas fa-caret-up ml-1' : 'fas fa-caret-down ml-1') : ''"></i>
+                </th>
+                <!-- NOVA COLUNA: Tipo CNCS -->
+                <th (click)="sortTable('cncsType')"
+                  class="w-44 px-5 py-3.5 bg-gray-100 dark:bg-gray-700 text-left text-xs font-bold text-gray-700 dark:text-gray-200 uppercase tracking-wider cursor-pointer select-none">
+                  Tipo CNCS
+                  <i
+                    [class]="sortType === 'cncsType' ? (sortReverse ? 'fas fa-caret-up ml-1' : 'fas fa-caret-down ml-1') : ''"></i>
                 </th>
                 <th
                   class="w-28 px-5 py-3.5 bg-gray-100 dark:bg-gray-700 text-center text-xs font-bold text-gray-700 dark:text-gray-200 uppercase tracking-wider">
@@ -175,7 +182,7 @@
               <!-- Linhas Paginadas -->
               <tr *ngFor="let u of pagedUseCases; let i = index"
                 [ngClass]="i % 2 === 0 ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-900'"
-                [routerLink]="'/usecaseDetails/' + u.id"
+                [routerLink]="'/usecase-Details/' + u.id"
                 class="hover:bg-gray-100 dark:hover:bg-gray-700 transition duration-150 h-16 cursor-pointer">
 
                 <!-- Red ID -->
@@ -186,17 +193,17 @@
                   </div>
                 </td>
 
-                <!-- Técnicas Mitre (Badges uniformizadas com truncagem e tooltip) -->
+                <!-- Técnicas Mitre -->
                 <td class="px-5 py-3 text-left">
                   <div class="flex items-center gap-1.5 flex-nowrap overflow-hidden">
-                    <div *ngFor="let technique of (u.mitreTechniques || []).slice(0, 3)" [title]="technique"
+                    <div *ngFor="let technique of (u.mitreTechniques || []).slice(0, 2)" [title]="technique"
                       class="bg-[#0d2f52] text-white text-xs font-medium rounded px-2 py-0.5 max-w-[130px] truncate shadow-sm">
                       {{ technique }}
                     </div>
 
-                    <span *ngIf="u.mitreTechniques?.length > 3" [title]="u.mitreTechniques.slice(3).join(', ')"
+                    <span *ngIf="u.mitreTechniques?.length > 2" [title]="u.mitreTechniques.slice(2).join(', ')"
                       class="bg-[#0d2f52] hover:bg-[#15467a] text-white text-xs rounded px-1.5 py-0.5 font-bold whitespace-nowrap shadow-sm">
-                      +{{ u.mitreTechniques.length - 3 }}
+                      +{{ u.mitreTechniques.length - 2 }}
                     </span>
 
                     <span *ngIf="!u.mitreTechniques || u.mitreTechniques.length === 0"
@@ -218,10 +225,16 @@
                   {{ u.cncsClass || 'N/A' }}
                 </td>
 
+                <!-- Tipo CNCS -->
+                <td class="px-5 py-3 text-left text-sm font-medium text-gray-700 dark:text-gray-300 truncate"
+                  [title]="u.cncsType">
+                  {{ u.cncsType || 'N/A' }}
+                </td>
+
                 <!-- Ações -->
                 <td class="px-5 py-3 text-center whitespace-nowrap" (click)="$event.stopPropagation()">
                   <div class="flex items-center justify-center space-x-2">
-                    <button [routerLink]="'/usecaseDetails/' + u.id" title="Ver Detalhes"
+                    <button [routerLink]="'/usecase-Details/' + u.id" title="Ver Detalhes"
                       class="bg-gray-400 hover:bg-gray-500 text-white w-8 h-8 rounded-md shadow transition inline-flex items-center justify-center">
                       <i class="fas fa-right-to-bracket text-xs"></i>
                     </button>
@@ -234,9 +247,9 @@
                 </td>
               </tr>
 
-              <!-- Empty State -->
+              <!-- Empty State (colspan atualizado para 6) -->
               <tr *ngIf="filteredUseCases.length === 0">
-                <td colspan="5" class="py-12 text-center bg-white dark:bg-gray-800">
+                <td colspan="6" class="py-12 text-center bg-white dark:bg-gray-800">
                   <div class="flex flex-col items-center justify-center text-gray-400 dark:text-gray-500">
                     <i class="fas fa-filter-circle-xmark text-4xl mb-3 opacity-40"></i>
                     <p class="text-base font-semibold text-gray-700 dark:text-gray-300">Nenhum use case encontrado</p>

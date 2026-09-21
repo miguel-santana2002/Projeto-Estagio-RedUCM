@@ -40,8 +40,10 @@ export class UsecaseDetailsComponent {
 
   ruleModels: any = [];
 
-  ngAfterViewInit() {
-    this.modalFlowbite = new Modal(this.modal.nativeElement);
+  ngAfterViewInit(): void {
+    if (this.modal?.nativeElement) {
+      this.modalFlowbite = new Modal(this.modal.nativeElement);
+    }
   }
 
   openTaskModal(phase: string) {
@@ -140,6 +142,15 @@ export class UsecaseDetailsComponent {
 
   selectedTask: any;
 
+  getPlaybookUrl(): string {
+    const pb = this.usecase?.playbook;
+    // Se for nulo, indefinido ou contiver a string 'null'
+    if (!pb || pb === 'null' || pb.endsWith('/null')) {
+      return './assets/examplediagram.png';
+    }
+    return pb;
+  }
+
   selectImage(): void {
     this.showModal = true;
   }
@@ -209,6 +220,15 @@ export class UsecaseDetailsComponent {
 
         this.closeTaskModal();
       });
+  }
+
+  getTechniqueId(technique: any): string {
+    if (!technique) return '';
+    const str =
+      typeof technique === 'string'
+        ? technique
+        : technique.id || technique.value || technique.display || '';
+    return str.split(' - ')[0].trim();
   }
 }
 

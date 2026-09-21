@@ -103,7 +103,7 @@
           <tbody>
             <tr *ngFor="let u of filteredRules"
               [class]="(filteredRules.indexOf(u) % 2 === 0 ? 'bg-white' : 'bg-gray-100')"
-              [routerLink]="'/ruleDetails/' + u.id" class="hover:drop-shadow-md transition duration-100">
+              [routerLink]="'/rule-Details/' + u.id" class="hover:drop-shadow-md transition duration-100">
 
               <td class="px-5 py-5 text-left cursor-pointer">RedRule{{ u.id }}</td>
               <td class="px-5 py-5 text-left cursor-pointer ">
@@ -135,7 +135,7 @@
 
               <td class="px-5 py-5 space-x-3 ">
 
-                <button [routerLink]="'/ruleModelDetails/' + u.id"
+                <button [routerLink]="'/ruleModel-Details/' + u.id"
                   class="drop-shadow-xl bg-gray-400 text-white  px-3 py-1 rounded-md">
                   <i class="fas fa-right-to-bracket"></i>
                 </button>

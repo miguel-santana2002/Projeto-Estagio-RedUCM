@@ -214,7 +214,7 @@
               <!-- Linhas Paginadas -->
               <tr *ngFor="let u of pagedRuleModels; let i = index"
                 [ngClass]="i % 2 === 0 ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-900'"
-                [routerLink]="'/ruleModelDetails/' + u.id"
+                [routerLink]="'/ruleModel-Details/' + u.id"
                 class="hover:bg-gray-100 dark:hover:bg-gray-700 transition duration-150 h-16 cursor-pointer">
 
                 <!-- ID -->
@@ -274,7 +274,7 @@
                 <!-- Ações -->
                 <td class="px-5 py-3 text-center whitespace-nowrap" (click)="$event.stopPropagation()">
                   <div class="flex items-center justify-center space-x-2">
-                    <button [routerLink]="'/ruleModelDetails/' + u.id" title="Ver Detalhes"
+                    <button [routerLink]="'/ruleModel-Details/' + u.id" title="Ver Detalhes"
                       class="bg-gray-400 hover:bg-gray-500 text-white w-8 h-8 rounded-md shadow transition inline-flex items-center justify-center">
                       <i class="fas fa-right-to-bracket text-xs"></i>
                     </button>
