@@ -22,8 +22,14 @@
         <label for="mitreTechniques" class="block text-sm font-medium leading-6 text-gray-900 dark:text-white">Técnicas
             Mitre Associadas</label>
         <tag-input theme='minimal' [secondaryPlaceholder]="'+ Nova Técnica'" [placeholder]="''"
-            formControlName="mitreTechniques"
-            class="block w-full rounded-md border-0 px-2 text-gray-900 bg-white dark:bg-gray-700 dark:text-white shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-600 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 dark:focus:ring-indigo-500 sm:text-sm sm:leading-6 transition"></tag-input>
+            formControlName="mitreTechniques" displayBy="display" identifyBy="id"
+            [onlyFromAutocomplete]="true"
+            class="block w-full rounded-md border-0 px-2 text-gray-900 bg-white dark:bg-gray-700 dark:text-white shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-600 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 dark:focus:ring-indigo-500 sm:text-sm sm:leading-6 transition">
+
+            <tag-input-dropdown [autocompleteItems]="mitreAutocompleteList" [showDropdownIfEmpty]="false"
+                [limitItemsTo]="10" displayBy="display" identifyBy="id">
+            </tag-input-dropdown>
+        </tag-input>
         <div *ngIf="editUseCaseForm.get('mitreTechniques')?.touched && editUseCaseForm.get('mitreTechniques')?.invalid"
             class="text-red-600 dark:text-red-400 text-sm">
             Técnicas Mitre são obrigatórias.
