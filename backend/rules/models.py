@@ -21,7 +21,9 @@ class Rule(models.Model):
     client = models.ForeignKey(Company, on_delete=models.CASCADE, null=True)
 
     def __str__(self):
-        return self.ruleCode or f"Rule #{self.id}"
+        model_name = self.ruleModel.title if self.ruleModel and self.ruleModel.title else f"Modelo #{self.ruleModel_id}"
+        client_name = self.client.name if self.client and hasattr(self.client, 'name') else f"Cliente #{self.client_id}"
+        return f"Rule #{self.id or 'Nova'} - {model_name} ({client_name})"[:255]
 
 class RegisteredLogSource(models.Model):
     TYPE_CHOICES = [
