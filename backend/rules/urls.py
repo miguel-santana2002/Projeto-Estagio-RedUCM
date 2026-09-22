@@ -1,5 +1,5 @@
 from django.urls import path
-from rules.views import createRegisteredLogSource, createRule, createRuleModel, deleteLogSourceById, deleteRuleModelById, deleteRuleById, getRegisteredLogSources, getRuleById, getRuleModelById, getRuleModels, getRuleModelsByUseCase, getRules, updateRuleCode, updateRuleModelCode, updateRuleModel, updateLogSourceById, convertRule
+from rules.views import createRegisteredLogSource, createRule, createRuleModel, deleteLogSourceById, deleteRuleModelById, deleteRuleById, getRegisteredLogSources, getRuleById, getRuleModelById, getRuleModels, getRuleModelsByUseCase, getRules, updateRuleCode, updateRuleModelCode, updateRuleModel, updateLogSourceById, convertRule, validateRuleById
 from rest_framework.urlpatterns import format_suffix_patterns
 
 
@@ -20,7 +20,8 @@ urlpatterns = [
     path('updateRuleCode/<int:id>', updateRuleCode, name='updateRuleCode'),
     path('updateRuleModel/<int:id>', updateRuleModel, name='updateRuleModel'),
     path('updateLogSourceById/<int:id>', updateLogSourceById, name='updateLogSourceById'),
-    path('convertRule', convertRule, name='convertRule')
+    path('convertRule', convertRule, name='convertRule'),
+    path('validateRuleById/<int:id>', validateRuleById, name='validateRuleById')
 ]
 
 # urlpatterns = format_suffix_patterns(urlpatterns)
