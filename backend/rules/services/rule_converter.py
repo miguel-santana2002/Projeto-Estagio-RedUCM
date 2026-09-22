@@ -11,8 +11,9 @@ from sigma.exceptions import SigmaError
 from sigma.backends.splunk import SplunkBackend
 from sigma.backends.kusto import KustoBackend
 from sigma.backends.elasticsearch import EqlBackend
-
 from .aql_backend import AQLBackend
+from sigma.backends.crowdstrike import LogScaleBackend
+from sigma.pipelines.crowdstrike import crowdstrike_falcon_pipeline
 
 OLLAMA_HOST = os.environ.get("OLLAMA_HOST", "http://ollama:11434")
 MODEL_NAME = os.environ.get("OLLAMA_MODEL", "qwen2.5-coder:3b")
@@ -107,6 +108,11 @@ def enrich_with_aggregations(source_query: str, source_syntax: str, compiled_bas
             "Append '| summarize count() by <field> | where count_ >= <threshold>'. "
             "Never replace or omit the base filter. No markdown, no commentary."
         )
+    elif "CQL" in target_syntax:
+        rules = (
+            "Append CrowdStrike LogScale pipes: '| groupBy([<field>], function=count()) | _count >= <threshold>'. "
+            "NEVER use Splunk 'stats count' or SQL. No markdown, no commentary."
+        )
     else:
         rules = "Append necessary grouping, threshold, and sorting pipes to the base filter."
 
@@ -191,6 +197,9 @@ def compile_sigma_to_target(sigma_yaml: str, target_syntax: str) -> str:
             backend = EqlBackend()
         case "AQL (QRadar)":
             backend = AQLBackend()
+        case "CQL (CrowdStrike)":
+            # Aplica o pipeline do Falcon Agent para mapear campos para LogScale/CQL
+            backend = LogScaleBackend(processing_pipeline=crowdstrike_falcon_pipeline())
         case "Sigma Rule":
             return cleaned_yaml
         case _:
@@ -234,9 +243,9 @@ def convert_rule_pipeline(source_query: str, source_syntax: str, target_syntax: 
     if not source_query:
         raise ValueError("A query original está vazia.")
 
-    LLM_ONLY_TARGETS = ["CQL (CrowdStrike)"]
+    # 1. Alvos exclusivos de LLM (esvaziado porque o pySigma agora tem o backend CrowdStrike)
+    LLM_ONLY_TARGETS = []
 
-    # 1. Alvos exclusivos via LLM (ex: CQL)
     if target_syntax in LLM_ONLY_TARGETS:
         if source_syntax == "Sigma Rule":
             structured_input = extract_structured_conditions(source_query)
@@ -250,7 +259,7 @@ def convert_rule_pipeline(source_query: str, source_syntax: str, target_syntax: 
             "engine": "llm",
         }
 
-    # 2. CENÁRIO 1: Origem Sigma -> Target determinístico (pySigma ou Híbrido se tiver correlação)
+    # 2. CENÁRIO 1: Origem Sigma -> Target determinístico (pySigma)
     if source_syntax == "Sigma Rule":
         final_query = compile_sigma_to_target(source_query, target_syntax)
         engine_used = "pysigma"
@@ -267,11 +276,11 @@ def convert_rule_pipeline(source_query: str, source_syntax: str, target_syntax: 
         return {
             "sigma_rule": source_query,
             "target_query": final_query,
-            "engine": engine_used,
+            "engine": engine_used,  # <-- Agora devolve "pysigma"
         }
 
     # 3. CENÁRIO 2: SIEM para SIEM direto via LLM
-    if target_syntax in ["SPL (Splunk)", "KQL (Sentinel)", "EQL (Elastic)", "AQL (QRadar)"]:
+    if target_syntax in ["SPL (Splunk)", "KQL (Sentinel)", "EQL (Elastic)", "AQL (QRadar)", "CQL (CrowdStrike)"]:
         final_query = direct_llm_translation(source_query, source_syntax, target_syntax)
         return {
             "sigma_rule": "N/A - Conversão direta via LLM (Agregações detetadas)",

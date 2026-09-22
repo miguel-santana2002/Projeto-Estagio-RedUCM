@@ -6,6 +6,7 @@ class RuleModel(models.Model):
     title = models.CharField(max_length=255, null=True, blank=True)
     useCaseId = models.IntegerField(null=True, blank=True)
     type = models.CharField(max_length=50, null=True, blank=True)
+    syntax = models.CharField(max_length=100, null=True, blank=True)
     ruleCode = models.TextField(null=True, blank=True)
     logsources = ArrayField(models.CharField(max_length=255, blank=True), blank=True, default=list)
 
@@ -26,7 +27,9 @@ class Rule(models.Model):
     validatedAt = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
-        return self.ruleCode
+        model_name = self.ruleModel.title if self.ruleModel and self.ruleModel.title else f"Modelo #{self.ruleModel_id}"
+        client_name = self.client.name if self.client and hasattr(self.client, 'name') else f"Cliente #{self.client_id}"
+        return f"Rule #{self.id or 'Nova'} - {model_name} ({client_name})"[:255]
 
 class RegisteredLogSource(models.Model):
     TYPE_CHOICES = [
