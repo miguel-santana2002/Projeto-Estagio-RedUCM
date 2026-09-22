@@ -113,7 +113,8 @@ export class RuleModelDetailsComponent implements OnInit {
   sourceRuleContent: string = '';
   convertedRuleContent: string = '';
   intermediateSigmaContent: string = '';
-  conversionEngine: 'pysigma' | 'hybrid' | 'llm' | null = null;
+  conversionEngine: string | null = null;
+  conversionSource: string | null = null;
   targetSyntax: string = '';
   isConverting: boolean = false;
   conversionError: string = '';
@@ -271,6 +272,7 @@ export class RuleModelDetailsComponent implements OnInit {
       this.selectedModel.value || this.ruleModel.ruleCode || '';
     this.convertedRuleContent = '';
     this.conversionEngine = null;
+    this.conversionSource = null;
     this.targetSyntax = '';
     this.isConverting = false;
     this.showConvertModal = true;
@@ -293,6 +295,7 @@ export class RuleModelDetailsComponent implements OnInit {
     this.convertedRuleContent = '';
     this.intermediateSigmaContent = '';
     this.conversionEngine = null;
+    this.conversionSource = null;
     this.conversionError = '';
 
     const payload = {
@@ -306,6 +309,7 @@ export class RuleModelDetailsComponent implements OnInit {
         this.convertedRuleContent = res.target_query;
         this.intermediateSigmaContent = res.sigma_rule;
         this.conversionEngine = res.engine || null;
+        this.conversionSource = res.engine || null;
         this.isConverting = false;
       },
       error: (err: any) => {
