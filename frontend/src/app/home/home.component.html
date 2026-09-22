@@ -74,22 +74,22 @@
                 <img class="w-32 h-32 rounded-full mx-auto" src="./assets/usericon.png" alt="User Icon">
             </div>
             <div class="p-2">
-                <h3 class="text-center text-xl text-gray-900 dark:text-white font-medium leading-8">{{user.username}}
+                <h3 class="text-center text-xl text-gray-900 dark:text-white font-medium leading-8">{{user?.username}}
                 </h3>
                 <div class="text-center text-gray-400 dark:text-gray-400 text-xs font-semibold">
-                    <p>{{user.companies?.length === 0 ? 'Administrador' : 'Operador'}}</p>
+                    <p>{{user?.companies?.length === 0 ? 'Administrador' : 'Operador'}}</p>
                 </div>
                 <table class="text-xs my-3 w-full">
                     <tbody>
                         <tr>
                             <td class="px-2 py-2 text-gray-500 dark:text-gray-400 font-semibold text-sm">Email</td>
                             <td class="px-2 py-2 text-sm text-gray-800 dark:text-gray-200">
-                                {{ user.email.length > 30 ? (user.email | slice:0:20) + '...' : user.email }}
+                                {{ user?.email?.length > 30 ? (user?.email | slice:0:20) + '...' : user?.email }}
                             </td>
                         </tr>
                         <tr>
                             <td class="px-2 py-2 text-gray-500 dark:text-gray-400 font-semibold text-sm">Registo</td>
-                            <td class="px-2 py-2 text-sm text-gray-800 dark:text-gray-200">{{user.date_joined | date:
+                            <td class="px-2 py-2 text-sm text-gray-800 dark:text-gray-200">{{user?.date_joined | date:
                                 'dd/MM/yyyy'}}</td>
                         </tr>
                         <tr>
@@ -125,11 +125,11 @@
             <div>
                 <div
                     class="max-w-sm bg-white border border-gray-200 rounded-lg shadow-md hover:drop-shadow-xl transition duration-300 dark:bg-gray-800 dark:border-gray-700">
-                    <a routerLink="/manage-use-cases">
+                    <a routerLink="/manage-usecases">
                         <img class="rounded-t-lg w-full" src="./assets/show1.png" alt="" />
                     </a>
                     <div class="p-5">
-                        <a routerLink="/manage-use-cases">
+                        <a routerLink="/manage-usecases">
                             <h5 class="mb-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-white">Gerir Use
                                 Cases</h5>
                         </a>
@@ -137,7 +137,7 @@
                             Aqui poderá efetuar a gestão relativa aos Use Cases disponibilizados na plataforma,
                             adicionar novos Use Cases e consultar os mesmos.
                         </p>
-                        <a routerLink="/manage-use-cases"
+                        <a routerLink="/manage-usecases"
                             class="inline-flex items-center px-3 py-2 text-sm font-medium text-center text-white bg-redshift-red rounded-lg hover:bg-redshift-hover transition">
                             Aceder
                             <i class="fas fa-arrow-right ms-2"></i>
@@ -216,11 +216,11 @@
             <div>
                 <div
                     class="max-w-sm bg-white border border-gray-200 rounded-lg shadow-md hover:drop-shadow-xl transition duration-300 dark:bg-gray-800 dark:border-gray-700">
-                    <a routerLink="/manage-use-cases">
+                    <a routerLink="/manage-usecases">
                         <img class="rounded-t-lg w-full" src="./assets/show1.png" alt="" />
                     </a>
                     <div class="p-5">
-                        <a routerLink="/manage-use-cases">
+                        <a routerLink="/manage-usecases">
                             <h5 class="mb-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-white">Consultar
                                 Use Cases</h5>
                         </a>
@@ -228,7 +228,7 @@
                             Aqui poderá consultar os Use Cases existentes no sistema, com recurso a diferentes dados e
                             informações de frameworks. Poderá ainda consultar as regras associadas aos mesmos.
                         </p>
-                        <a routerLink="/manage-use-cases"
+                        <a routerLink="/manage-usecases"
                             class="inline-flex items-center px-3 py-2 text-sm font-medium text-center text-white bg-redshift-red rounded-lg hover:bg-redshift-hover transition">
                             Aceder
                             <i class="fas fa-arrow-right ms-2"></i>

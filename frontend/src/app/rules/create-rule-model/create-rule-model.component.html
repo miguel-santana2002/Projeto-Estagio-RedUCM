@@ -92,11 +92,10 @@
             </span>
         </div>
 
-        <div class="w-full border border-gray-300 dark:border-gray-700 mx-auto rounded-md overflow-hidden transition">
-            <ngs-code-editor [codeModel]="selectedModel" [theme]="theme" [options]="options"
-                (valueChanged)="onCodeChanged($event)" (loaded)="onEditorLoaded($event)"
-                (codeModelChanged)="onCodeModelChanged($event)">
-            </ngs-code-editor>
+        <div class="w-full">
+            <app-code-editor [code]="code" [language]="selectedSyntax" height="450px"
+                (codeChange)="onCodeChanged($event)">
+            </app-code-editor>
         </div>
     </div>
 

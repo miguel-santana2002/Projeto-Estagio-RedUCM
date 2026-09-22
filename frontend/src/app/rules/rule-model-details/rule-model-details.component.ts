@@ -23,6 +23,8 @@ import { UsecasesService } from '../../services/usecases.service';
 import { AuthService } from '../../services/auth.service';
 import { SigmaConversionsService } from '../../services/sigma-conversions.service';
 
+import { AppCodeEditorComponent } from '../../shared/components/app-code-editor/app-code-editor.component';
+
 @Component({
   selector: 'app-rule-model-details',
   standalone: true,
@@ -36,6 +38,7 @@ import { SigmaConversionsService } from '../../services/sigma-conversions.servic
     RouterModule,
     FormsModule,
     ReactiveFormsModule,
+    AppCodeEditorComponent,
   ],
 })
 export class RuleModelDetailsComponent implements OnInit {
@@ -88,14 +91,14 @@ export class RuleModelDetailsComponent implements OnInit {
   siemSintaxes = [
     'AQL (QRadar)',
     'SPL (Splunk)',
+    'SPL2 (Splunk)',
     'KQL (Sentinel)',
     'EQL (Elastic)',
     'Sigma Rule',
   ];
 
-  edrSintaxes = ['CQL (CrowdStrike)', 'Sigma Rule'];
+  edrSintaxes = ['CQL (CrowdStrike)', 'Defender KQL', 'Sigma Rule'];
 
-  // Atualizado: Removido Lucene, adicionado CQL (CrowdStrike) e EQL (Elastic)
   availableSyntaxes = [
     { id: 'SPL (Splunk)', name: 'SPL (Splunk)' },
     { id: 'KQL (Sentinel)', name: 'KQL (Sentinel)' },
@@ -110,10 +113,10 @@ export class RuleModelDetailsComponent implements OnInit {
   sourceRuleContent: string = '';
   convertedRuleContent: string = '';
   intermediateSigmaContent: string = '';
+  conversionEngine: 'pysigma' | 'hybrid' | 'llm' | null = null;
   targetSyntax: string = '';
   isConverting: boolean = false;
   conversionError: string = '';
-  conversionSource: string = ''; // Adicionado para evitar erro de compilação no template
 
   createRuleForm = new FormGroup({
     modalCode: new FormControl(''),
@@ -200,7 +203,6 @@ export class RuleModelDetailsComponent implements OnInit {
       case 'AQL (QRadar)':
       case 'KQL (Sentinel)':
       case 'EQL (Elastic)':
-      case 'CQL (CrowdStrike)':
         return 'sql';
       default:
         return 'yaml';
@@ -246,7 +248,7 @@ export class RuleModelDetailsComponent implements OnInit {
 
           setTimeout(() => (this.message = ''), 4000);
         },
-        error: (err: any) =>
+        error: (err) =>
           console.error('Erro ao atualizar código e sintaxe:', err),
       });
   }
@@ -268,10 +270,9 @@ export class RuleModelDetailsComponent implements OnInit {
     this.sourceRuleContent =
       this.selectedModel.value || this.ruleModel.ruleCode || '';
     this.convertedRuleContent = '';
+    this.conversionEngine = null;
     this.targetSyntax = '';
     this.isConverting = false;
-    this.conversionError = '';
-    this.conversionSource = '';
     this.showConvertModal = true;
   }
 
@@ -282,17 +283,17 @@ export class RuleModelDetailsComponent implements OnInit {
   convertRule(): void {
     if (!this.targetSyntax || !this.sourceRuleContent) return;
 
+    // Se a sintaxe de destino for igual à atual, não precisa de conversão
     if (this.targetSyntax === this.ruleModel.syntax) {
       this.convertedRuleContent = this.sourceRuleContent;
-      this.conversionSource = 'pySigma (Original)';
       return;
     }
 
     this.isConverting = true;
     this.convertedRuleContent = '';
     this.intermediateSigmaContent = '';
+    this.conversionEngine = null;
     this.conversionError = '';
-    this.conversionSource = '';
 
     const payload = {
       source_query: this.sourceRuleContent,
@@ -304,8 +305,7 @@ export class RuleModelDetailsComponent implements OnInit {
       next: (res: any) => {
         this.convertedRuleContent = res.target_query;
         this.intermediateSigmaContent = res.sigma_rule;
-        // Identifica quem converteu com base na resposta ou define por defeito IA + pySigma
-        this.conversionSource = this.engineLabel(res.source);
+        this.conversionEngine = res.engine || null;
         this.isConverting = false;
       },
       error: (err: any) => {
@@ -402,22 +402,7 @@ export class RuleModelDetailsComponent implements OnInit {
         document.body.classList.remove('overflow-hidden');
         this.router.navigate(['/manage-rules']);
       },
-      error: (e: any) => console.error('Erro ao atribuir regra ao cliente:', e),
+      error: (e) => console.error('Erro ao atribuir regra ao cliente:', e),
     });
-  }
-
-  engineLabel(source: string): string {
-    switch (source) {
-      case 'pysigma':
-        return 'pySigma (determinístico)';
-      case 'pysigma+llm':
-        return 'pySigma + IA (agregação assistida)';
-      case 'llm':
-        return 'IA (não verificado)';
-      case 'llm+pysigma':
-        return 'IA + pySigma';
-      default:
-      return source || 'Desconhecido';
-    }
   }
 }

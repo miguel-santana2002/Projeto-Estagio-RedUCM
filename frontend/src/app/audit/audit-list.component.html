@@ -1,0 +1,380 @@
+<app-header></app-header>
+
+<app-titlebanner title="Histórico de Auditoria Global" image="./assets/bannercover.jpg"></app-titlebanner>
+
+<div class="mx-auto max-w-screen-2xl px-4 py-8">
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-8 mt-4">
+
+        <!-- Coluna Esquerda: Resumo Transversal (Visão Geral) -->
+        <div class="lg:col-span-1 space-y-6">
+            <h2 class="font-semibold text-lg text-gray-700 dark:text-gray-200 flex items-center gap-2">
+                <i class="fas fa-chart-pie text-redshift-red"></i>
+                <span>1. Visão Geral</span>
+            </h2>
+
+            <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6 dark:border-gray-700 dark:bg-gray-800">
+                <div class="flex items-center space-x-4 mb-4">
+                    <div class="p-3 bg-red-50 dark:bg-red-900/20 rounded-lg text-redshift-red">
+                        <i class="fas fa-history text-xl"></i>
+                    </div>
+                    <div>
+                        <h5 class="text-base font-bold tracking-tight text-gray-900 dark:text-white">Registo Transversal
+                        </h5>
+                        <span class="text-xs text-gray-500 dark:text-gray-400">Plataforma RedUCM</span>
+                    </div>
+                </div>
+                <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">
+                    Monitorização centralizada e imutável de todas as operações efetuadas nos modelos críticos da
+                    plataforma.
+                </p>
+
+                <div class="space-y-3 border-t border-gray-200 dark:border-gray-700 pt-4">
+                    <div class="flex justify-between items-center text-sm">
+                        <span
+                            class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Total
+                            de Alterações</span>
+                        <span class="text-xl font-bold text-gray-900 dark:text-white">{{ logs.length }}</span>
+                    </div>
+
+                    <div class="flex justify-between items-center text-sm">
+                        <span
+                            class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Alterações
+                            Filtradas</span>
+                        <span class="text-base font-bold text-redshift-red">{{ filteredLogs.length }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Coluna Direita: Tabela e Filtros de Auditoria -->
+        <div class="lg:col-span-3">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="font-semibold text-lg text-gray-700 dark:text-gray-200 flex items-center gap-2">
+                    <i class="fas fa-list-alt text-redshift-red"></i>
+                    <span>2. Registo de Eventos</span>
+                </h2>
+            </div>
+
+            <!-- Barra Superior: Pesquisa, Contador e Botão Filtros -->
+            <div class="mb-5 flex flex-col md:flex-row gap-4 items-center justify-between">
+
+                <div class="relative w-full md:w-96">
+                    <i
+                        class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-gray-400 dark:text-gray-500 pointer-events-none">
+                        <span class="fas fa-search text-sm"></span>
+                    </i>
+                    <input type="text" id="searchTerm" [(ngModel)]="searchTerm" (ngModelChange)="onSearchChange()"
+                        placeholder="Procurar por ID, objeto ou utilizador..."
+                        class="pl-10 px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-redshift-red transition text-sm">
+                </div>
+
+                <div class="flex items-center gap-4 w-full md:w-auto justify-end">
+                    <span class="text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">
+                        Mostrando <strong class="text-gray-900 dark:text-white font-semibold">{{ filteredLogs.length
+                            }}</strong> de <strong class="text-gray-900 dark:text-white font-semibold">{{ logs.length
+                            }}</strong>
+                    </span>
+
+                    <button (click)="showFilters = !showFilters"
+                        [ngClass]="{'ring-2 ring-offset-2 ring-redshift-red': showFilters}"
+                        class="h-10 px-4 bg-redshift-red text-white rounded-lg hover:bg-redshift-hover shadow-md flex items-center justify-center gap-2 transition text-sm font-medium flex-shrink-0"
+                        type="button">
+                        <i class="fas fa-filter text-xs"></i>
+                        <span>Filtros</span>
+                        <span
+                            *ngIf="selectedActions.length > 0 || selectedModels.length > 0 || selectedActors.length > 0"
+                            class="w-2 h-2 rounded-full bg-white animate-pulse"></span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Painel de Filtros Expansível -->
+            <div *ngIf="showFilters"
+                class="mb-6 p-5 rounded-xl bg-gray-50 dark:bg-[#1a2234] border border-gray-200 dark:border-gray-700 shadow-sm transition-all duration-200">
+
+                <!-- Cabeçalho do Painel -->
+                <div
+                    class="flex items-center justify-between pb-3 mb-4 border-b border-gray-200 dark:border-gray-700/60">
+                    <div class="flex items-center gap-2">
+                        <div class="w-2 h-2 rounded-full bg-redshift-red animate-pulse"></div>
+                        <span class="text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-200">
+                            Filtrar Registos de Auditoria
+                        </span>
+                        <span
+                            *ngIf="selectedActions.length > 0 || selectedModels.length > 0 || selectedActors.length > 0"
+                            class="ml-2 px-2 py-0.5 text-[11px] font-semibold rounded-full bg-redshift-red/10 text-redshift-red dark:bg-redshift-red/20 border border-redshift-red/30">
+                            {{ selectedActions.length + selectedModels.length + selectedActors.length }} ativo(s)
+                        </span>
+                    </div>
+
+                    <button *ngIf="selectedActions.length > 0 || selectedModels.length > 0 || selectedActors.length > 0"
+                        (click)="clearAllFilters()"
+                        class="text-xs text-redshift-red hover:text-redshift-hover font-medium flex items-center gap-1.5 transition">
+                        <i class="fas fa-trash-can text-[11px]"></i>
+                        <span>Limpar filtros</span>
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+                    <!-- Secção: Ação -->
+                    <div class="flex flex-col">
+                        <div class="flex items-center justify-between mb-2">
+                            <label
+                                class="text-xs font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-1.5">
+                                <i class="fas fa-bolt text-redshift-red"></i>
+                                <span>Tipo de Ação</span>
+                            </label>
+                            <span class="text-[11px] text-gray-400">
+                                {{ selectedActions.length }} de {{ uniqueActions.length }}
+                            </span>
+                        </div>
+
+                        <div class="flex flex-wrap gap-2 max-h-36 overflow-y-auto pr-1">
+                            <button *ngFor="let act of uniqueActions" type="button" (click)="toggleAction(act)"
+                                [ngClass]="{
+                  'bg-redshift-red text-white border-redshift-red shadow-sm': isActionSelected(act),
+                  'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-700 hover:border-redshift-red dark:hover:border-redshift-red': !isActionSelected(act)
+                }" class="px-3 py-1.5 rounded-lg border text-xs font-medium transition flex items-center gap-2 select-none">
+                                <i
+                                    [class]="isActionSelected(act) ? 'fas fa-check text-[10px]' : 'fas fa-plus text-[10px] opacity-40'"></i>
+                                <span>{{ act }}</span>
+                            </button>
+                            <span *ngIf="uniqueActions.length === 0" class="text-xs text-gray-400 italic">Nenhuma
+                                ação</span>
+                        </div>
+                    </div>
+
+                    <!-- Secção: Objeto -->
+                    <div class="flex flex-col">
+                        <div class="flex items-center justify-between mb-2">
+                            <label
+                                class="text-xs font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-1.5">
+                                <i class="fas fa-cubes text-redshift-red"></i>
+                                <span>Objeto Afetado</span>
+                            </label>
+                            <span class="text-[11px] text-gray-400">
+                                {{ selectedModels.length }} de {{ uniqueModels.length }}
+                            </span>
+                        </div>
+
+                        <div class="flex flex-wrap gap-2 max-h-36 overflow-y-auto pr-1">
+                            <button *ngFor="let model of uniqueModels" type="button" (click)="toggleModel(model)"
+                                [ngClass]="{
+                  'bg-redshift-red text-white border-redshift-red shadow-sm': isModelSelected(model),
+                  'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-700 hover:border-redshift-red dark:hover:border-redshift-red': !isModelSelected(model)
+                }" class="px-3 py-1.5 rounded-lg border text-xs font-medium transition flex items-center gap-2 select-none">
+                                <i
+                                    [class]="isModelSelected(model) ? 'fas fa-check text-[10px]' : 'fas fa-plus text-[10px] opacity-40'"></i>
+                                <span>{{ model }}</span>
+                            </button>
+                            <span *ngIf="uniqueModels.length === 0" class="text-xs text-gray-400 italic">Nenhum
+                                modelo</span>
+                        </div>
+                    </div>
+
+                    <!-- Secção: Utilizador -->
+                    <div class="flex flex-col">
+                        <div class="flex items-center justify-between mb-2">
+                            <label
+                                class="text-xs font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-1.5">
+                                <i class="fas fa-user-circle text-redshift-red"></i>
+                                <span>Utilizador</span>
+                            </label>
+                            <span class="text-[11px] text-gray-400">
+                                {{ selectedActors.length }} de {{ uniqueActors.length }}
+                            </span>
+                        </div>
+
+                        <div class="flex flex-wrap gap-2 max-h-36 overflow-y-auto pr-1">
+                            <button *ngFor="let actor of uniqueActors" type="button" (click)="toggleActor(actor)"
+                                [ngClass]="{
+                  'bg-redshift-red text-white border-redshift-red shadow-sm': isActorSelected(actor),
+                  'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-700 hover:border-redshift-red dark:hover:border-redshift-red': !isActorSelected(actor)
+                }" class="px-3 py-1.5 rounded-lg border text-xs font-medium transition flex items-center gap-2 select-none">
+                                <i
+                                    [class]="isActorSelected(actor) ? 'fas fa-check text-[10px]' : 'fas fa-plus text-[10px] opacity-40'"></i>
+                                <span>{{ actor }}</span>
+                            </button>
+                            <span *ngIf="uniqueActors.length === 0" class="text-xs text-gray-400 italic">Nenhum
+                                utilizador</span>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Estado de Carregamento -->
+            <div *ngIf="loading"
+                class="flex justify-center items-center py-16 bg-white border border-gray-200 rounded-lg shadow dark:border-gray-700 dark:bg-gray-800">
+                <div class="flex items-center gap-3 text-gray-500 text-sm font-medium">
+                    <i class="fas fa-spinner fa-spin text-redshift-red"></i> A carregar histórico de auditoria...
+                </div>
+            </div>
+
+            <!-- Mensagem de Erro -->
+            <div *ngIf="errorMessage"
+                class="p-4 mb-4 text-sm text-red-700 bg-red-100 rounded-lg dark:bg-gray-800 dark:text-red-400 border border-red-200"
+                role="alert">
+                <i class="fas fa-exclamation-triangle mr-2"></i> {{ errorMessage }}
+            </div>
+
+            <!-- Tabela de Dados Formatada com table-fixed -->
+            <div *ngIf="!loading"
+                class="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden shadow-sm">
+                <table class="min-w-full table-fixed divide-y divide-gray-200 dark:divide-gray-700 leading-normal">
+                    <thead>
+                        <tr>
+                            <th (click)="sortTable('id')"
+                                class="w-24 px-4 py-3.5 bg-gray-100 dark:bg-gray-700 text-left text-xs font-bold text-gray-700 dark:text-gray-200 uppercase tracking-wider cursor-pointer select-none">
+                                Registo
+                                <i
+                                    [class]="sortType === 'id' ? (sortReverse ? 'fas fa-caret-up ml-1' : 'fas fa-caret-down ml-1') : ''"></i>
+                            </th>
+                            <th (click)="sortTable('timestamp')"
+                                class="w-36 px-4 py-3.5 bg-gray-100 dark:bg-gray-700 text-left text-xs font-bold text-gray-700 dark:text-gray-200 uppercase tracking-wider cursor-pointer select-none">
+                                Data / Hora
+                                <i
+                                    [class]="sortType === 'timestamp' ? (sortReverse ? 'fas fa-caret-up ml-1' : 'fas fa-caret-down ml-1') : ''"></i>
+                            </th>
+                            <th (click)="sortTable('action')"
+                                class="w-28 px-4 py-3.5 bg-gray-100 dark:bg-gray-700 text-left text-xs font-bold text-gray-700 dark:text-gray-200 uppercase tracking-wider cursor-pointer select-none">
+                                Ação
+                                <i
+                                    [class]="sortType === 'action' ? (sortReverse ? 'fas fa-caret-up ml-1' : 'fas fa-caret-down ml-1') : ''"></i>
+                            </th>
+                            <th (click)="sortTable('model_name')"
+                                class="w-64 px-4 py-3.5 bg-gray-100 dark:bg-gray-700 text-left text-xs font-bold text-gray-700 dark:text-gray-200 uppercase tracking-wider cursor-pointer select-none">
+                                Objeto
+                                <i
+                                    [class]="sortType === 'model_name' ? (sortReverse ? 'fas fa-caret-up ml-1' : 'fas fa-caret-down ml-1') : ''"></i>
+                            </th>
+                            <th (click)="sortTable('actor')"
+                                class="w-40 px-4 py-3.5 bg-gray-100 dark:bg-gray-700 text-left text-xs font-bold text-gray-700 dark:text-gray-200 uppercase tracking-wider cursor-pointer select-none">
+                                Utilizador
+                                <i
+                                    [class]="sortType === 'actor' ? (sortReverse ? 'fas fa-caret-up ml-1' : 'fas fa-caret-down ml-1') : ''"></i>
+                            </th>
+                            <th
+                                class="px-4 py-3.5 bg-gray-100 dark:bg-gray-700 text-left text-xs font-bold text-gray-700 dark:text-gray-200 uppercase tracking-wider">
+                                Alterações
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200 dark:divide-gray-700 bg-white dark:bg-gray-800">
+
+                        <!-- Linhas Paginadas -->
+                        <tr *ngFor="let log of pagedLogs; let i = index"
+                            [ngClass]="i % 2 === 0 ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-900'"
+                            class="hover:bg-gray-100 dark:hover:bg-gray-700 transition duration-150 h-16">
+
+                            <!-- ID Registo -->
+                            <td
+                                class="px-4 py-3 whitespace-nowrap font-mono text-xs font-bold text-redshift-red dark:text-red-400">
+                                #{{ log.id }}
+                            </td>
+
+                            <!-- Data e Hora -->
+                            <td class="px-4 py-3 whitespace-nowrap text-xs text-gray-600 dark:text-gray-300">
+                                {{ log.timestamp | date:'yyyy-MM-dd' }}
+                                <span class="block font-bold text-gray-900 dark:text-white">{{ log.timestamp |
+                                    date:'HH:mm:ss' }}</span>
+                            </td>
+
+                            <!-- Ação -->
+                            <td class="px-4 py-3 whitespace-nowrap">
+                                <span class="px-2.5 py-1 text-xs font-semibold rounded-md shadow-sm inline-block"
+                                    [ngClass]="{
+                  'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300 border border-green-200 dark:border-green-800': log.action === 'CREATE',
+                  'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300 border border-amber-200 dark:border-amber-800': log.action === 'UPDATE',
+                  'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300 border border-red-200 dark:border-red-800': log.action === 'DELETE'
+                }">
+                                    {{ log.action }}
+                                </span>
+                            </td>
+
+                            <!-- Objeto / Modelo -->
+                            <td class="px-4 py-3 truncate" [title]="log.object_repr">
+                                <span class="block font-mono text-xs font-bold text-gray-900 dark:text-gray-200">{{
+                                    log.model_name }}</span>
+                                <span class="text-xs text-gray-500 dark:text-gray-400 truncate block max-w-xs">{{
+                                    log.object_repr }}</span>
+                            </td>
+
+                            <!-- Utilizador (Ator) -->
+                            <td class="px-4 py-3 whitespace-nowrap truncate" [title]="log.actor || 'Sistema'">
+                                <span
+                                    class="inline-flex items-center gap-1.5 text-xs font-medium text-gray-800 dark:text-gray-200">
+                                    <i class="fas fa-user-circle text-gray-400 text-sm"></i>
+                                    <span class="truncate">{{ log.actor || 'Sistema' }}</span>
+                                </span>
+                            </td>
+
+                            <!-- Alterações Efetuadas -->
+                            <td class="px-4 py-3">
+                                <details class="group">
+                                    <summary
+                                        class="cursor-pointer text-xs text-redshift-red dark:text-red-400 font-semibold hover:underline flex items-center gap-1 select-none">
+                                        <i class="fas fa-code text-[10px]"></i> Ver JSON
+                                    </summary>
+                                    <pre
+                                        class="mt-2 max-w-sm max-h-40 overflow-auto text-[11px] bg-gray-900 text-green-400 p-2.5 rounded-md shadow-inner"><code>{{ log.changes | json }}</code></pre>
+                                </details>
+                            </td>
+                        </tr>
+
+                        <!-- Empty State -->
+                        <tr *ngIf="filteredLogs.length === 0">
+                            <td colspan="6" class="py-12 text-center bg-white dark:bg-gray-800">
+                                <div class="flex flex-col items-center justify-center text-gray-400 dark:text-gray-500">
+                                    <i class="fas fa-filter-circle-xmark text-4xl mb-3 opacity-40"></i>
+                                    <p class="text-base font-semibold text-gray-700 dark:text-gray-300">Nenhum registo
+                                        de auditoria encontrado</p>
+                                    <p class="text-sm mt-1">Tenta alterar o termo de pesquisa ou limpar os filtros
+                                        aplicados.</p>
+                                    <button
+                                        *ngIf="searchTerm || selectedActions.length > 0 || selectedModels.length > 0 || selectedActors.length > 0"
+                                        (click)="searchTerm = ''; clearAllFilters()"
+                                        class="mt-3 text-sm text-redshift-red hover:underline font-medium">
+                                        Limpar todos os critérios
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Rodapé da Tabela: Paginação -->
+            <div *ngIf="!loading && filteredLogs.length > 0"
+                class="flex flex-col sm:flex-row items-center justify-between pt-4 mt-2 gap-3 text-sm text-gray-600 dark:text-gray-400">
+
+                <div class="flex items-center gap-2.5">
+                    <span>Linhas por página:</span>
+                    <select [ngModel]="pageSize" (ngModelChange)="onPageSizeChange($event)"
+                        class="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-2.5 py-1 text-sm text-gray-900 dark:text-white focus:ring-redshift-red focus:border-redshift-red">
+                        <option *ngFor="let size of pageSizeOptions" [value]="size">{{ size }}</option>
+                    </select>
+                </div>
+
+                <div class="flex items-center gap-3">
+                    <span>Página <strong class="text-gray-900 dark:text-white">{{ page }}</strong> de <strong
+                            class="text-gray-900 dark:text-white">{{ totalPages }}</strong></span>
+
+                    <div class="inline-flex rounded-lg shadow-sm">
+                        <button (click)="setPage(page - 1)" [disabled]="page === 1"
+                            class="px-3 py-1.5 text-sm font-medium bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-l-lg hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-40 disabled:cursor-not-allowed transition">
+                            <i class="fas fa-chevron-left text-xs"></i>
+                        </button>
+                        <button (click)="setPage(page + 1)" [disabled]="page === totalPages"
+                            class="px-3 py-1.5 text-sm font-medium bg-white dark:bg-gray-700 border-t border-b border-r border-gray-300 dark:border-gray-600 rounded-r-lg hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-40 disabled:cursor-not-allowed transition">
+                            <i class="fas fa-chevron-right text-xs"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>

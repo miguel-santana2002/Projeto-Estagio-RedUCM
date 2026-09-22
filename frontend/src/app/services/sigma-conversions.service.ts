@@ -35,25 +35,6 @@ export class SigmaConversionsService {
     return this.http.post(`${AUTH_URL}convertSigmaToSplunk`, { rule: rule });
   }
 
-  convertSigmaToQRadar(rule: any) {
-    return this.http.post(`${AUTH_URL}convertSigmaToQRadar`, { rule: rule });
-  }
-
-  // Substituído o antigo Lucene por EQL limpo em JSON
-  convertSigmaToElasticEQL(rule: any) {
-    return this.http.post(`${AUTH_URL}convertSigma`, {
-      rule: rule,
-      backend: 'Elastic Rule',
-    });
-  }
-
-  convertSigmaToCrowdStrike(ruleCode: string) {
-    const formData = new FormData();
-    formData.append('rule', ruleCode);
-    formData.append('backend', 'CrowdStrike Rule');
-    return this.http.post(`${AUTH_URL}convertSigma`, formData);
-  }
-
   convertSigma(rule: any, backend: any) {
     return this.http.post(`${AUTH_URL}convertSigma`, {
       rule: rule,

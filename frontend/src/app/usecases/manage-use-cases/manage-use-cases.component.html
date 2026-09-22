@@ -1,6 +1,6 @@
 <app-header></app-header>
 
-<app-titlebanner title="Gestão de Use Cases" image="./assets/bannercover.jpg"> </app-titlebanner>
+<app-titlebanner title="Gestão de Use Cases" image="./assets/bannercover.jpg"></app-titlebanner>
 
 <div class="container mx-auto px-4 sm:px-8">
   <div class="py-8">
@@ -8,106 +8,294 @@
       <div
         class="inline-block min-w-full shadow-md p-5 rounded-lg overflow-hidden bg-white dark:bg-gray-800 transition">
 
-        <div class="mb-4 relative">
-          <label for="nameSearch" class="sr-only">Procurar por nome</label>
-          <div class="flex items-center">
-            <i
-              class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400 dark:text-gray-500 pointer-events-none">
-              <span class="fas fa-search"></span>
-            </i>
+        <!-- Barra Superior: Pesquisa, Contador e Botões -->
+        <div class="mb-5 flex flex-col md:flex-row gap-4 items-center justify-between">
 
-            <input type="text" id="nameSearch" [(ngModel)]="nameSearch" placeholder="Procurar por nome"
-              class="pl-10 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-redshift-red transition">
+          <div class="relative w-full md:w-96">
+            <i
+              class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-gray-400 dark:text-gray-500 pointer-events-none">
+              <span class="fas fa-search text-sm"></span>
+            </i>
+            <input type="text" id="nameSearch" [(ngModel)]="nameSearch" (ngModelChange)="onSearchChange()"
+              placeholder="Procurar por nome"
+              class="pl-10 px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-redshift-red transition text-sm">
+          </div>
+
+          <div class="flex items-center gap-4 w-full md:w-auto justify-end">
+            <!-- Contador de Registos -->
+            <span class="text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">
+              Mostrando <strong class="text-gray-900 dark:text-white font-semibold">{{ filteredUseCases.length
+                }}</strong> de <strong class="text-gray-900 dark:text-white font-semibold">{{ useCases.length
+                }}</strong>
+            </span>
 
             <button *ngIf="user.companies?.length === 0" [routerLink]="'/create-usecase'"
-              class="ml-5 w-48 h-10 bg-redshift-red text-white rounded hover:bg-redshift-hover shadow-md transition flex items-center justify-center gap-2 flex-shrink-0">
-              <i class="fas fa-plus"></i>
-              Adicionar Novo
+              class="h-10 px-5 bg-redshift-red text-white rounded-lg hover:bg-redshift-hover shadow-md transition flex items-center justify-center gap-2 text-sm font-medium flex-shrink-0">
+              <i class="fas fa-plus text-xs"></i>
+              <span>Adicionar Novo</span>
             </button>
 
-            <div class="text-center flex-shrink-0">
-              <button
-                class="ml-5 w-28 h-10 bg-redshift-red text-white rounded hover:bg-redshift-hover shadow-md transition"
-                type="button" data-drawer-target="drawer-navigation" data-drawer-show="drawer-navigation"
-                aria-controls="drawer-navigation">
-                <span> <i class="fas fa-filter"></i> Filtros</span>
+            <!-- Botão Filtros -->
+            <button (click)="showFilters = !showFilters"
+              [ngClass]="{'ring-2 ring-offset-2 ring-redshift-red': showFilters}"
+              class="h-10 px-4 bg-redshift-red text-white rounded-lg hover:bg-redshift-hover shadow-md flex items-center justify-center gap-2 transition text-sm font-medium flex-shrink-0"
+              type="button">
+              <i class="fas fa-filter text-xs"></i>
+              <span>Filtros</span>
+              <span *ngIf="selectedMitreTechniques.length > 0 || selectedCNCSClass.length > 0"
+                class="w-2 h-2 rounded-full bg-white animate-pulse"></span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Painel de Filtros -->
+        <div *ngIf="showFilters"
+          class="mb-6 p-5 rounded-xl bg-gray-50 dark:bg-[#1a2234] border border-gray-200 dark:border-gray-700 shadow-sm transition-all duration-200">
+
+          <!-- Cabeçalho do Painel -->
+          <div class="flex items-center justify-between pb-3 mb-4 border-b border-gray-200 dark:border-gray-700/60">
+            <div class="flex items-center gap-2">
+              <div class="w-2 h-2 rounded-full bg-redshift-red animate-pulse"></div>
+              <span class="text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-200">
+                Filtrar Resultados
+              </span>
+              <span *ngIf="selectedMitreTechniques.length > 0 || selectedCNCSClass.length > 0"
+                class="ml-2 px-2 py-0.5 text-[11px] font-semibold rounded-full bg-redshift-red/10 text-redshift-red dark:bg-redshift-red/20 border border-redshift-red/30">
+                {{ selectedMitreTechniques.length + selectedCNCSClass.length }} ativo(s)
+              </span>
+            </div>
+
+            <button *ngIf="selectedMitreTechniques.length > 0 || selectedCNCSClass.length > 0"
+              (click)="clearAllFilters()"
+              class="text-xs text-redshift-red hover:text-redshift-hover font-medium flex items-center gap-1.5 transition">
+              <i class="fas fa-trash-can text-[11px]"></i>
+              <span>Limpar filtros</span>
+            </button>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+            <!-- Secção: Técnicas MITRE -->
+            <div class="flex flex-col">
+              <div class="flex items-center justify-between mb-2">
+                <label class="text-xs font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-1.5">
+                  <i class="fas fa-shield-halved text-redshift-red"></i>
+                  <span>Técnicas MITRE</span>
+                </label>
+                <span class="text-[11px] text-gray-400">
+                  {{ selectedMitreTechniques.length }} de {{ uniqueMitreTechniques.length }} selecionada(s)
+                </span>
+              </div>
+
+              <div class="flex flex-wrap gap-2 max-h-36 overflow-y-auto pr-1">
+                <button *ngFor="let technique of uniqueMitreTechniques" type="button"
+                  (click)="toggleMitreTechnique(technique)" [ngClass]="{
+                    'bg-redshift-red text-white border-redshift-red shadow-sm': isMitreTechniqueSelected(technique),
+                    'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-700 hover:border-redshift-red dark:hover:border-redshift-red': !isMitreTechniqueSelected(technique)
+                  }"
+                  class="px-3 py-1.5 rounded-lg border text-xs font-medium transition flex items-center gap-2 select-none">
+                  <i
+                    [class]="isMitreTechniqueSelected(technique) ? 'fas fa-check text-[10px]' : 'fas fa-plus text-[10px] opacity-40'"></i>
+                  <span>{{ technique }}</span>
+                </button>
+
+                <span *ngIf="uniqueMitreTechniques.length === 0" class="text-xs text-gray-400 italic">
+                  Nenhuma técnica disponível.
+                </span>
+              </div>
+            </div>
+
+            <!-- Secção: Classes CNCS -->
+            <div class="flex flex-col">
+              <div class="flex items-center justify-between mb-2">
+                <label class="text-xs font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-1.5">
+                  <i class="fas fa-rectangle-list text-redshift-red"></i>
+                  <span>Classes CNCS</span>
+                </label>
+                <span class="text-[11px] text-gray-400">
+                  {{ selectedCNCSClass.length }} de {{ uniqueCNCSClasses.length }} selecionada(s)
+                </span>
+              </div>
+
+              <div class="flex flex-wrap gap-2 max-h-36 overflow-y-auto pr-1">
+                <button *ngFor="let cncs of uniqueCNCSClasses" type="button" (click)="toggleCNCSClass(cncs)" [ngClass]="{
+                    'bg-redshift-red text-white border-redshift-red shadow-sm': isCNCSClassSelected(cncs),
+                    'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-700 hover:border-redshift-red dark:hover:border-redshift-red': !isCNCSClassSelected(cncs)
+                  }"
+                  class="px-3.5 py-1.5 rounded-lg border text-xs font-medium transition flex items-center gap-2 select-none">
+                  <i
+                    [class]="isCNCSClassSelected(cncs) ? 'fas fa-check text-[10px]' : 'fas fa-plus text-[10px] opacity-40'"></i>
+                  <span>{{ cncs }}</span>
+                </button>
+
+                <span *ngIf="uniqueCNCSClasses.length === 0" class="text-xs text-gray-400 italic">
+                  Nenhuma classe disponível.
+                </span>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Tabela (Estrutura table-fixed com a coluna Tipo CNCS) -->
+        <div class="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+          <table class="min-w-full table-fixed divide-y divide-gray-200 dark:divide-gray-700 leading-normal">
+            <thead>
+              <tr>
+                <th (click)="sortTable('id')"
+                  class="w-28 px-5 py-3.5 bg-gray-100 dark:bg-gray-700 text-left text-xs font-bold text-gray-700 dark:text-gray-200 uppercase tracking-wider cursor-pointer select-none">
+                  Red ID
+                  <i
+                    [class]="sortType === 'id' ? (sortReverse ? 'fas fa-caret-up ml-1' : 'fas fa-caret-down ml-1') : ''"></i>
+                </th>
+                <th
+                  class="w-72 px-5 py-3.5 bg-gray-100 dark:bg-gray-700 text-left text-xs font-bold text-gray-700 dark:text-gray-200 uppercase tracking-wider select-none">
+                  Técnicas Mitre
+                </th>
+                <th (click)="sortTable('title')"
+                  class="w-64 px-5 py-3.5 bg-gray-100 dark:bg-gray-700 text-left text-xs font-bold text-gray-700 dark:text-gray-200 uppercase tracking-wider cursor-pointer select-none">
+                  Nome
+                  <i
+                    [class]="sortType === 'title' ? (sortReverse ? 'fas fa-caret-up ml-1' : 'fas fa-caret-down ml-1') : ''"></i>
+                </th>
+                <th (click)="sortTable('cncsClass')"
+                  class="w-44 px-5 py-3.5 bg-gray-100 dark:bg-gray-700 text-left text-xs font-bold text-gray-700 dark:text-gray-200 uppercase tracking-wider cursor-pointer select-none">
+                  Classe CNCS
+                  <i
+                    [class]="sortType === 'cncsClass' ? (sortReverse ? 'fas fa-caret-up ml-1' : 'fas fa-caret-down ml-1') : ''"></i>
+                </th>
+                <!-- NOVA COLUNA: Tipo CNCS -->
+                <th (click)="sortTable('cncsType')"
+                  class="w-44 px-5 py-3.5 bg-gray-100 dark:bg-gray-700 text-left text-xs font-bold text-gray-700 dark:text-gray-200 uppercase tracking-wider cursor-pointer select-none">
+                  Tipo CNCS
+                  <i
+                    [class]="sortType === 'cncsType' ? (sortReverse ? 'fas fa-caret-up ml-1' : 'fas fa-caret-down ml-1') : ''"></i>
+                </th>
+                <th
+                  class="w-28 px-5 py-3.5 bg-gray-100 dark:bg-gray-700 text-center text-xs font-bold text-gray-700 dark:text-gray-200 uppercase tracking-wider">
+                  Ação
+                </th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+
+              <!-- Linhas Paginadas -->
+              <tr *ngFor="let u of pagedUseCases; let i = index"
+                [ngClass]="i % 2 === 0 ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-900'"
+                [routerLink]="'/usecase-Details/' + u.id"
+                class="hover:bg-gray-100 dark:hover:bg-gray-700 transition duration-150 h-16 cursor-pointer">
+
+                <!-- Red ID -->
+                <td class="px-5 py-3 text-left whitespace-nowrap">
+                  <div class="flex items-center text-sm">
+                    <span class="text-redshift-red font-bold">Red</span>
+                    <span class="font-semibold text-gray-900 dark:text-white">UC{{ u.id }}</span>
+                  </div>
+                </td>
+
+                <!-- Técnicas Mitre -->
+                <td class="px-5 py-3 text-left">
+                  <div class="flex items-center gap-1.5 flex-nowrap overflow-hidden">
+                    <div *ngFor="let technique of (u.mitreTechniques || []).slice(0, 2)" [title]="technique"
+                      class="bg-[#0d2f52] text-white text-xs font-medium rounded px-2 py-0.5 max-w-[130px] truncate shadow-sm">
+                      {{ technique }}
+                    </div>
+
+                    <span *ngIf="u.mitreTechniques?.length > 2" [title]="u.mitreTechniques.slice(2).join(', ')"
+                      class="bg-[#0d2f52] hover:bg-[#15467a] text-white text-xs rounded px-1.5 py-0.5 font-bold whitespace-nowrap shadow-sm">
+                      +{{ u.mitreTechniques.length - 2 }}
+                    </span>
+
+                    <span *ngIf="!u.mitreTechniques || u.mitreTechniques.length === 0"
+                      class="text-sm text-gray-400 dark:text-gray-500 italic">
+                      Nenhuma
+                    </span>
+                  </div>
+                </td>
+
+                <!-- Nome -->
+                <td class="px-5 py-3 text-left truncate" [title]="u.title">
+                  <span class="text-base font-semibold text-gray-900 dark:text-white truncate block">{{ u.title
+                    }}</span>
+                </td>
+
+                <!-- Classe CNCS -->
+                <td class="px-5 py-3 text-left text-sm font-medium text-gray-700 dark:text-gray-300 truncate"
+                  [title]="u.cncsClass">
+                  {{ u.cncsClass || 'N/A' }}
+                </td>
+
+                <!-- Tipo CNCS -->
+                <td class="px-5 py-3 text-left text-sm font-medium text-gray-700 dark:text-gray-300 truncate"
+                  [title]="u.cncsType">
+                  {{ u.cncsType || 'N/A' }}
+                </td>
+
+                <!-- Ações -->
+                <td class="px-5 py-3 text-center whitespace-nowrap" (click)="$event.stopPropagation()">
+                  <div class="flex items-center justify-center space-x-2">
+                    <button [routerLink]="'/usecase-Details/' + u.id" title="Ver Detalhes"
+                      class="bg-gray-400 hover:bg-gray-500 text-white w-8 h-8 rounded-md shadow transition inline-flex items-center justify-center">
+                      <i class="fas fa-right-to-bracket text-xs"></i>
+                    </button>
+
+                    <button (click)="updateSelectDelete($event, u.id); openModal()" title="Eliminar Use Case"
+                      class="bg-red-500 hover:bg-red-600 text-white w-8 h-8 rounded-md shadow transition inline-flex items-center justify-center">
+                      <i class="fas fa-trash-alt text-xs"></i>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+
+              <!-- Empty State (colspan atualizado para 6) -->
+              <tr *ngIf="filteredUseCases.length === 0">
+                <td colspan="6" class="py-12 text-center bg-white dark:bg-gray-800">
+                  <div class="flex flex-col items-center justify-center text-gray-400 dark:text-gray-500">
+                    <i class="fas fa-filter-circle-xmark text-4xl mb-3 opacity-40"></i>
+                    <p class="text-base font-semibold text-gray-700 dark:text-gray-300">Nenhum use case encontrado</p>
+                    <p class="text-sm mt-1">Tenta alterar o termo de pesquisa ou limpar os filtros aplicados.</p>
+                    <button *ngIf="nameSearch || selectedMitreTechniques.length > 0 || selectedCNCSClass.length > 0"
+                      (click)="nameSearch = ''; clearAllFilters()"
+                      class="mt-3 text-sm text-redshift-red hover:underline font-medium">
+                      Limpar todos os critérios
+                    </button>
+                  </div>
+                </td>
+              </tr>
+
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Rodapé da Tabela: Paginação -->
+        <div *ngIf="filteredUseCases.length > 0"
+          class="flex flex-col sm:flex-row items-center justify-between pt-4 mt-2 gap-3 text-sm text-gray-600 dark:text-gray-400">
+
+          <div class="flex items-center gap-2.5">
+            <span>Registos por página:</span>
+            <select [ngModel]="pageSize" (ngModelChange)="onPageSizeChange($event)"
+              class="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-2.5 py-1 text-sm text-gray-900 dark:text-white focus:ring-redshift-red focus:border-redshift-red">
+              <option *ngFor="let size of pageSizeOptions" [value]="size">{{ size }}</option>
+            </select>
+          </div>
+
+          <div class="flex items-center gap-3">
+            <span>Página <strong class="text-gray-900 dark:text-white">{{ page }}</strong> de <strong
+                class="text-gray-900 dark:text-white">{{ totalPages }}</strong></span>
+
+            <div class="inline-flex rounded-lg shadow-sm">
+              <button (click)="setPage(page - 1)" [disabled]="page === 1"
+                class="px-3 py-1.5 text-sm font-medium bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-l-lg hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-40 disabled:cursor-not-allowed transition">
+                <i class="fas fa-chevron-left text-xs"></i>
+              </button>
+              <button (click)="setPage(page + 1)" [disabled]="page === totalPages"
+                class="px-3 py-1.5 text-sm font-medium bg-white dark:bg-gray-700 border-t border-b border-r border-gray-300 dark:border-gray-600 rounded-r-lg hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-40 disabled:cursor-not-allowed transition">
+                <i class="fas fa-chevron-right text-xs"></i>
               </button>
             </div>
           </div>
         </div>
 
-        <table class="min-w-full leading-normal border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
-          <thead>
-            <tr>
-              <th (click)="sortTable('id')"
-                class="px-5 py-3 border-b-2 border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-700 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider cursor-pointer">
-                Red ID
-                <span [class]="sortType === 'id' ? (sortReverse ? 'fas fa-caret-up' : 'fas fa-caret-down') : ''"></span>
-              </th>
-              <th (click)="sortTable('username')"
-                class="px-5 py-3 border-b-2 border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-700 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider cursor-pointer">
-                Técnicas Mitre Associadas
-                <span
-                  [class]="sortType === 'username' ? (sortReverse ? 'fas fa-caret-up' : 'fas fa-caret-down') : ''"></span>
-              </th>
-              <th (click)="sortTable('company')"
-                class="px-5 py-3 border-b-2 border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-700 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider cursor-pointer">
-                Nome
-                <span
-                  [class]="sortType === 'company' ? (sortReverse ? 'fas fa-caret-up' : 'fas fa-caret-down') : ''"></span>
-              </th>
-              <th (click)="sortTable('date')"
-                class="px-5 py-3 border-b-2 border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-700 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider cursor-pointer">
-                Classe CNCS
-                <span
-                  [class]="sortType === 'date' ? (sortReverse ? 'fas fa-caret-up' : 'fas fa-caret-down') : ''"></span>
-              </th>
-              <th
-                class="px-5 py-3 border-b-2 border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-700 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
-                Ação
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let u of filteredUseCases"
-              [class]="(useCases.indexOf(u) % 2 === 0 ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-900')"
-              [routerLink]="'/usecaseDetails/' + u.id"
-              class="hover:bg-gray-100 dark:hover:bg-gray-700 transition duration-100">
-
-              <td
-                class="px-5 py-5 text-left cursor-pointer whitespace-nowrap border-b border-gray-200 dark:border-gray-700">
-                <span class="text-redshift-red font-semibold">Red</span><span
-                  class="font-medium text-gray-900 dark:text-white">UC{{ u.id }}</span>
-              </td>
-              <td class="px-5 py-5 text-left cursor-pointer border-b border-gray-200 dark:border-gray-700">
-                <div class="flex flex-wrap">
-                  <div *ngFor="let technique of u.mitreTechniques.slice(0,5)"
-                    class="bg-[#0d2f52] text-white text-center text-[12px] rounded-md px-1 w-12 mr-1 my-1">
-                    {{ technique }}
-                  </div>
-                </div>
-              </td>
-              <td
-                class="px-5 py-5 text-left cursor-pointer text-gray-800 dark:text-gray-200 border-b border-gray-200 dark:border-gray-700">
-                {{ u.title }}</td>
-              <td
-                class="px-5 py-5 text-left cursor-pointer text-gray-800 dark:text-gray-200 border-b border-gray-200 dark:border-gray-700">
-                {{ u.cncsClass }}</td>
-
-              <td class="px-5 py-5 space-x-3 border-b border-gray-200 dark:border-gray-700 whitespace-nowrap">
-                <button [routerLink]="'/usecaseDetails/' + u.id"
-                  class="bg-gray-400 hover:bg-gray-500 text-white px-3 py-1 rounded-md transition">
-                  <i class="fas fa-right-to-bracket"></i>
-                </button>
-
-                <button (click)="updateSelectDelete($event, u.id); openModal()" data-modal-target="deleteModal"
-                  class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-md transition">
-                  <i class="fas fa-trash-alt"></i>
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
       </div>
     </div>
   </div>
@@ -115,89 +303,32 @@
 
 <!-- Modal Eliminar -->
 <div id="deleteModal" tabindex="-1" aria-hidden="true"
-  class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-modal md:h-full"
+  class="bg-black/60 backdrop-blur-sm hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-modal md:h-full"
   #modal>
   <div class="relative p-4 w-full max-w-md h-full md:h-auto">
     <div
       class="relative p-4 text-center bg-white rounded-lg shadow dark:bg-gray-800 sm:p-5 border border-transparent dark:border-gray-700">
       <button type="button" (click)="closeModal()"
-        class="text-gray-400 absolute top-2.5 right-2.5 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center dark:hover:bg-gray-600 dark:hover:text-white transition">
-        <i class="fas fa-times"></i>
+        class="text-gray-400 absolute top-2.5 right-2.5 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center dark:hover:bg-gray-700 dark:hover:text-white transition">
+        <i class="fas fa-times text-base"></i>
         <span class="sr-only">Fechar</span>
       </button>
-      <i class="fas fa-trash-alt text-gray-400 dark:text-gray-500 text-4xl mb-3.5 mx-auto block text-center"
-        aria-hidden="true"></i>
-      <p class="mb-4 text-gray-500 dark:text-gray-300">Tem a certeza que quer eliminar o Use Case #{{ selectDelete }}
+      <div class="w-12 h-12 mb-3.5 mx-auto flex items-center justify-center text-gray-400 dark:text-gray-500">
+        <i class="fas fa-trash-alt text-4xl"></i>
+      </div>
+      <p class="mb-4 text-gray-500 dark:text-gray-300 text-sm">
+        Tem a certeza que quer eliminar o Use Case #{{ selectDelete }}?
       </p>
       <div class="flex justify-center items-center space-x-4">
         <button (click)="closeModal()" type="button"
-          class="py-2 px-3 text-sm font-medium text-gray-500 bg-white rounded-lg border border-gray-200 hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-primary-300 hover:text-gray-900 focus:z-10 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-600 transition">
+          class="py-2 px-3 text-sm font-medium text-gray-500 bg-white rounded-lg border border-gray-200 hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-primary-300 hover:text-gray-900 focus:z-10 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-600 transition">
           Não, cancelar
         </button>
-        <button (click)="deleteUseCase(); closeModal()" data-modal-target="deleteModal"
+        <button (click)="deleteUseCase(); closeModal()"
           class="py-2 px-3 text-sm font-medium text-center text-white bg-red-600 rounded-lg hover:bg-red-700 focus:ring-4 focus:outline-none focus:ring-red-300 dark:bg-red-500 dark:hover:bg-red-600 dark:focus:ring-red-900 transition">
           Sim, tenho a certeza
         </button>
       </div>
     </div>
-  </div>
-</div>
-
-<!-- Drawer Component (Filtros Laterais) -->
-<div id="drawer-navigation"
-  class="fixed top-0 left-0 z-40 w-96 h-screen p-4 overflow-y-auto transition-transform -translate-x-full bg-white dark:bg-gray-800 border-r border-transparent dark:border-gray-700"
-  tabindex="-1" aria-labelledby="drawer-navigation-label">
-
-  <h5 id="drawer-navigation-label" class="text-base font-semibold text-gray-500 uppercase dark:text-gray-400">
-    <i class="fas fa-filter"></i> Filtros
-  </h5>
-  <button type="button" data-drawer-hide="drawer-navigation" aria-controls="drawer-navigation"
-    class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 absolute top-2.5 end-2.5 inline-flex items-center dark:hover:bg-gray-600 dark:hover:text-white transition">
-    <i class="fas fa-times"></i>
-    <span class="sr-only">Close menu</span>
-  </button>
-
-  <div class="py-4 overflow-y-auto">
-    <ul class="space-y-4 font-medium">
-      <li>
-        <div
-          class="flex items-center justify-between p-2 text-gray-600 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group transition">
-          <div class="flex items-center">
-            <i class="fas fa-font"></i>
-            <span class="ms-3">Técnicas Mitre</span>
-          </div>
-          <button (click)="clearMitreTechniques()"
-            class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 inline-flex items-center dark:hover:bg-gray-600 dark:hover:text-white transition"
-            title="Limpar filtro">
-            <i class="fas fa-times"></i>
-            <span class="sr-only">Clear filter</span>
-          </button>
-        </div>
-        <select id="sintax" name="sintax" [(ngModel)]="selectedMitreTechniques" required multiple
-          class="block w-full rounded-md border-0 px-2 py-2.5 text-gray-900 bg-white dark:bg-gray-700 dark:text-white shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-600 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 dark:focus:ring-indigo-500 sm:text-sm sm:leading-6 transition">
-          <option *ngFor="let technique of uniqueMitreTechniques" [ngValue]="technique">{{ technique }}</option>
-        </select>
-      </li>
-
-      <li>
-        <div
-          class="flex items-center justify-between p-2 text-gray-600 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group transition">
-          <div class="flex items-center">
-            <i class="fas fa-rectangle-list"></i>
-            <span class="ms-3">Classes CNCS</span>
-          </div>
-          <button (click)="clearCNCSClass()"
-            class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 inline-flex items-center dark:hover:bg-gray-600 dark:hover:text-white transition"
-            title="Limpar filtro">
-            <i class="fas fa-times"></i>
-            <span class="sr-only">Clear filter</span>
-          </button>
-        </div>
-        <select id="class" name="class" [(ngModel)]="selectedCNCSClass" required multiple
-          class="block w-full rounded-md border-0 px-2 py-2.5 text-gray-900 bg-white dark:bg-gray-700 dark:text-white shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-600 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 dark:focus:ring-indigo-500 sm:text-sm sm:leading-6 transition">
-          <option *ngFor="let class of uniqueCNCSClasses" [ngValue]="class">{{ class }}</option>
-        </select>
-      </li>
-    </ul>
   </div>
 </div>

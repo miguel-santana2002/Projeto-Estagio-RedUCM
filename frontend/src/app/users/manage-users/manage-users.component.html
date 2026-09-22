@@ -1,6 +1,6 @@
 <app-header></app-header>
 
-<app-titlebanner title="Gestão de Utilizadores" image="./assets/bannercover.jpg"> </app-titlebanner>
+<app-titlebanner title="Gestão de Utilizadores" image="./assets/bannercover.jpg"></app-titlebanner>
 
 <div class="container mx-auto px-4 sm:px-8">
   <div class="py-8">
@@ -8,133 +8,295 @@
       <div
         class="inline-block min-w-full shadow-md p-5 rounded-lg overflow-hidden bg-white dark:bg-gray-800 transition">
 
-        <!-- Barra de Pesquisa e Ações -->
-        <div class="mb-4 relative">
-          <label for="nameSearch" class="sr-only">Procurar por nome</label>
-          <div class="flex items-center">
+        <!-- Barra Superior: Pesquisa, Contador e Botões -->
+        <div class="mb-5 flex flex-col md:flex-row gap-4 items-center justify-between">
+
+          <div class="relative w-full md:w-96">
             <i
-              class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400 dark:text-gray-500 pointer-events-none">
-              <span class="fas fa-search"></span>
+              class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-gray-400 dark:text-gray-500 pointer-events-none">
+              <span class="fas fa-search text-sm"></span>
             </i>
-            <input type="text" id="nameSearch" [(ngModel)]="nameSearch" placeholder="Procurar por nome"
-              class="pl-10 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-redshift-red transition">
+            <input type="text" id="nameSearch" [(ngModel)]="nameSearch" (ngModelChange)="onSearchChange()"
+              placeholder="Procurar por nome ou email"
+              class="pl-10 px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-redshift-red transition text-sm">
+          </div>
+
+          <div class="flex items-center gap-4 w-full md:w-auto justify-end">
+            <!-- Contador de Registos -->
+            <span class="text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">
+              Mostrando <strong class="text-gray-900 dark:text-white font-semibold">{{ filteredUsers.length }}</strong>
+              de <strong class="text-gray-900 dark:text-white font-semibold">{{ users.length }}</strong>
+            </span>
 
             <button [routerLink]="'/create-user'"
-              class="ml-5 w-48 h-10 bg-redshift-red text-white rounded hover:bg-redshift-hover shadow-md transition flex items-center justify-center gap-2 flex-shrink-0">
-              <i class="fas fa-plus"></i>
-              Adicionar Novo
+              class="h-10 px-5 bg-redshift-red text-white rounded-lg hover:bg-redshift-hover shadow-md transition flex items-center justify-center gap-2 text-sm font-medium flex-shrink-0">
+              <i class="fas fa-plus text-xs"></i>
+              <span>Adicionar Novo</span>
             </button>
 
-            <div class="text-center flex-shrink-0">
-              <button
-                class="ml-5 w-28 h-10 bg-redshift-red text-white rounded hover:bg-redshift-hover shadow-md transition"
-                type="button" data-drawer-target="drawer-navigation" data-drawer-show="drawer-navigation"
-                aria-controls="drawer-navigation">
-                <span> <i class="fas fa-filter"></i> Filtros</span>
+            <!-- Botão Filtros -->
+            <button (click)="showFilters = !showFilters"
+              [ngClass]="{'ring-2 ring-offset-2 ring-redshift-red': showFilters}"
+              class="h-10 px-4 bg-redshift-red text-white rounded-lg hover:bg-redshift-hover shadow-md flex items-center justify-center gap-2 transition text-sm font-medium flex-shrink-0"
+              type="button">
+              <i class="fas fa-filter text-xs"></i>
+              <span>Filtros</span>
+              <span *ngIf="selectedClients.length > 0 || selectedRoles.length > 0"
+                class="w-2 h-2 rounded-full bg-white animate-pulse"></span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Painel de Filtros -->
+        <div *ngIf="showFilters"
+          class="mb-6 p-5 rounded-xl bg-gray-50 dark:bg-[#1a2234] border border-gray-200 dark:border-gray-700 shadow-sm transition-all duration-200">
+
+          <!-- Cabeçalho do Painel -->
+          <div class="flex items-center justify-between pb-3 mb-4 border-b border-gray-200 dark:border-gray-700/60">
+            <div class="flex items-center gap-2">
+              <div class="w-2 h-2 rounded-full bg-redshift-red animate-pulse"></div>
+              <span class="text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-200">
+                Filtrar Resultados
+              </span>
+              <span *ngIf="selectedClients.length > 0 || selectedRoles.length > 0"
+                class="ml-2 px-2 py-0.5 text-[11px] font-semibold rounded-full bg-redshift-red/10 text-redshift-red dark:bg-redshift-red/20 border border-redshift-red/30">
+                {{ selectedClients.length + selectedRoles.length }} ativo(s)
+              </span>
+            </div>
+
+            <button *ngIf="selectedClients.length > 0 || selectedRoles.length > 0" (click)="clearAllFilters()"
+              class="text-xs text-redshift-red hover:text-redshift-hover font-medium flex items-center gap-1.5 transition">
+              <i class="fas fa-trash-can text-[11px]"></i>
+              <span>Limpar filtros</span>
+            </button>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+            <!-- Secção: Clientes Atribuídos -->
+            <div class="flex flex-col">
+              <div class="flex items-center justify-between mb-2">
+                <label class="text-xs font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-1.5">
+                  <i class="fas fa-building text-redshift-red"></i>
+                  <span>Clientes Atribuídos</span>
+                </label>
+                <span class="text-[11px] text-gray-400">
+                  {{ selectedClients.length }} de {{ uniqueClients.length }}
+                </span>
+              </div>
+
+              <div class="flex flex-wrap gap-2 max-h-36 overflow-y-auto pr-1">
+                <button *ngFor="let client of uniqueClients" type="button" (click)="toggleClient(client)" [ngClass]="{
+                    'bg-redshift-red text-white border-redshift-red shadow-sm': isClientSelected(client),
+                    'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-700 hover:border-redshift-red dark:hover:border-redshift-red': !isClientSelected(client)
+                  }"
+                  class="px-3 py-1.5 rounded-lg border text-xs font-medium transition flex items-center gap-2 select-none">
+                  <i
+                    [class]="isClientSelected(client) ? 'fas fa-check text-[10px]' : 'fas fa-plus text-[10px] opacity-40'"></i>
+                  <span>{{ client }}</span>
+                </button>
+
+                <span *ngIf="uniqueClients.length === 0" class="text-xs text-gray-400 italic">
+                  Nenhum cliente disponível.
+                </span>
+              </div>
+            </div>
+
+            <!-- Secção: Role -->
+            <div class="flex flex-col">
+              <div class="flex items-center justify-between mb-2">
+                <label class="text-xs font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-1.5">
+                  <i class="fas fa-user-shield text-redshift-red"></i>
+                  <span>Role</span>
+                </label>
+                <span class="text-[11px] text-gray-400">
+                  {{ selectedRoles.length }} de {{ roles.length }}
+                </span>
+              </div>
+
+              <div class="flex flex-wrap gap-2">
+                <button *ngFor="let role of roles" type="button" (click)="toggleRole(role)" [ngClass]="{
+                    'bg-redshift-red text-white border-redshift-red shadow-sm': isRoleSelected(role),
+                    'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-700 hover:border-redshift-red dark:hover:border-redshift-red': !isRoleSelected(role)
+                  }"
+                  class="px-3.5 py-1.5 rounded-lg border text-xs font-medium transition flex items-center gap-2 select-none">
+                  <i [class]="role === 'Administrador' ? 'fas fa-shield-halved' : 'fas fa-user-gear'"
+                    class="text-xs"></i>
+                  <span>{{ role }}</span>
+                  <i *ngIf="isRoleSelected(role)" class="fas fa-check text-[10px] ml-1"></i>
+                </button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Tabela (Estrutura table-fixed com tipografia ampliada) -->
+        <div class="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+          <table class="min-w-full table-fixed divide-y divide-gray-200 dark:divide-gray-700 leading-normal">
+            <thead>
+              <tr>
+                <th (click)="sortTable('pk')"
+                  class="w-20 px-5 py-3.5 bg-gray-100 dark:bg-gray-700 text-left text-xs font-bold text-gray-700 dark:text-gray-200 uppercase tracking-wider cursor-pointer select-none">
+                  ID
+                  <i
+                    [class]="sortType === 'pk' ? (sortReverse ? 'fas fa-caret-up ml-1' : 'fas fa-caret-down ml-1') : ''"></i>
+                </th>
+                <th (click)="sortTable('username')"
+                  class="w-56 px-5 py-3.5 bg-gray-100 dark:bg-gray-700 text-left text-xs font-bold text-gray-700 dark:text-gray-200 uppercase tracking-wider cursor-pointer select-none">
+                  Nome
+                  <i
+                    [class]="sortType === 'username' ? (sortReverse ? 'fas fa-caret-up ml-1' : 'fas fa-caret-down ml-1') : ''"></i>
+                </th>
+                <th (click)="sortTable('email')"
+                  class="w-64 px-5 py-3.5 bg-gray-100 dark:bg-gray-700 text-left text-xs font-bold text-gray-700 dark:text-gray-200 uppercase tracking-wider cursor-pointer select-none">
+                  Email
+                  <i
+                    [class]="sortType === 'email' ? (sortReverse ? 'fas fa-caret-up ml-1' : 'fas fa-caret-down ml-1') : ''"></i>
+                </th>
+                <th (click)="sortTable('company')"
+                  class="px-5 py-3.5 bg-gray-100 dark:bg-gray-700 text-left text-xs font-bold text-gray-700 dark:text-gray-200 uppercase tracking-wider cursor-pointer select-none">
+                  Clientes Atribuídos
+                  <i
+                    [class]="sortType === 'company' ? (sortReverse ? 'fas fa-caret-up ml-1' : 'fas fa-caret-down ml-1') : ''"></i>
+                </th>
+                <th (click)="sortTable('date_joined')"
+                  class="w-36 px-5 py-3.5 bg-gray-100 dark:bg-gray-700 text-left text-xs font-bold text-gray-700 dark:text-gray-200 uppercase tracking-wider cursor-pointer select-none">
+                  Data de Registo
+                  <i
+                    [class]="sortType === 'date_joined' ? (sortReverse ? 'fas fa-caret-up ml-1' : 'fas fa-caret-down ml-1') : ''"></i>
+                </th>
+                <th (click)="sortTable('role')"
+                  class="w-36 px-5 py-3.5 bg-gray-100 dark:bg-gray-700 text-left text-xs font-bold text-gray-700 dark:text-gray-200 uppercase tracking-wider cursor-pointer select-none">
+                  Role
+                  <i
+                    [class]="sortType === 'role' ? (sortReverse ? 'fas fa-caret-up ml-1' : 'fas fa-caret-down ml-1') : ''"></i>
+                </th>
+                <th
+                  class="w-24 px-5 py-3.5 bg-gray-100 dark:bg-gray-700 text-center text-xs font-bold text-gray-700 dark:text-gray-200 uppercase tracking-wider">
+                  Ação
+                </th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+
+              <!-- Linhas Paginadas -->
+              <tr *ngFor="let u of pagedUsers; let i = index"
+                [ngClass]="i % 2 === 0 ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-900'"
+                class="hover:bg-gray-100 dark:hover:bg-gray-700 transition duration-150 h-16 cursor-pointer">
+
+                <!-- ID -->
+                <td (click)="openModalDetails(u)"
+                  class="px-5 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-300">
+                  {{ u.pk }}
+                </td>
+
+                <!-- Nome -->
+                <td (click)="openModalDetails(u)" class="px-5 py-3 text-left truncate" [title]="u.username">
+                  <span class="text-base font-semibold text-gray-900 dark:text-white truncate block">{{ u.username
+                    }}</span>
+                </td>
+
+                <!-- Email -->
+                <td (click)="openModalDetails(u)" class="px-5 py-3 text-left truncate" [title]="u.email">
+                  <span class="text-sm font-medium text-gray-700 dark:text-gray-300 truncate block">{{ u.email }}</span>
+                </td>
+
+                <!-- Clientes Atribuídos -->
+                <td (mouseenter)="showCompanies[u.pk] = true" (mouseleave)="showCompanies[u.pk] = false"
+                  (click)="openModalDetails(u)" class="px-5 py-3 text-left relative group">
+                  <div class="flex items-center gap-1.5 flex-nowrap overflow-hidden">
+                    <div *ngIf="u.companies && u.companies.length > 0" [title]="u.companies[0]"
+                      class="bg-[#0d2f52] text-white text-xs font-medium rounded-md px-2.5 py-1 max-w-[150px] truncate shadow-sm">
+                      {{ u.companies[0] }}
+                    </div>
+
+                    <span *ngIf="u.companies && u.companies.length > 1" [title]="u.companies.slice(1).join(', ')"
+                      class="bg-[#0d2f52] hover:bg-[#15467a] text-white text-xs rounded-md px-2 py-1 font-bold whitespace-nowrap shadow-sm">
+                      +{{ u.companies.length - 1 }}
+                    </span>
+
+                    <span *ngIf="!u.companies || u.companies.length === 0"
+                      class="text-sm text-gray-400 dark:text-gray-500 italic">
+                      N/A
+                    </span>
+                  </div>
+                </td>
+
+                <!-- Data de Registo -->
+                <td (click)="openModalDetails(u)"
+                  class="px-5 py-3 text-left text-sm font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap">
+                  {{ u.date_joined | date: 'dd/MM/yyyy' }}
+                </td>
+
+                <!-- Role -->
+                <td (click)="openModalDetails(u)" class="px-5 py-3 text-left whitespace-nowrap">
+                  <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold"
+                    [ngClass]="u.companies?.length !== 0 ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 border border-blue-200 dark:border-blue-800' : 'bg-purple-50 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300 border border-purple-200 dark:border-purple-800'">
+                    <i [class]="u.companies?.length !== 0 ? 'fas fa-user-gear' : 'fas fa-shield-halved'"
+                      class="text-[10px]"></i>
+                    <span>{{ u.companies?.length !== 0 ? 'Operador' : 'Administrador' }}</span>
+                  </span>
+                </td>
+
+                <!-- Ação -->
+                <td class="px-5 py-3 text-center whitespace-nowrap" (click)="$event.stopPropagation()">
+                  <button (click)="updateSelectDelete(u.pk); openModal()" title="Eliminar Utilizador"
+                    class="bg-red-500 hover:bg-red-600 text-white w-8 h-8 rounded-md shadow transition inline-flex items-center justify-center">
+                    <i class="fas fa-trash-alt text-xs"></i>
+                  </button>
+                </td>
+              </tr>
+
+              <!-- Empty State -->
+              <tr *ngIf="filteredUsers.length === 0">
+                <td colspan="7" class="py-12 text-center bg-white dark:bg-gray-800">
+                  <div class="flex flex-col items-center justify-center text-gray-400 dark:text-gray-500">
+                    <i class="fas fa-filter-circle-xmark text-4xl mb-3 opacity-40"></i>
+                    <p class="text-base font-semibold text-gray-700 dark:text-gray-300">Nenhum utilizador encontrado</p>
+                    <p class="text-sm mt-1">Tenta alterar o termo de pesquisa ou limpar os filtros aplicados.</p>
+                    <button *ngIf="nameSearch || selectedClients.length > 0 || selectedRoles.length > 0"
+                      (click)="nameSearch = ''; clearAllFilters()"
+                      class="mt-3 text-sm text-redshift-red hover:underline font-medium">
+                      Limpar todos os critérios
+                    </button>
+                  </div>
+                </td>
+              </tr>
+
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Rodapé da Tabela: Paginação -->
+        <div *ngIf="filteredUsers.length > 0"
+          class="flex flex-col sm:flex-row items-center justify-between pt-4 mt-2 gap-3 text-sm text-gray-600 dark:text-gray-400">
+
+          <div class="flex items-center gap-2.5">
+            <span>Registos por página:</span>
+            <select [ngModel]="pageSize" (ngModelChange)="onPageSizeChange($event)"
+              class="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-2.5 py-1 text-sm text-gray-900 dark:text-white focus:ring-redshift-red focus:border-redshift-red">
+              <option *ngFor="let size of pageSizeOptions" [value]="size">{{ size }}</option>
+            </select>
+          </div>
+
+          <div class="flex items-center gap-3">
+            <span>Página <strong class="text-gray-900 dark:text-white">{{ page }}</strong> de <strong
+                class="text-gray-900 dark:text-white">{{ totalPages }}</strong></span>
+
+            <div class="inline-flex rounded-lg shadow-sm">
+              <button (click)="setPage(page - 1)" [disabled]="page === 1"
+                class="px-3 py-1.5 text-sm font-medium bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-l-lg hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-40 disabled:cursor-not-allowed transition">
+                <i class="fas fa-chevron-left text-xs"></i>
+              </button>
+              <button (click)="setPage(page + 1)" [disabled]="page === totalPages"
+                class="px-3 py-1.5 text-sm font-medium bg-white dark:bg-gray-700 border-t border-b border-r border-gray-300 dark:border-gray-600 rounded-r-lg hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-40 disabled:cursor-not-allowed transition">
+                <i class="fas fa-chevron-right text-xs"></i>
               </button>
             </div>
           </div>
         </div>
 
-        <!-- Tabela de Utilizadores -->
-        <table class="min-w-full leading-normal border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
-          <thead>
-            <tr>
-              <th (click)="sortTable('pk')"
-                class="px-5 py-3 border-b-2 border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-700 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider cursor-pointer">
-                ID
-                <span [class]="sortType === 'pk' ? (sortReverse ? 'fas fa-caret-up' : 'fas fa-caret-down') : ''"></span>
-              </th>
-              <th (click)="sortTable('username')"
-                class="px-5 py-3 border-b-2 border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-700 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider cursor-pointer">
-                Nome
-                <span
-                  [class]="sortType === 'username' ? (sortReverse ? 'fas fa-caret-up' : 'fas fa-caret-down') : ''"></span>
-              </th>
-              <th (click)="sortTable('email')"
-                class="px-5 py-3 border-b-2 border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-700 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider cursor-pointer">
-                Email
-                <span
-                  [class]="sortType === 'email' ? (sortReverse ? 'fas fa-caret-up' : 'fas fa-caret-down') : ''"></span>
-              </th>
-              <th (click)="sortTable('company')"
-                class="px-5 py-3 border-b-2 border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-700 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider cursor-pointer">
-                Clientes Atribuídos
-                <span
-                  [class]="sortType === 'company' ? (sortReverse ? 'fas fa-caret-up' : 'fas fa-caret-down') : ''"></span>
-              </th>
-              <th (click)="sortTable('date_joined')"
-                class="px-5 py-3 border-b-2 border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-700 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider cursor-pointer">
-                Data de Registo
-                <span
-                  [class]="sortType === 'date_joined' ? (sortReverse ? 'fas fa-caret-up' : 'fas fa-caret-down') : ''"></span>
-              </th>
-              <th (click)="sortTable('role')"
-                class="px-5 py-3 border-b-2 border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-700 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider cursor-pointer">
-                Role
-                <span
-                  [class]="sortType === 'role' ? (sortReverse ? 'fas fa-caret-up' : 'fas fa-caret-down') : ''"></span>
-              </th>
-              <th
-                class="px-5 py-3 border-b-2 border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-700 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
-                Ação
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let u of filteredUsers"
-              [class]="(filteredUsers.indexOf(u) % 2 === 0 ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-900')"
-              class="hover:bg-gray-100 dark:hover:bg-gray-700 transition duration-100 cursor-pointer">
-
-              <td (click)="openModalDetails(u)"
-                class="px-5 py-5 text-left border-b border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-200">
-                {{ u.pk }}</td>
-              <td (click)="openModalDetails(u)"
-                class="px-5 py-5 text-left border-b border-gray-200 dark:border-gray-700 font-medium text-gray-900 dark:text-white">
-                {{ u.username }}</td>
-              <td (click)="openModalDetails(u)"
-                class="px-5 py-5 text-left border-b border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-200">
-                {{ u.email }}</td>
-
-              <td (mouseenter)="showCompanies[u.pk] = true" (mouseleave)="showCompanies[u.pk] = false"
-                (click)="openModalDetails(u)"
-                class="px-5 z-0 py-5 text-left relative group border-b border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-200">
-                <span *ngIf="u.companies && u.companies.length > 0">
-                  {{ u.companies[0] }}
-                </span>
-                <span *ngIf="u.companies && u.companies.length > 1"
-                  class="inline-flex items-center justify-center w-6 h-6 text-xs font-bold text-white bg-gray-700 dark:bg-gray-600 rounded-full ml-2">
-                  +{{ u.companies.length - 1 }}
-                </span>
-                <span *ngIf="!u.companies || u.companies.length === 0"
-                  class="text-gray-500 dark:text-gray-400">N/A</span>
-
-                <!-- Popover de clientes adicionais -->
-                <div
-                  class="absolute left-0 mt-1 w-max bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded shadow-lg z-50 hidden group-hover:block"
-                  *ngIf="u.companies && u.companies.length > 1 && showCompanies[u.pk]">
-                  <div *ngFor="let company of u.companies.slice(1)" class="z-50 bg-white dark:bg-gray-800">
-                    <span class="block px-2 py-1 text-gray-900 dark:text-white">{{ company }}</span>
-                  </div>
-                </div>
-              </td>
-
-              <td (click)="openModalDetails(u)"
-                class="px-5 py-5 text-left border-b border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-200">
-                {{ u.date_joined | date: 'dd/MM/yyyy' }}</td>
-              <td (click)="openModalDetails(u)"
-                class="px-5 py-5 text-left border-b border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-200">
-                {{ u.companies?.length !== 0 ? 'Operador' : 'Administrador' }}</td>
-
-              <td class="px-5 py-5 border-b border-gray-200 dark:border-gray-700 whitespace-nowrap">
-                <button data-modal-target="deleteModal" (click)="updateSelectDelete(u.pk); openModal()"
-                  class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-md hover:shadow-lg transition duration-300">
-                  <i class="fas fa-trash-alt"></i>
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
       </div>
     </div>
   </div>
@@ -142,13 +304,13 @@
 
 <!-- Modal Eliminar Utilizador -->
 <div id="deleteModal" tabindex="-1" aria-hidden="true"
-  class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-modal md:h-full"
+  class="bg-black/60 backdrop-blur-sm hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-modal md:h-full"
   #modal>
   <div class="relative p-4 w-full max-w-md h-full md:h-auto">
     <div
       class="relative p-4 text-center bg-white rounded-lg shadow dark:bg-gray-800 sm:p-5 border border-transparent dark:border-gray-700">
       <button type="button" (click)="closeModal()"
-        class="text-gray-400 absolute top-2.5 right-2.5 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center dark:hover:bg-gray-600 dark:hover:text-white transition">
+        class="text-gray-400 absolute top-2.5 right-2.5 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center dark:hover:bg-gray-700 dark:hover:text-white transition">
         <i class="fas fa-times text-base"></i>
         <span class="sr-only">Fechar</span>
       </button>
@@ -157,16 +319,16 @@
         <i class="fas fa-trash-alt text-4xl"></i>
       </div>
 
-      <p class="mb-4 text-gray-500 dark:text-gray-300">
+      <p class="mb-4 text-gray-500 dark:text-gray-300 text-sm">
         Tem a certeza que quer eliminar o utilizador #{{ selectDelete }}?
       </p>
 
       <div class="flex justify-center items-center space-x-4">
         <button (click)="closeModal()" type="button"
-          class="py-2 px-3 text-sm font-medium text-gray-500 bg-white rounded-lg border border-gray-200 hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-primary-300 hover:text-gray-900 focus:z-10 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-600 transition">
+          class="py-2 px-3 text-sm font-medium text-gray-500 bg-white rounded-lg border border-gray-200 hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-primary-300 hover:text-gray-900 focus:z-10 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-600 transition">
           Não, cancelar
         </button>
-        <button (click)="deleteUser(); closeModal()" data-modal-target="deleteModal"
+        <button (click)="deleteUser(); closeModal()"
           class="py-2 px-3 text-sm font-medium text-center text-white bg-red-600 rounded-lg hover:bg-red-700 focus:ring-4 focus:outline-none focus:ring-red-300 dark:bg-red-500 dark:hover:bg-red-600 dark:focus:ring-red-900 transition">
           Sim, tenho a certeza
         </button>
@@ -175,144 +337,76 @@
   </div>
 </div>
 
-<!-- Drawer Component (Filtros Laterais) -->
-<div id="drawer-navigation"
-  class="fixed top-0 left-0 z-40 w-96 h-screen p-4 overflow-y-auto transition-transform -translate-x-full bg-white dark:bg-gray-800 border-r border-transparent dark:border-gray-700"
-  tabindex="-1" aria-labelledby="drawer-navigation-label">
-
-  <h5 id="drawer-navigation-label" class="text-base font-semibold text-gray-500 uppercase dark:text-gray-400">
-    <i class="fas fa-filter"></i> Filtros
-  </h5>
-  <button type="button" data-drawer-hide="drawer-navigation" aria-controls="drawer-navigation"
-    class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 absolute top-2.5 end-2.5 inline-flex items-center dark:hover:bg-gray-600 dark:hover:text-white transition">
-    <i class="fas fa-times"></i>
-    <span class="sr-only">Close menu</span>
-  </button>
-
-  <div class="py-4 overflow-y-auto">
-    <ul class="space-y-4 font-medium">
-      <li>
-        <div
-          class="flex items-center justify-between p-2 text-gray-600 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group transition">
-          <div class="flex items-center">
-            <i class="fas fa-rectangle-list"></i>
-            <span class="ms-3">Clientes</span>
-          </div>
-          <button (click)="clearSelectedClients()"
-            class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 inline-flex items-center dark:hover:bg-gray-600 dark:hover:text-white transition"
-            title="Limpar filtro">
-            <i class="fas fa-times"></i>
-            <span class="sr-only">Clear filter</span>
-          </button>
-        </div>
-        <select id="types" name="types" [(ngModel)]="selectedClients" required multiple
-          class="block w-full rounded-md border-0 px-2 py-2.5 text-gray-900 bg-white dark:bg-gray-700 dark:text-white shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-600 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 dark:focus:ring-indigo-500 sm:text-sm sm:leading-6 transition">
-          <option *ngFor="let client of uniqueClients" [ngValue]="client">{{ client }}</option>
-        </select>
-      </li>
-
-      <li>
-        <div
-          class="flex items-center justify-between p-2 text-gray-600 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group transition">
-          <div class="flex items-center">
-            <i class="fas fa-file"></i>
-            <span class="ms-3">Role</span>
-          </div>
-          <button (click)="clearSelectedRoles()"
-            class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 inline-flex items-center dark:hover:bg-gray-600 dark:hover:text-white transition"
-            title="Limpar filtro">
-            <i class="fas fa-times"></i>
-            <span class="sr-only">Clear filter</span>
-          </button>
-        </div>
-        <select id="role" name="role" [(ngModel)]="selectedRoles" required multiple
-          class="block w-full rounded-md border-0 px-2 py-2.5 text-gray-900 bg-white dark:bg-gray-700 dark:text-white shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-600 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 dark:focus:ring-indigo-500 sm:text-sm sm:leading-6 transition">
-          <option *ngFor="let role of roles" [ngValue]="role">{{ role }}</option>
-        </select>
-      </li>
-    </ul>
-  </div>
-</div>
-
 <!-- Modal Detalhes do Utilizador -->
-<div id="static-modal" data-modal-backdrop="static" tabindex="-1" aria-hidden="true"
-  class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full"
+<div id="static-modal" tabindex="-1" aria-hidden="true"
+  class="bg-black/60 backdrop-blur-sm hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-full p-4"
   #modalDetails>
   <div class="relative p-4 w-full max-w-2xl max-h-full">
     <div class="relative bg-white rounded-lg shadow dark:bg-gray-800 border border-transparent dark:border-gray-700">
 
       <!-- Header do Modal -->
       <div class="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-700">
-        <h3 class="text-xl font-semibold text-gray-900 dark:text-white">
-          {{selectedUser?.username}}
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+          <i class="fas fa-user text-redshift-red"></i>
+          <span>{{ selectedUser?.username }}</span>
         </h3>
         <button (click)="closeModalDetails()" type="button"
-          class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-700 dark:hover:text-white transition"
-          data-modal-hide="static-modal">
-          <i class="fas fa-times"></i>
-          <span class="sr-only">Close modal</span>
+          class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-700 dark:hover:text-white transition">
+          <i class="fas fa-times text-base"></i>
+          <span class="sr-only">Fechar modal</span>
         </button>
       </div>
 
       <!-- Corpo do Modal -->
       <div class="p-4 md:p-5 space-y-6">
-        <div class="flex items-center">
-          <h4 class="text-lg font-semibold text-gray-900 dark:text-white">Detalhes do Utilizador</h4>
+        <div class="flex items-center justify-between">
+          <h4 class="text-sm font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Detalhes do Registo
+          </h4>
 
-          <button [routerLink]="'/update-user/'+selectedUser?.pk" (click)="closeModalDetails()"
-            class="bg-redshift-red hover:bg-redshift-hover ml-6 text-sm font-medium text-center text-white px-3 py-1 rounded-lg transition flex items-center gap-1.5">
+          <button [routerLink]="'/update-user/' + selectedUser?.pk" (click)="closeModalDetails()"
+            class="bg-redshift-red hover:bg-redshift-hover text-sm font-medium text-white px-3.5 py-1.5 rounded-lg transition flex items-center gap-1.5 shadow-sm">
             <span>Editar</span>
             <i class="fas fa-pen text-xs"></i>
           </button>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div class="flex items-center space-x-2">
-            <span class="text-gray-500 dark:text-gray-400">ID:</span>
-            <span class="text-gray-900 dark:text-white font-medium">{{selectedUser?.pk}}</span>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+          <div>
+            <span class="text-xs text-gray-400 dark:text-gray-500 block uppercase font-semibold">ID</span>
+            <span class="text-gray-900 dark:text-white font-medium">{{ selectedUser?.pk }}</span>
           </div>
-          <div class="flex items-center space-x-2">
-            <span class="text-gray-500 dark:text-gray-400">Nome:</span>
-            <span class="text-gray-900 dark:text-white font-medium">{{selectedUser?.username}}</span>
+          <div>
+            <span class="text-xs text-gray-400 dark:text-gray-500 block uppercase font-semibold">Nome de
+              Utilizador</span>
+            <span class="text-gray-900 dark:text-white font-medium">{{ selectedUser?.username }}</span>
           </div>
-          <div class="flex items-center space-x-2">
-            <span class="text-gray-500 dark:text-gray-400">Email:</span>
-            <span class="text-gray-900 dark:text-white font-medium">{{selectedUser?.email}}</span>
+          <div>
+            <span class="text-xs text-gray-400 dark:text-gray-500 block uppercase font-semibold">Email</span>
+            <span class="text-gray-900 dark:text-white font-medium">{{ selectedUser?.email }}</span>
           </div>
-          <div class="flex items-center space-x-2">
-            <span class="text-gray-500 dark:text-gray-400">Data de Registo:</span>
-            <span class="text-gray-900 dark:text-white font-medium">{{selectedUser?.date_joined | date:
-              'dd/MM/yyyy'}}</span>
+          <div>
+            <span class="text-xs text-gray-400 dark:text-gray-500 block uppercase font-semibold">Data de Registo</span>
+            <span class="text-gray-900 dark:text-white font-medium">{{ selectedUser?.date_joined | date: 'dd/MM/yyyy
+              HH:mm' }}</span>
           </div>
-          <div class="flex items-center space-x-2">
-            <span class="text-gray-500 dark:text-gray-400">Role:</span>
-            <span class="text-gray-900 dark:text-white font-medium">{{selectedUser?.companies?.length ? 'Operador' :
-              'Administrador'}}</span>
+          <div>
+            <span class="text-xs text-gray-400 dark:text-gray-500 block uppercase font-semibold">Role</span>
+            <span class="text-gray-900 dark:text-white font-medium">
+              {{ selectedUser?.companies?.length ? 'Operador' : 'Administrador' }}
+            </span>
           </div>
-          <div class="flex items-center space-x-2">
-            <span class="text-gray-500 dark:text-gray-400">Clientes Atribuídos:</span>
-            <div class="relative" (mouseenter)="showAllCompanies = true" (mouseleave)="showAllCompanies = false">
-              <span class="text-gray-900 dark:text-white font-medium"
-                *ngIf="selectedUser?.companies && selectedUser?.companies.length > 0">
-                {{selectedUser?.companies[0]}}
+          <div>
+            <span class="text-xs text-gray-400 dark:text-gray-500 block uppercase font-semibold">Clientes
+              Atribuídos</span>
+            <div class="flex flex-wrap gap-1.5 mt-1 max-h-32 overflow-y-auto">
+              <span *ngFor="let company of selectedUser?.companies"
+                class="bg-[#0d2f52] text-white text-xs px-2.5 py-0.5 rounded-md">
+                {{ company }}
               </span>
-              <span *ngIf="selectedUser?.companies && selectedUser?.companies.length > 1"
-                class="inline-flex items-center justify-center w-6 h-6 text-xs font-bold text-white bg-gray-700 dark:bg-gray-600 rounded-full ml-1">
-                +{{selectedUser?.companies.length - 1}}
+              <span *ngIf="!selectedUser?.companies || selectedUser?.companies.length === 0"
+                class="text-gray-400 dark:text-gray-500 italic">
+                Nenhum cliente associado
               </span>
-              <span class="text-gray-500 dark:text-gray-400"
-                *ngIf="!selectedUser?.companies || selectedUser?.companies.length === 0">
-                N/A
-              </span>
-
-              <!-- Popover modal clientes -->
-              <div
-                class="absolute left-0 mt-1 w-max bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded shadow-lg z-20"
-                *ngIf="selectedUser?.companies && selectedUser?.companies.length > 1 && showAllCompanies">
-                <div *ngFor="let company of selectedUser?.companies.slice(1)" class="bg-white dark:bg-gray-800">
-                  <span class="block px-3 py-1 text-sm text-gray-900 dark:text-white">{{ company }}</span>
-                </div>
-              </div>
             </div>
           </div>
         </div>
@@ -320,9 +414,8 @@
 
       <!-- Footer do Modal -->
       <div class="flex justify-end p-4 md:p-5 border-t border-gray-200 dark:border-gray-700 rounded-b">
-        <button data-modal-hide="static-modal" (click)="closeModalDetails()" data-modal-target="static-modal"
-          type="button"
-          class="text-gray-500 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-lg border border-gray-200 dark:border-gray-600 text-sm px-4 py-2 transition">
+        <button (click)="closeModalDetails()" type="button"
+          class="text-gray-500 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-100 rounded-lg border border-gray-200 dark:border-gray-600 text-sm px-4 py-2 transition">
           Fechar
         </button>
       </div>

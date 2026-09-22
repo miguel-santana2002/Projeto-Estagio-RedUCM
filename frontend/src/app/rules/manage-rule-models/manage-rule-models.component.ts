@@ -34,19 +34,27 @@ export class ManageRuleModelsComponent implements OnInit, AfterViewInit {
   @ViewChild('modal') modal!: ElementRef<HTMLElement>;
   modalFlowbite!: Modal;
 
-  sortType = 'id';
-  sortReverse = false;
+  sortType: string = 'id';
+  sortReverse: boolean = false;
   nameSearch: string = '';
   selectDelete: number = 999999;
 
   ruleModels: any[] = [];
+
+  // Paginação
+  page: number = 1;
+  pageSize: number = 10;
+  pageSizeOptions: number[] = [5, 10, 25, 50];
+
+  // Controlo do Painel de Filtros
+  showFilters: boolean = false;
 
   // Filtros selecionados
   selectedSintaxes: string[] = [];
   selectedTypes: string[] = [];
   selectedLogSources: string[] = [];
 
-  // Opções únicas para as dropdowns do Drawer
+  // Opções únicas para as pills
   uniqueSintaxes: string[] = [];
   uniqueTypes: string[] = [];
   uniqueLogSources: string[] = [];
@@ -71,28 +79,28 @@ export class ManageRuleModelsComponent implements OnInit, AfterViewInit {
       next: (data: any) => {
         this.ruleModels = Array.isArray(data) ? data : [];
         this.startFilters();
+        this.ruleModels.sort((a: any, b: any) => this.sortNumeric(a.id, b.id));
       },
       error: (err) => console.error('Erro ao carregar modelos de regra:', err),
     });
   }
 
   startFilters(): void {
-    // Extrai valores únicos ignorando nulos/vazios
-    this.uniqueSintaxes = [
-      ...new Set(
+    this.uniqueSintaxes = Array.from(
+      new Set(
         this.ruleModels
           .map((item: any) => item.syntax)
           .filter((s): s is string => Boolean(s)),
       ),
-    ];
+    ).sort();
 
-    this.uniqueTypes = [
-      ...new Set(
+    this.uniqueTypes = Array.from(
+      new Set(
         this.ruleModels
           .map((item: any) => item.type)
           .filter((t): t is string => Boolean(t)),
       ),
-    ];
+    ).sort();
 
     this.uniqueLogSources = Array.from(
       new Set(
@@ -100,10 +108,125 @@ export class ManageRuleModelsComponent implements OnInit, AfterViewInit {
           .flatMap((item: any) => item.logsources || [])
           .filter((l): l is string => Boolean(l)),
       ),
-    );
+    ).sort();
   }
 
-  // Ordenação com suporte para Strings, Números, Arrays e Valores Nulos
+  // Toggles de Filtro com Reset de Página
+  toggleType(type: string): void {
+    this.page = 1;
+    if (this.selectedTypes.includes(type)) {
+      this.selectedTypes = this.selectedTypes.filter((t) => t !== type);
+    } else {
+      this.selectedTypes = [...this.selectedTypes, type];
+    }
+  }
+
+  isTypeSelected(type: string): boolean {
+    return this.selectedTypes.includes(type);
+  }
+
+  toggleSyntax(syntax: string): void {
+    this.page = 1;
+    if (this.selectedSintaxes.includes(syntax)) {
+      this.selectedSintaxes = this.selectedSintaxes.filter((s) => s !== syntax);
+    } else {
+      this.selectedSintaxes = [...this.selectedSintaxes, syntax];
+    }
+  }
+
+  isSyntaxSelected(syntax: string): boolean {
+    return this.selectedSintaxes.includes(syntax);
+  }
+
+  toggleLogSource(logSource: string): void {
+    this.page = 1;
+    if (this.selectedLogSources.includes(logSource)) {
+      this.selectedLogSources = this.selectedLogSources.filter(
+        (l) => l !== logSource,
+      );
+    } else {
+      this.selectedLogSources = [...this.selectedLogSources, logSource];
+    }
+  }
+
+  isLogSourceSelected(logSource: string): boolean {
+    return this.selectedLogSources.includes(logSource);
+  }
+
+  // Ações de Limpeza
+  clearSelectedSyntax(): void {
+    this.page = 1;
+    this.selectedSintaxes = [];
+  }
+
+  clearSelectedTypes(): void {
+    this.page = 1;
+    this.selectedTypes = [];
+  }
+
+  clearSelectedLogSources(): void {
+    this.page = 1;
+    this.selectedLogSources = [];
+  }
+
+  clearAllFilters(): void {
+    this.page = 1;
+    this.selectedSintaxes = [];
+    this.selectedTypes = [];
+    this.selectedLogSources = [];
+  }
+
+  onSearchChange(): void {
+    this.page = 1;
+  }
+
+  // Filtragem Reativa
+  get filteredRuleModels(): any[] {
+    const term = this.nameSearch.trim().toLowerCase();
+
+    return this.ruleModels.filter((rule: any) => {
+      const matchesName = (rule.title || '').toLowerCase().includes(term);
+
+      const matchesSyntax =
+        this.selectedSintaxes.length === 0 ||
+        this.selectedSintaxes.includes(rule.syntax);
+
+      const matchesType =
+        this.selectedTypes.length === 0 ||
+        this.selectedTypes.includes(rule.type);
+
+      const matchesLogs =
+        this.selectedLogSources.length === 0 ||
+        (rule.logsources || []).some((log: string) =>
+          this.selectedLogSources.includes(log),
+        );
+
+      return matchesName && matchesSyntax && matchesType && matchesLogs;
+    });
+  }
+
+  // Segmentação Paginada
+  get pagedRuleModels(): any[] {
+    const start = (this.page - 1) * this.pageSize;
+    return this.filteredRuleModels.slice(start, start + this.pageSize);
+  }
+
+  get totalPages(): number {
+    return Math.ceil(this.filteredRuleModels.length / this.pageSize) || 1;
+  }
+
+  setPage(newPage: number): void {
+    if (newPage >= 1 && newPage <= this.totalPages) {
+      this.page = newPage;
+    }
+  }
+
+  onPageSizeChange(newSize: number): void {
+    this.pageSize = Number(newSize);
+    this.page = 1;
+  }
+
+  // Ordenação
   sortTable(column: string): void {
     if (this.sortType === column) {
       this.sortReverse = !this.sortReverse;
@@ -116,52 +239,28 @@ export class ManageRuleModelsComponent implements OnInit, AfterViewInit {
       const valA = a[column];
       const valB = b[column];
 
-      // 1. Trata campos vazios/nulos
-      if (!valA && valB) return this.sortReverse ? -1 : 1;
-      if (valA && !valB) return this.sortReverse ? 1 : -1;
-      if (!valA && !valB) return 0;
+      if (valA == null && valB != null) return this.sortReverse ? -1 : 1;
+      if (valA != null && valB == null) return this.sortReverse ? 1 : -1;
+      if (valA == null && valB == null) return 0;
 
-      // 2. Trata arrays (Logsources) ordenando pela quantidade
       if (Array.isArray(valA) && Array.isArray(valB)) {
         return (valA.length - valB.length) * (this.sortReverse ? -1 : 1);
       }
 
-      // 3. Trata strings
       if (typeof valA === 'string') {
-        return valA.localeCompare(valB) * (this.sortReverse ? -1 : 1);
+        return this.sortString(valA, valB);
       }
 
-      // 4. Trata números (IDs)
-      return (Number(valA) - Number(valB)) * (this.sortReverse ? -1 : 1);
+      return this.sortNumeric(valA, valB);
     });
   }
 
-  get filteredRuleModels(): any[] {
-    return this.ruleModels.filter((rule: any) => {
-      // 1. Filtro por nome
-      const matchesName = (rule.title || '')
-        .toLowerCase()
-        .includes(this.nameSearch.toLowerCase());
+  private sortString(a: string = '', b: string = ''): number {
+    return a.localeCompare(b) * (this.sortReverse ? -1 : 1);
+  }
 
-      // 2. Filtro por Sintaxe
-      const matchesSyntax =
-        this.selectedSintaxes.length === 0 ||
-        this.selectedSintaxes.includes(rule.syntax);
-
-      // 3. Filtro por Tipo
-      const matchesType =
-        this.selectedTypes.length === 0 ||
-        this.selectedTypes.includes(rule.type);
-
-      // 4. Filtro por Logsources
-      const matchesLogs =
-        this.selectedLogSources.length === 0 ||
-        (rule.logsources || []).some((log: string) =>
-          this.selectedLogSources.includes(log),
-        );
-
-      return matchesName && matchesSyntax && matchesType && matchesLogs;
-    });
+  private sortNumeric(a: number = 0, b: number = 0): number {
+    return (a - b) * (this.sortReverse ? -1 : 1);
   }
 
   // Gestão de Modal Eliminar
@@ -182,28 +281,11 @@ export class ManageRuleModelsComponent implements OnInit, AfterViewInit {
     this.rulesService.deleteRuleModelById(this.selectDelete).subscribe({
       next: () => {
         this.loadRuleModels();
+        if (this.page > this.totalPages) {
+          this.page = this.totalPages;
+        }
       },
       error: (err) => console.error('Erro ao eliminar modelo de regra:', err),
     });
-  }
-
-  // Ações de Limpeza de Filtros
-  clearSelectedSyntax(): void {
-    this.selectedSintaxes = [];
-  }
-
-  clearSelectedTypes(): void {
-    this.selectedTypes = [];
-  }
-
-  clearSelectedLogSources(): void {
-    this.selectedLogSources = [];
-  }
-
-  clearFilters(): void {
-    this.selectedSintaxes = [];
-    this.selectedTypes = [];
-    this.selectedLogSources = [];
-    this.nameSearch = '';
   }
 }

@@ -1,21 +1,23 @@
 <app-header></app-header>
-<app-titlebanner [title]="'Editar RedModel' + ruleModelId" image="./assets/bannercover.jpg"></app-titlebanner>
+<app-titlebanner [title]="'Editar RedModel ' + ruleModelId" image="./assets/bannercover.jpg"></app-titlebanner>
 
-<div *ngIf="isLoading" class="text-center py-20 text-gray-500 font-medium">
+<div *ngIf="isLoading" class="text-center py-20 text-gray-500 dark:text-gray-400 font-medium">
     A carregar dados do modelo de regra...
 </div>
 
-<form *ngIf="!isLoading" class="grid grid-cols-2 gap-12 px-32 pt-12 pb-20" (ngSubmit)="updateRuleModel()"
-    [formGroup]="editRuleModelForm">
+<form *ngIf="!isLoading"
+    class="grid grid-cols-2 gap-12 px-32 pt-12 pb-20 dark:bg-gray-900 transition-colors duration-200"
+    (ngSubmit)="updateRuleModel()" [formGroup]="editRuleModelForm">
 
     <!-- Título -->
     <div class="space-y-4 col-span-2 md:col-span-1">
-        <label for="title" class="block text-sm font-medium leading-6 text-gray-900">Título da Regra</label>
+        <label for="title" class="block text-sm font-medium leading-6 text-gray-900 dark:text-white">Título da
+            Regra</label>
         <div class="flex flex-col">
             <input id="title" type="text" formControlName="title" required
-                class="block w-full rounded-md border-0 px-2 py-2.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6">
+                class="block w-full rounded-md border-0 px-3 py-2.5 text-gray-900 bg-white dark:bg-gray-700 dark:text-white shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-600 placeholder:text-gray-400 dark:placeholder-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 dark:focus:ring-indigo-500 sm:text-sm sm:leading-6">
             <div *ngIf="editRuleModelForm.get('title')?.touched && editRuleModelForm.get('title')?.invalid"
-                class="text-red-600 text-sm mt-1">
+                class="text-red-600 dark:text-red-400 text-sm mt-1">
                 O título da regra é obrigatório.
             </div>
         </div>
@@ -23,66 +25,66 @@
 
     <!-- Use Case Associado -->
     <div class="space-y-4 col-span-2 md:col-span-1">
-        <label for="selectedUseCase" class="block text-sm font-medium leading-6 text-gray-900">Use Case
+        <label for="selectedUseCase" class="block text-sm font-medium leading-6 text-gray-900 dark:text-white">Use Case
             Associado</label>
         <select id="selectedUseCase" formControlName="selectedUseCase" [(ngModel)]="selectedUseCase"
-            class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+            class="mt-1 block w-full py-2.5 px-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 dark:focus:ring-indigo-500 sm:text-sm">
             <option value="" disabled selected>Selecione um Use Case</option>
             <option *ngFor="let option of usecases" [value]="option.id">
                 RedUC{{ option.id }} - {{ option.title }}
             </option>
         </select>
         <div *ngIf="editRuleModelForm.get('selectedUseCase')?.touched && editRuleModelForm.get('selectedUseCase')?.invalid"
-            class="text-red-600 text-sm mt-1">
+            class="text-red-600 dark:text-red-400 text-sm mt-1">
             O Use Case Associado é obrigatório.
         </div>
     </div>
 
     <!-- Tipo (SIEM / SOAR / EDR) -->
     <div class="space-y-4 col-span-2 md:col-span-1">
-        <label for="selectedType" class="block text-sm font-medium leading-6 text-gray-900">Tipo</label>
+        <label for="selectedType" class="block text-sm font-medium leading-6 text-gray-900 dark:text-white">Tipo</label>
         <select id="selectedType" formControlName="selectedType" [(ngModel)]="selectedType" (change)="onTypeChange()"
-            class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+            class="mt-1 block w-full py-2.5 px-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 dark:focus:ring-indigo-500 sm:text-sm">
             <option *ngFor="let option of typeKeys()" [value]="option">{{ option }}</option>
         </select>
     </div>
 
     <!-- Sintaxe -->
     <div class="space-y-4 col-span-2 md:col-span-1">
-        <label for="syntax" class="block text-sm font-medium leading-6 text-gray-900">Sintaxe</label>
-        <select id="syntax" formControlName="syntax" [(ngModel)]="selectedSyntax" (change)="onSyntaxChange()"
-            class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+        <label for="syntax" class="block text-sm font-medium leading-6 text-gray-900 dark:text-white">Sintaxe</label>
+        <select id="syntax" formControlName="syntax" [(ngModel)]="selectedSyntax"
+            class="mt-1 block w-full py-2.5 px-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 dark:focus:ring-indigo-500 sm:text-sm">
             <option *ngFor="let option of getAvailableSyntaxes()" [value]="option">{{ option }}</option>
         </select>
         <div *ngIf="editRuleModelForm.get('syntax')?.touched && editRuleModelForm.get('syntax')?.invalid"
-            class="text-red-600 text-sm mt-1">
+            class="text-red-600 dark:text-red-400 text-sm mt-1">
             A Sintaxe é obrigatória.
         </div>
     </div>
 
     <!-- LogSources -->
     <div class="space-y-4 col-span-2">
-        <label for="logsources" class="block text-sm font-medium leading-6 text-gray-900">LogSources Associadas</label>
+        <label for="logsources" class="block text-sm font-medium leading-6 text-gray-900 dark:text-white">LogSources
+            Associadas</label>
         <tag-input [onlyFromAutocomplete]="true" theme="minimal" [secondaryPlaceholder]="'+ Nova Log Source'"
             [placeholder]="''" formControlName="logsources"
-            class="block w-full rounded-md border-0 px-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6">
+            class="block w-full rounded-md border-0 px-2 text-gray-900 bg-white dark:bg-gray-700 dark:text-white shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-600 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 dark:focus:ring-indigo-500 sm:text-sm sm:leading-6">
             <tag-input-dropdown [showDropdownIfEmpty]="true" [autocompleteItems]="registeredLogsources">
             </tag-input-dropdown>
         </tag-input>
         <div *ngIf="editRuleModelForm.get('logsources')?.touched && editRuleModelForm.get('logsources')?.invalid"
-            class="text-red-600 text-sm mt-1">
+            class="text-red-600 dark:text-red-400 text-sm mt-1">
             Pelo menos uma LogSource é obrigatória.
         </div>
     </div>
 
     <!-- Editor de Código -->
     <div class="space-y-4 col-span-2">
-        <label class="block text-sm font-medium leading-6 text-gray-900">Regra ({{ selectedSyntax }})</label>
-        <div class="w-full border border-gray-300 mx-auto rounded-md overflow-hidden">
-            <ngs-code-editor [codeModel]="selectedModel" [theme]="theme" [options]="options"
-                (valueChanged)="onCodeChanged($event)">
-            </ngs-code-editor>
-        </div>
+        <label class="block text-sm font-medium leading-6 text-gray-900 dark:text-white">
+            Regra ({{ selectedSyntax }})
+        </label>
+        <app-code-editor [code]="code" [language]="selectedSyntax" height="450px" (codeChange)="onCodeChanged($event)">
+        </app-code-editor>
     </div>
 
     <!-- Botões de Ação -->
@@ -91,8 +93,8 @@
             class="disabled:opacity-60 w-full md:w-[25rem] py-2.5 px-5 text-white font-semibold bg-redshift-red rounded-md hover:bg-redshift-hover transition duration-150">
             Guardar Alterações
         </button>
-        <a [routerLink]="['/ruleModelDetails', ruleModelId]"
-            class="px-6 py-2.5 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100 transition cursor-pointer">
+        <a [routerLink]="['/ruleModel-Details', ruleModelId]"
+            class="px-6 py-2.5 border border-gray-300 dark:border-gray-600 rounded-md text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition cursor-pointer">
             Cancelar
         </a>
     </div>

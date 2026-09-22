@@ -20,7 +20,7 @@
   </button>
 </div>
 
-<div class="mx-16 pt-6 dark:text-white">
+<div class="px-20 pt-6 dark:text-white">
   <h1 class="font-inter font-semibold text-2xl text-gray-700 dark:text-white mb-4">
     {{ ruleModel.title }}
   </h1>
@@ -116,11 +116,9 @@
 
     <!-- Coluna do Editor Monaco -->
     <div class="xl:col-span-10 w-full min-w-0">
-      <div class="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden shadow-sm">
-        <ngs-code-editor [theme]="theme" [codeModel]="selectedModel" [options]="options"
-          (loaded)="onEditorLoaded($event)" (valueChanged)="onCodeChanged($event)" class="block w-full h-[550px]">
-        </ngs-code-editor>
-      </div>
+      <app-code-editor [code]="selectedModel.value" [language]="ruleModel.syntax" height="550px"
+        (codeChange)="onCodeChanged($event)">
+      </app-code-editor>
     </div>
 
     <!-- Coluna de Ações -->
@@ -168,7 +166,7 @@
     <div class="w-full sm:w-1/2 md:w-1/3 lg:w-1/6 p-2" *ngFor="let rule of ruleInstances">
       <div
         class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-4 rounded-lg shadow-sm cursor-pointer hover:shadow-md hover:border-gray-300 dark:hover:border-gray-600 transition duration-200"
-        [routerLink]="'/ruleDetails/' + rule.id">
+        [routerLink]="'/rule-Details/' + rule.id">
         <h1 class="font-inter font-semibold text-lg text-gray-800 dark:text-white truncate">
           {{ rule.client?.name }}
         </h1>
@@ -350,12 +348,38 @@
             </button>
           </div>
 
-          <!-- Campo Texto: Depois -->
           <div class="lg:col-span-5 flex flex-col h-full">
             <div class="flex justify-between items-center mb-2">
-              <label class="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                Resultado da Conversão
-              </label>
+              <div class="flex items-center gap-2">
+                <label class="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                  Resultado da Conversão
+                </label>
+
+                <!-- Badge Determinístico (pySigma) -->
+                <span *ngIf="conversionEngine === 'pysigma' && !isConverting"
+                  class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-medium bg-emerald-100 text-emerald-800 dark:bg-emerald-500/10 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-500/20"
+                  title="Compilação 100% determinística via AST do pySigma">
+                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400"></span>
+                  pySigma
+                </span>
+
+                <!-- Badge Híbrido (pySigma + Ollama) -->
+                <span *ngIf="conversionEngine === 'hybrid' && !isConverting"
+                  class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-medium bg-amber-100 text-amber-800 dark:bg-amber-500/10 dark:text-amber-400 border border-amber-300 dark:border-amber-500/20"
+                  title="Filtro base via pySigma com correlações/agregações enriquecidas via IA">
+                  <span class="w-1.5 h-1.5 rounded-full bg-amber-500 dark:bg-amber-400"></span>
+                  Híbrido
+                </span>
+
+                <!-- Badge Modelo IA (LLM Puro) -->
+                <span *ngIf="conversionEngine === 'llm' && !isConverting"
+                  class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-medium bg-indigo-100 text-indigo-800 dark:bg-indigo-500/10 dark:text-indigo-400 border border-indigo-300 dark:border-indigo-500/20"
+                  title="Tradução generativa direta via Ollama">
+                  <span class="w-1.5 h-1.5 rounded-full bg-indigo-500 dark:bg-indigo-400"></span>
+                  Modelo IA
+                </span>
+              </div>
+
               <button *ngIf="convertedRuleContent && !isConverting" (click)="copyConvertedToClipboard()" type="button"
                 class="text-xs text-gray-500 dark:text-gray-400 hover:text-redshift-red dark:hover:text-redshift-red inline-flex items-center transition">
                 <i class="fas fa-copy mr-1"></i> Copiar

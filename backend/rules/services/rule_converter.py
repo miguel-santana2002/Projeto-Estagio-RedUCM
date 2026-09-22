@@ -10,18 +10,9 @@ from sigma.exceptions import SigmaError
 # Backends pySigma
 from sigma.backends.splunk import SplunkBackend
 from sigma.backends.kusto import KustoBackend
-from sigma.backends.elasticsearch import LuceneBackend, EqlBackend
-from sigma.backends.QRadarAQL import QRadarAQLBackend
-from sigma.pipelines.splunk import splunk_windows_pipeline
-from sigma.pipelines.elasticsearch import ecs_windows
-from sigma.pipelines.microsoft365defender import microsoft_365_defender_pipeline
-try:
-    from sigma.backends.crowdstrike import LogScaleBackend
-    from sigma.pipelines.crowdstrike import crowdstrike_falcon_pipeline
-except ImportError:
-    LogScaleBackend = None
-    crowdstrike_falcon_pipeline = None
+from sigma.backends.elasticsearch import EqlBackend
 
+from .aql_backend import AQLBackend
 
 OLLAMA_HOST = os.environ.get("OLLAMA_HOST", "http://ollama:11434")
 MODEL_NAME = os.environ.get("OLLAMA_MODEL", "qwen2.5-coder:3b")
@@ -97,24 +88,37 @@ def decompile_to_sigma(source_query: str, source_syntax: str) -> str:
     return yaml.dump(parsed, sort_keys=False, allow_unicode=True)
 
 def enrich_with_aggregations(source_query: str, source_syntax: str, compiled_base: str, target_syntax: str) -> str:
-    """Anexa pipes de agregação com injeção dinâmica de contexto alvo."""
-    agg_keywords = ["group by", "count(", "stats ", "summarize", "order by", "sort ", "select "]
+    """Anexa pipes de agregação e limiares temporais ao filtro base compilado."""
+    agg_keywords = [
+        "group by", "group-by", "count(", "stats ", "summarize", 
+        "order by", "sort ", "select ", "correlation:", "timespan:"
+    ]
     if not any(kw in source_query.lower() for kw in agg_keywords):
         return compiled_base
 
-    # Isolamento de sintaxe: O LLM só vê a regra da linguagem final pedida
+    # Regras específicas com base na sintaxe de destino
     if "SPL" in target_syntax:
-        rules = "Use '| stats count by field'. Sort descending: '| sort - field'. NEVER use 'summarize'."
+        rules = (
+            "Append '| stats count by <field> | where count >= <threshold>'. "
+            "Never replace or omit the base filter. No markdown, no commentary."
+        )
     elif "KQL" in target_syntax:
-        rules = "Use '| summarize count() by field'. Sort descending: '| order by field desc'."
+        rules = (
+            "Append '| summarize count() by <field> | where count_ >= <threshold>'. "
+            "Never replace or omit the base filter. No markdown, no commentary."
+        )
     else:
-        rules = "Append necessary grouping and sorting pipes."
+        rules = "Append necessary grouping, threshold, and sorting pipes to the base filter."
 
-    prompt = f"""Output ONLY raw {target_syntax} query code. No explanations.
-Source: {source_query}
-Base filter: {compiled_base}
+    prompt = f"""You are a detection engineer.
+Base search: {compiled_base}
+Rule context / Aggregation requirement:
+{source_query}
+
+Task: Output the complete {target_syntax} query.
+Rule: Start with '{compiled_base}' and append the correct aggregation/threshold pipes (e.g. stats count, where count >= N).
 Rules: {rules}
-Task: Append aggregation/sorting pipes to the Base filter."""
+Output ONLY the raw final query code on a single line or piped lines."""
 
     payload = {
         "model": MODEL_NAME,
@@ -122,8 +126,8 @@ Task: Append aggregation/sorting pipes to the Base filter."""
         "stream": False,
         "keep_alive": "1h",
         "options": {
-            "num_predict": 50, # Reduzido (o output esperado é apenas 1 linha)
-            "num_ctx": 256,    # Reduz carga na VRAM
+            "num_predict": 100,
+            "num_ctx": 512,
             "temperature": 0.0,
         },
     }
@@ -133,15 +137,18 @@ Task: Append aggregation/sorting pipes to the Base filter."""
         if response.status_code == 200:
             result = response.json().get("response", "").strip()
             
+            # Limpeza de markdown
             clean_result = re.sub(r"^```(?:[a-zA-Z]+)?\s*|\s*```$", "", result, flags=re.MULTILINE).strip()
             clean_result = re.sub(r"^(?:Here is[^\n:]*:?|Result:?|Final query:?)\s*", "", clean_result, flags=re.IGNORECASE).strip()
 
-            lines = [line.strip() for line in clean_result.splitlines() if line.strip()]
-            for line in lines:
-                base_token = compiled_base.strip().split()[0] if compiled_base.strip() else ""
-                if (base_token and base_token in line) or line.startswith("|"):
-                    idx = lines.index(line)
-                    return "\n".join(lines[idx:])
+            # Se o modelo devolveu apenas os pipes (começa com |), junta com o filtro base
+            if clean_result.startswith("|"):
+                return f"{compiled_base} {clean_result}"
+
+            # Se o modelo omitiu o filtro base mas gerou pipes dentro das linhas
+            if compiled_base not in clean_result and "|" in clean_result:
+                pipe_part = clean_result[clean_result.index("|"):]
+                return f"{compiled_base} {pipe_part}"
 
             if clean_result:
                 return clean_result
@@ -150,173 +157,142 @@ Task: Append aggregation/sorting pipes to the Base filter."""
 
     return compiled_base
 
-def enrich_correlation_with_llm(compiled_base: str, corr_hint: str, target_syntax: str) -> str:
-    """Pede ao LLM apenas os pipes de correlação a anexar ao filtro base."""
-    if "SPL" in target_syntax:
-        rules = "Use '| bin _time span=<timespan> | stats count by <group-by fields> | where count >= <threshold>'."
-    elif "KQL" in target_syntax:
-        rules = "Use '| summarize count() by bin(TimeGenerated, <timespan>), <group-by fields> | where count_ >= <threshold>'."
-    elif "AQL" in target_syntax:
-        rules = "Use 'GROUP BY <fields> HAVING COUNT(*) >= <threshold> LAST <timespan>'."
-    else:
-        rules = "Append the grouping, time-window and threshold clauses."
-
-    prompt = f"""Output ONLY the raw {target_syntax} query. No explanations, no markdown.
-
-Base filter (already correct, keep it):
-{compiled_base}
-
-Sigma correlation block to apply:
-{corr_hint}
-
-Rules: {rules}
-Task: return the base filter with the correlation (time window, group-by, threshold) appended."""
-
-    payload = {
-        "model": MODEL_NAME,
-        "prompt": prompt,
-        "stream": False,
-        "keep_alive": "1h",
-        "options": {"num_predict": 120, "num_ctx": 1024, "temperature": 0.0},
-    }
-
-    try:
-        response = requests.post(f"{OLLAMA_HOST}/api/generate", json=payload, timeout=30)
-        response.raise_for_status()
-        result = response.json().get("response", "").strip()
-        clean = re.sub(r"^```(?:[a-zA-Z]+)?\s*|\s*```$", "", result, flags=re.MULTILINE).strip()
-        clean = re.sub(r"^(?:Here is[^\n:]*:?|Result:?|Final query:?)\s*", "", clean, flags=re.IGNORECASE).strip()
-        return clean or compiled_base
-    except Exception:
-        return compiled_base
-
-
 
 def compile_sigma_to_target(sigma_yaml: str, target_syntax: str) -> str:
-    try:
-        collection = SigmaCollection.from_yaml(sigma_yaml)
-        if not collection.rules:
-            raise ValueError("O conteúdo não contém regras Sigma válidas.")
-    except yaml.YAMLError as e:
-        raise ValueError(f"YAML inválido: {str(e)}")
-    except SigmaError as e:
-        raise ValueError(f"Regra Sigma inválida: {str(e)}")
+    # 1. Sanitização de múltiplos documentos '---' ou lixo residual
+    cleaned_yaml = sigma_yaml.strip()
+    
+    # Se houver delimitadores múltiplos '---', isola o primeiro bloco não vazio que contenha a estrutura Sigma
+    if "---" in cleaned_yaml:
+        docs = [d.strip() for d in cleaned_yaml.split("---") if d.strip()]
+        # Procura o bloco que realmente contenha a secção de deteção
+        target_doc = next((d for d in docs if "detection" in d or "logsource" in d), docs[0] if docs else cleaned_yaml)
+        cleaned_yaml = target_doc
 
- 
-    # IMPORTANTE: todos os backends abaixo recebem a pipeline correta.
-    # Sem isto, os campos ficam crus (ex: EventID em vez de EventCode no
-    # Splunk), e a query nunca encontra nada num SIEM real.
+    try:
+        # Usa o parser nativo do pySigma diretamente sobre a string sanitizada
+        collection = SigmaCollection.from_yaml(cleaned_yaml)
+    except Exception:
+        # Fallback via safe_load_all para garantir compatibilidade se houver streams
+        try:
+            parsed_docs = [doc for doc in yaml.safe_load_all(cleaned_yaml) if isinstance(doc, dict)]
+            if not parsed_docs:
+                raise ValueError("O conteúdo não é um YAML Sigma válido.")
+            collection = SigmaCollection.from_dicts(parsed_docs)
+        except Exception as e:
+            raise ValueError(f"Falha ao validar a regra no motor pySigma: {str(e)}")
+
     match target_syntax:
         case "SPL (Splunk)":
-            backend = SplunkBackend(processing_pipeline=splunk_windows_pipeline())
+            backend = SplunkBackend()
         case "KQL (Sentinel)":
-            backend = KustoBackend(processing_pipeline=microsoft_365_defender_pipeline())
-        case "AQL (QRadar)":
-            backend = QRadarAQLBackend()
+            backend = KustoBackend()
         case "EQL (Elastic)":
-            backend = EqlBackend(processing_pipeline=ecs_windows())
-        case "CQL (CrowdStrike)":
-            if LogScaleBackend is None:
-                raise ValueError("Backend CrowdStrike LogScale não está instalado.")
-            backend = LogScaleBackend(processing_pipeline=crowdstrike_falcon_pipeline())
+            backend = EqlBackend()
+        case "AQL (QRadar)":
+            backend = AQLBackend()
         case "Sigma Rule":
-            return sigma_yaml
+            return cleaned_yaml
         case _:
             raise ValueError(f"Sintaxe de destino '{target_syntax}' não suportada.")
- 
+
     try:
         result = backend.convert(collection)
         target_query = "\n".join(result) if isinstance(result, list) else str(result)
+
+        if target_syntax == "KQL (Sentinel)":
+            clean_query = target_query.strip()
+            if not clean_query.startswith(("SecurityEvent", "Device", "CommonSecurityLog", "SigninLogs", "AuditLogs")):
+                if clean_query.startswith("| where"):
+                    target_query = f"DeviceProcessEvents\n{clean_query}"
+                elif clean_query.startswith("|"):
+                    target_query = f"DeviceProcessEvents\n{clean_query}"
+                else:
+                    target_query = f"DeviceProcessEvents\n| where {clean_query}"
+
         return target_query
-    except NotImplementedError:
-        raise RuntimeError(f"O backend '{target_syntax}' não suporta este tipo de regra (ex: regras de correlação).")
     except SigmaError as e:
         raise RuntimeError(f"Erro de compilação pySigma ({target_syntax}): {str(e)}")
-    
-def split_sigma_documents(sigma_yaml: str):
-    """Separa o YAML em regras base e regras de correlação."""
-    docs = [d for d in yaml.safe_load_all(sigma_yaml) if isinstance(d, dict)]
-    base_docs = [d for d in docs if "correlation" not in d]
-    corr_docs = [d for d in docs if "correlation" in d]
-    return base_docs, corr_docs
 
+def extract_structured_conditions(sigma_yaml: str) -> str:
+    """Usa o parser determinístico do pySigma para extrair campos/valores/condição,
+    evitando reescrever a regra Sigma via LLM antes da tradução final."""
+    collection = SigmaCollection.from_yaml(sigma_yaml)
+    rule = collection.rules[0]
 
-def convert_with_engine(sigma_yaml: str, target_syntax: str) -> tuple[str, str]:
-    """
-    Motor em 3 níveis. Devolve (query, origem).
-    origem: 'pysigma' | 'pysigma+llm' | 'llm'
-    """
-
-    # NÍVEL 1 — pySigma puro. É determinístico, por isso é sempre a 1ª escolha.
-    try:
-        return compile_sigma_to_target(sigma_yaml, target_syntax), "pysigma"
-    except (RuntimeError, ValueError) as e:
-        first_error = str(e)
-
-    base_docs, corr_docs = split_sigma_documents(sigma_yaml)
-
-    # NÍVEL 2 — o backend não suporta a correlação, mas suporta a regra base.
-    # Compilamos a base com pySigma (fiável) e pedimos ao LLM só os pipes
-    # de agregação (count/group by/timespan) que faltam.
-    if corr_docs and base_docs:
-        try:
-            base_yaml = yaml.dump_all(base_docs, sort_keys=False, allow_unicode=True)
-            compiled_base = compile_sigma_to_target(base_yaml, target_syntax)
-
-            corr = corr_docs[0].get("correlation", {}) or {}
-            corr_hint = yaml.dump(corr, sort_keys=False, allow_unicode=True)
-
-            enriched = enrich_correlation_with_llm(compiled_base, corr_hint, target_syntax)
-            if enriched and enriched != compiled_base:
-                return enriched, "pysigma+llm"
-            return compiled_base, "pysigma+llm"
-        except Exception:
-            pass
-
-    # NÍVEL 3 — último recurso: tradução completa pelo LLM.
-    llm_result = direct_llm_translation(sigma_yaml, "Sigma Rule", target_syntax)
-    if llm_result.startswith("Erro na tradução direta"):
-        raise ValueError(
-            f"Não foi possível converter para {target_syntax}. "
-            f"pySigma: {first_error}. LLM: {llm_result}"
-        )
-    return llm_result, "llm"
-
+    lines = [f"Rule: {rule.title}"]
+    for name, det in rule.detection.detections.items():
+        lines.append(f"Block [{name}]:")
+        for item in det.detection_items:
+            field = item.field or "(keyword match)"
+            mods = [m.__name__ for m in item.modifiers] if item.modifiers else []
+            lines.append(f"  field={field} modifiers={mods} value={item.value}")
+    lines.append(f"Condition: {rule.detection.condition[0]}")
+    return "\n".join(lines)
 
 def convert_rule_pipeline(source_query: str, source_syntax: str, target_syntax: str) -> dict:
     if not source_query:
         raise ValueError("A query original está vazia.")
- 
-    # CENÁRIO 1: A Origem é Sigma. Bypass total ao LLM, pySigma puro.
+
+    LLM_ONLY_TARGETS = ["CQL (CrowdStrike)"]
+
+    # 1. Alvos exclusivos via LLM (ex: CQL)
+    if target_syntax in LLM_ONLY_TARGETS:
+        if source_syntax == "Sigma Rule":
+            structured_input = extract_structured_conditions(source_query)
+            final_query = direct_llm_translation(structured_input, "Sigma (structured)", target_syntax)
+        else:
+            final_query = direct_llm_translation(source_query, source_syntax, target_syntax)
+
+        return {
+            "sigma_rule": source_query if source_syntax == "Sigma Rule" else "N/A - Tradução direta via LLM",
+            "target_query": final_query,
+            "engine": "llm",
+        }
+
+    # 2. CENÁRIO 1: Origem Sigma -> Target determinístico (pySigma ou Híbrido se tiver correlação)
     if source_syntax == "Sigma Rule":
-        final_query, engine = convert_with_engine(source_query, target_syntax)
+        final_query = compile_sigma_to_target(source_query, target_syntax)
+        engine_used = "pysigma"
+
+        if "correlation:" in source_query:
+            final_query = enrich_with_aggregations(
+                source_query=source_query,
+                source_syntax="Sigma Correlation",
+                compiled_base=final_query,
+                target_syntax=target_syntax
+            )
+            engine_used = "hybrid"
+
         return {
             "sigma_rule": source_query,
             "target_query": final_query,
-            "source": engine,
-            "validated": False,
+            "engine": engine_used,
         }
 
- 
-    # CENÁRIO 2: SIEM para SIEM direto via LLM (ex: AQL -> SPL sem passar por Sigma).
-    if target_syntax in ["SPL (Splunk)", "KQL (Sentinel)", "AQL (QRadar)", "EQL (Elastic)"]:
+    # 3. CENÁRIO 2: SIEM para SIEM direto via LLM
+    if target_syntax in ["SPL (Splunk)", "KQL (Sentinel)", "EQL (Elastic)", "AQL (QRadar)"]:
         final_query = direct_llm_translation(source_query, source_syntax, target_syntax)
         return {
             "sigma_rule": "N/A - Conversão direta via LLM (Agregações detetadas)",
             "target_query": final_query,
-            "source": "llm",
-            "validated": False,
+            "engine": "llm",
         }
- 
-    # CENÁRIO 3: SIEM para Sigma via LLM, depois Sigma -> destino via pySigma (determinístico).
+
+    # 4. CENÁRIO 3: SIEM -> Descompilação para Sigma (LLM) + Compilação pySigma (Híbrido)
     sigma_rule = decompile_to_sigma(source_query, source_syntax)
-    final_query = compile_sigma_to_target(sigma_rule, target_syntax)
- 
+    
+    if target_syntax == "Sigma Rule":
+        final_query = sigma_rule
+        engine_used = "llm"
+    else:
+        final_query = compile_sigma_to_target(sigma_rule, target_syntax)
+        engine_used = "hybrid"
+
     return {
         "sigma_rule": sigma_rule,
         "target_query": final_query,
-        "source": "llm+pysigma",
-        "validated": False,
+        "engine": engine_used,
     }
 
 def get_decompilation_prompt(source_query: str, source_syntax: str) -> str:
@@ -343,17 +319,60 @@ Query ({source_syntax}):
 """
 
 def direct_llm_translation(source_query: str, source_syntax: str, target_syntax: str) -> str:
-    prompt = f"""Task: Translate the following {source_syntax} query into a production-ready {target_syntax} query.
+    # Definição estrita com Few-Shot Learning para evitar repetição de SQL
+    if "CQL" in target_syntax:
+        system_instruction = (
+            "Target: CrowdStrike Falcon LogScale Query Language (LQL/CQL).\n"
+            "STRICT RULES:\n"
+            "1. Output ONLY filters and pipes. NEVER use SQL ('SELECT', 'FROM', 'WHERE').\n"
+            "2. Format filters as: field=\"value\" or field=number.\n"
+            "3. Combine multiple conditions with spaces or 'AND'.\n"
+            "\n"
+            "Example 1:\n"
+            "Input: SELECT * FROM events WHERE destinationip = '10.0.0.1' AND sourceport = 80\n"
+            "Output: destinationip=\"10.0.0.1\" sourceport=80\n"
+            "\n"
+            "Example 2:\n"
+            "Input: EventID=4625 LogonType=3\n"
+            "Output: EventID=4625 LogonType=3\n"    
+        )
+    elif "KQL" in target_syntax:
+        system_instruction = "Target: Microsoft Sentinel KQL. Format: SecurityEvent | where EventID == 4625"
+    elif "SPL" in target_syntax:
+        system_instruction = "Target: Splunk SPL. Format: index=* EventID=4625"
+    elif "AQL" in target_syntax:
+        system_instruction = (
+            "Target: IBM QRadar AQL (Ariel Query Language).\n"
+            "STRICT RULES:\n"
+            "1. Always use the form: SELECT * FROM events WHERE <conditions> LAST 24 HOURS\n"
+            "2. Translate EVERY field/value pair listed in the input — never skip one, "
+            "even if there are multiple blocks.\n"
+            "3. Use quotes around field names with spaces: \"Process Name\"\n"
+            "4. Modifier 'endswith' -> field ILIKE '%value'; 'contains' -> field ILIKE '%value%'; "
+            "'startswith' -> field ILIKE 'value%'.\n"
+            "5. Combine multiple blocks/conditions per the given Condition line, using AND/OR accordingly.\n"
+            "6. NEVER invent field names not present in the input.\n"
+            "7. Preserve the value string EXACTLY as given, including leading/trailing "
+            "backslashes, dots, or slashes — these are often significant path separators "
+            "and must not be dropped or altered.\n"
+            "\n"
+            "Example:\n"
+            "Input:\n"
+            "Block [selection]:\n"
+            "  field=Image modifiers=['endswith'] value=['\\\\whoami.exe']\n"
+            "Condition: selection\n"
+            "Output: SELECT * FROM events WHERE \"Image\" ILIKE '%\\\\whoami.exe' LAST 24 HOURS\n"
+        )
+    else:
+        system_instruction = f"Target: {target_syntax}"
 
-CRITICAL INSTRUCTIONS:
-- The data table already exists (assume it is named 'events'). DO NOT declare it.
-- DO NOT use 'datatable', 'let mock', or generate any sample data.
-- Output ONLY the query string starting directly with the table name or base command. No markdown, no comments.
+    prompt = f"""You are a cybersecurity SIEM engineer translating queries.
+{system_instruction}
 
 Original Query ({source_syntax}):
 {source_query}
 
-Translation ({target_syntax}):"""
+Output ONLY the translated query string without any markdown, code blocks, or explanations:"""
 
     payload = {
         "model": MODEL_NAME,
@@ -361,28 +380,32 @@ Translation ({target_syntax}):"""
         "stream": False,
         "keep_alive": "1h",
         "options": {
-            "num_predict": 150, 
+            "num_predict": 80,
             "temperature": 0.0,
-            "num_ctx": 512
-        }
+            "num_ctx": 512,
+        },
     }
-    
+
     try:
         response = requests.post(f"{OLLAMA_HOST}/api/generate", json=payload, timeout=30)
         response.raise_for_status()
-        
+
         result = response.json().get("response", "").strip()
-        
-        # Limpa os blocos de markdown caso o modelo insista em enviá-los
+
+        # Limpeza de markdown e textos introdutórios
         clean_result = re.sub(r"^```(?:[a-zA-Z]+)?\s*|\s*```$", "", result, flags=re.MULTILINE).strip()
-        
-        # Última linha de defesa (Hardcode): Se ele ainda assim alucinar o datatable, cortamos a string
-        if "datatable" in clean_result and "];" in clean_result:
-            clean_result = clean_result.split("];")[-1].strip()
-            # Remove o "let filteredEvents = events" ou semelhante e deixa só o pipe
-            clean_result = re.sub(r"^let\s+[a-zA-Z_]+\s*=\s*[a-zA-Z_]+\s*\|?", "events\n|", clean_result).strip()
+        clean_result = re.sub(r"^(?:Output:?|Translation:?|Result:?|Final query:?)\s*", "", clean_result, flags=re.IGNORECASE).strip()
+
+        # Higienização de segurança para CQL: se o LLM ainda assim começar com SELECT/FROM, extrai apenas o WHERE
+        if "CQL" in target_syntax and ("select " in clean_result.lower() or "from " in clean_result.lower()):
+            where_match = re.search(r"where\s+(.+)$", clean_result, re.IGNORECASE | re.DOTALL)
+            if where_match:
+                where_clause = where_match.group(1).strip()
+                # Converte 'field = value' -> 'field="value"'
+                clean_result = re.sub(r"(\w+)\s*=\s*['\"]?([^'\"\s]+)['\"]?", r'\1="\2"', where_clause)
+                clean_result = re.sub(r"\s+and\s+", " ", clean_result, flags=re.IGNORECASE)
 
         return clean_result
 
     except Exception as e:
-        return f"Erro na tradução direta via LLM: {str(e)}"
+        return f"Erro na tradução direta para {target_syntax}: {str(e)}"

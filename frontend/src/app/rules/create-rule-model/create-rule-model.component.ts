@@ -9,16 +9,11 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
-import {
-  CodeEditorComponent,
-  CodeEditorModule,
-  CodeModel,
-  CodeModelChangedEvent,
-} from '@ngstack/code-editor';
 import { UsecasesService } from '../../services/usecases.service';
 import { RulesService } from '../../services/rules.service';
 import { TagInputModule } from 'ngx-chips';
 import { Router } from '@angular/router';
+import { AppCodeEditorComponent } from '../../shared/components/app-code-editor/app-code-editor.component';
 
 @Component({
   selector: 'app-create-rule-model',
@@ -32,14 +27,13 @@ import { Router } from '@angular/router';
     TagInputModule,
     FormsModule,
     ReactiveFormsModule,
-    CodeEditorModule,
+    AppCodeEditorComponent,
   ],
 })
 export class CreateRuleModelComponent implements OnInit {
   usecases: any = [];
   registeredLogsources: string[] = [];
 
-  // Categorização atualizada incluindo as novas sintaxes
   types: { [key: string]: string[] } = {
     SIEM: [
       'AQL (QRadar)',
@@ -48,7 +42,6 @@ export class CreateRuleModelComponent implements OnInit {
       'KQL (Sentinel)',
       'EQL (Elastic)',
       'Sigma Rule',
-      'Elastic Lucene Rule',
     ],
     EDR: ['CQL (CrowdStrike)'],
     SOAR: ['YARA Rule'],
@@ -58,6 +51,7 @@ export class CreateRuleModelComponent implements OnInit {
   selectedSyntax: string = 'AQL (QRadar)';
   selectedUseCase: any = '';
 
+  code: string = '';
   isAutoDetecting = false;
 
   createRuleModelForm = new FormGroup({
@@ -67,217 +61,6 @@ export class CreateRuleModelComponent implements OnInit {
     syntax: new FormControl('AQL (QRadar)', Validators.required),
     logsources: new FormControl<any>(null, Validators.required),
   });
-
-  options = {
-    language: 'sql',
-    minimap: { enabled: true },
-    automaticLayout: true,
-    dragAndDrop: true,
-  };
-
-  selectedModel: CodeModel = {
-    value: '',
-    language: 'sql',
-    uri: 'rule-model-editor',
-  };
-
-  theme = 'vs';
-
-  constructor(
-    private useCasesService: UsecasesService,
-    private rulesService: RulesService,
-    private router: Router,
-  ) {}
-
-  ngOnInit(): void {
-    this.useCasesService.getUseCases().subscribe((data) => {
-      this.usecases = data;
-      this.rulesService.getRegisteredLogSources().subscribe((res: any) => {
-        this.registeredLogsources = res.map((log: any) => log.name);
-      });
-    });
-
-    this.applyExampleCode(this.selectedSyntax);
-  }
-
-  typeKeys(): string[] {
-    return Object.keys(this.types);
-  }
-
-  getAvailableSyntaxes(): string[] {
-    return this.types[this.selectedType] || [];
-  }
-
-  onTypeChange(): void {
-    const syntaxes = this.getAvailableSyntaxes();
-    if (syntaxes.length > 0) {
-      this.selectedSyntax = syntaxes[0];
-      this.createRuleModelForm.patchValue({ syntax: this.selectedSyntax });
-      this.applyExampleCode(this.selectedSyntax);
-    }
-  }
-
-  onSyntaxChange(): void {
-    this.applyExampleCode(this.selectedSyntax);
-  }
-
-  applyExampleCode(syntax: string): void {
-    if (this.isAutoDetecting) return;
-
-    const lang = this.getMonacoLanguage(syntax);
-    this.options.language = lang;
-    this.selectedModel = {
-      ...this.selectedModel,
-      value: this.examples[syntax] || '',
-      language: lang,
-    };
-  }
-
-  getMonacoLanguage(syntax: string): string {
-    switch (syntax) {
-      case 'Elastic Lucene Rule':
-        return 'json';
-      case 'AQL (QRadar)':
-      case 'SPL (Splunk)':
-      case 'SPL2 (Splunk)':
-      case 'KQL (Sentinel)':
-      case 'CQL (CrowdStrike)':
-        return 'sql';
-      default:
-        return 'yaml';
-    }
-  }
-
-  onEditorLoaded(editor: CodeEditorComponent): void {}
-
-  onCodeModelChanged(event: CodeModelChangedEvent): void {
-    setTimeout(() => {
-      event.sender.formatDocument();
-    }, 100);
-  }
-
-  onCodeChanged(value: string): void {
-    // 1. Previne a auto-deteção se for apenas o utilizador a carregar os exemplos predefinidos
-    if (this.isAutoDetecting) return;
-    if (!value || value.trim() === '') return;
-
-    // Remove case-sensitivity para a análise
-    const code = value.trim().toLowerCase();
-
-    let detectedType = '';
-    let detectedSyntax = '';
-
-    // 2. Motor de Regras de Deteção (Ordem de especificidade importa)
-    if (
-      code.startsWith('rule ') ||
-      (code.includes('strings:') && code.includes('condition:'))
-    ) {
-      detectedType = 'SOAR';
-      detectedSyntax = 'YARA Rule';
-    } else if (
-      code.includes('title:') &&
-      code.includes('logsource:') &&
-      code.includes('detection:')
-    ) {
-      detectedType = 'SIEM';
-      detectedSyntax = 'Sigma Rule';
-    } else if (code.startsWith('{') && code.includes('"query":')) {
-      detectedType = 'SIEM';
-      detectedSyntax = 'Elastic Lucene Rule';
-    } else if (
-      code.includes('sequence by') ||
-      code.includes('[process where')
-    ) {
-      detectedType = 'SIEM';
-      detectedSyntax = 'EQL (Elastic)';
-    } else if (code.includes('index=') || code.includes('sourcetype=')) {
-      detectedType = 'SIEM';
-      detectedSyntax = 'SPL (Splunk)';
-    } else if (
-      code.includes('$data =') ||
-      code.includes('into $target_dataset;')
-    ) {
-      detectedType = 'SIEM';
-      detectedSyntax = 'SPL2 (Splunk)';
-    } else if (
-      code.includes('| summarize') ||
-      code.includes('| project') ||
-      code.includes('timegenerated > ago')
-    ) {
-      detectedType = 'SIEM';
-      detectedSyntax = 'KQL (Sentinel)';
-    } else if (
-      code.includes('#event_simplename') ||
-      code.includes('groupby([')
-    ) {
-      detectedType = 'EDR';
-      detectedSyntax = 'CQL (CrowdStrike)';
-    } else if (
-      code.startsWith('select ') &&
-      code.includes('from ') &&
-      code.includes('where ')
-    ) {
-      detectedType = 'SIEM';
-      detectedSyntax = 'AQL (QRadar)';
-    }
-
-    // 3. Aplicação Segura ao Formulário
-    if (
-      detectedType &&
-      detectedSyntax &&
-      detectedSyntax !== this.selectedSyntax
-    ) {
-      // Bloqueia a reinjeção de código do applyExampleCode
-      this.isAutoDetecting = true;
-
-      // Atualiza o Reactive Form e as variáveis NgModel associadas ao UI
-      this.selectedType = detectedType;
-      this.selectedSyntax = detectedSyntax;
-
-      this.createRuleModelForm.patchValue(
-        {
-          selectedType: detectedType,
-          syntax: detectedSyntax,
-        },
-        { emitEvent: false }, // Evita que isto dispare validações ciclicas infinitas
-      );
-
-      // Ajusta o Syntax Highlighting do Editor (SQL, YAML, JSON)
-      this.options.language = this.getMonacoLanguage(detectedSyntax);
-
-      // Liberta o bloqueio após o ciclo de deteção
-      setTimeout(() => {
-        this.isAutoDetecting = false;
-      }, 100);
-    }
-  }
-
-  createRuleModel(): void {
-    if (this.createRuleModelForm.invalid) {
-      return;
-    }
-
-    const arrayLogsources: any = this.createRuleModelForm.value.logsources;
-    const logsources = arrayLogsources?.map((logsource: any) =>
-      typeof logsource === 'string' ? logsource : logsource.value,
-    );
-
-    const payload = {
-      title: this.createRuleModelForm.value.title,
-      useCaseId: this.createRuleModelForm.value.selectedUseCase,
-      type: this.createRuleModelForm.value.selectedType,
-      syntax: this.createRuleModelForm.value.syntax,
-      ruleCode: this.selectedModel.value,
-      logsources: logsources,
-    };
-
-    this.rulesService.createRuleModel(payload).subscribe({
-      next: () => {
-        this.router.navigate(['/manage-rule-models']);
-      },
-      error: (err) => console.error('Erro ao criar modelo de regra:', err),
-    });
-  }
 
   examples: { [key: string]: string } = {
     'AQL (QRadar)': `SELECT QIDNAME(qid) as "Event Name", sourceip, destinationip, count(*) as "Event Count"
@@ -324,14 +107,6 @@ detection:
     condition: selection
 level: medium`,
 
-    'Elastic Lucene Rule': `{
-  "name": "Falhas de Autenticação Repetidas",
-  "type": "query",
-  "language": "lucene",
-  "query": "event.category:authentication AND event.outcome:failure",
-  "severity": "medium"
-}`,
-
     'YARA Rule': `rule Suspicious_Process_Execution {
     strings:
         $s1 = "powershell -enc" nocase
@@ -341,16 +116,168 @@ level: medium`,
 }`,
   };
 
-  get isExampleCode(): boolean {
-    const currentVal = this.selectedModel.value;
-    const exampleVal = this.examples[this.selectedSyntax] || '';
+  constructor(
+    private useCasesService: UsecasesService,
+    private rulesService: RulesService,
+    private router: Router,
+  ) {}
 
-    // Função para remover diferenças de formatação (transforma quebras de linha e tabs em espaços simples)
+  ngOnInit(): void {
+    this.useCasesService.getUseCases().subscribe((data) => {
+      this.usecases = data;
+      this.rulesService.getRegisteredLogSources().subscribe((res: any) => {
+        this.registeredLogsources = res.map((log: any) => log.name);
+      });
+    });
+
+    this.applyExampleCode(this.selectedSyntax);
+  }
+
+  typeKeys(): string[] {
+    return Object.keys(this.types);
+  }
+
+  getAvailableSyntaxes(): string[] {
+    return this.types[this.selectedType] || [];
+  }
+
+  onTypeChange(): void {
+    const syntaxes = this.getAvailableSyntaxes();
+    if (syntaxes.length > 0) {
+      this.selectedSyntax = syntaxes[0];
+      this.createRuleModelForm.patchValue({ syntax: this.selectedSyntax });
+      this.applyExampleCode(this.selectedSyntax);
+    }
+  }
+
+  onSyntaxChange(): void {
+    this.applyExampleCode(this.selectedSyntax);
+  }
+
+  applyExampleCode(syntax: string): void {
+    if (this.isAutoDetecting) return;
+    this.code = this.examples[syntax] || '';
+  }
+
+  onCodeChanged(value: string): void {
+    this.code = value;
+
+    if (this.isAutoDetecting || !value || value.trim() === '') return;
+
+    const lowerCode = value.trim().toLowerCase();
+    let detectedType = '';
+    let detectedSyntax = '';
+
+    // Motor de Deteção Heurística
+    if (
+      lowerCode.startsWith('rule ') ||
+      (lowerCode.includes('strings:') && lowerCode.includes('condition:'))
+    ) {
+      detectedType = 'SOAR';
+      detectedSyntax = 'YARA Rule';
+    } else if (
+      lowerCode.includes('title:') &&
+      lowerCode.includes('logsource:') &&
+      lowerCode.includes('detection:')
+    ) {
+      detectedType = 'SIEM';
+      detectedSyntax = 'Sigma Rule';
+    } else if (
+      lowerCode.includes('sequence by') ||
+      lowerCode.includes('[process where')
+    ) {
+      detectedType = 'SIEM';
+      detectedSyntax = 'EQL (Elastic)';
+    } else if (
+      lowerCode.includes('index=') ||
+      lowerCode.includes('sourcetype=')
+    ) {
+      detectedType = 'SIEM';
+      detectedSyntax = 'SPL (Splunk)';
+    } else if (
+      lowerCode.includes('$data =') ||
+      lowerCode.includes('into $target_dataset;')
+    ) {
+      detectedType = 'SIEM';
+      detectedSyntax = 'SPL2 (Splunk)';
+    } else if (
+      lowerCode.includes('| summarize') ||
+      lowerCode.includes('| project') ||
+      lowerCode.includes('timegenerated > ago')
+    ) {
+      detectedType = 'SIEM';
+      detectedSyntax = 'KQL (Sentinel)';
+    } else if (
+      lowerCode.includes('#event_simplename') ||
+      lowerCode.includes('groupby([')
+    ) {
+      detectedType = 'EDR';
+      detectedSyntax = 'CQL (CrowdStrike)';
+    } else if (
+      lowerCode.startsWith('select ') &&
+      lowerCode.includes('from ') &&
+      lowerCode.includes('where ')
+    ) {
+      detectedType = 'SIEM';
+      detectedSyntax = 'AQL (QRadar)';
+    }
+
+    if (
+      detectedType &&
+      detectedSyntax &&
+      detectedSyntax !== this.selectedSyntax
+    ) {
+      this.isAutoDetecting = true;
+      this.selectedType = detectedType;
+      this.selectedSyntax = detectedSyntax;
+
+      this.createRuleModelForm.patchValue(
+        {
+          selectedType: detectedType,
+          syntax: detectedSyntax,
+        },
+        { emitEvent: false },
+      );
+
+      setTimeout(() => {
+        this.isAutoDetecting = false;
+      }, 100);
+    }
+  }
+
+  createRuleModel(): void {
+    if (this.createRuleModelForm.invalid) {
+      return;
+    }
+
+    const arrayLogsources: any = this.createRuleModelForm.value.logsources;
+    const logsources = arrayLogsources?.map((logsource: any) =>
+      typeof logsource === 'string' ? logsource : logsource.value,
+    );
+
+    const payload = {
+      title: this.createRuleModelForm.value.title,
+      useCaseId: this.createRuleModelForm.value.selectedUseCase,
+      type: this.createRuleModelForm.value.selectedType,
+      syntax: this.createRuleModelForm.value.syntax,
+      ruleCode: this.code,
+      logsources: logsources,
+    };
+
+    this.rulesService.createRuleModel(payload).subscribe({
+      next: () => {
+        this.router.navigate(['/manage-rule-models']);
+      },
+      error: (err) => console.error('Erro ao criar modelo de regra:', err),
+    });
+  }
+
+  get isExampleCode(): boolean {
+    const exampleVal = this.examples[this.selectedSyntax] || '';
     const normalize = (text: string) => text.replace(/\s+/g, ' ').trim();
 
     return (
-      currentVal.trim() !== '' &&
-      normalize(currentVal) === normalize(exampleVal)
+      this.code.trim() !== '' && normalize(this.code) === normalize(exampleVal)
     );
   }
 }

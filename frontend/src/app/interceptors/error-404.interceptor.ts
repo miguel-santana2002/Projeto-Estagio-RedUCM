@@ -20,16 +20,15 @@ export class Error404Interceptor implements HttpInterceptor {
   ): Observable<HttpEvent<unknown>> {
     return next.handle(request).pipe(
       catchError((error: HttpErrorResponse) => {
-        const isNotFoundOrServerError =
-          error.status === 404 || error.status === 500;
         const isAlreadyOnNotFoundPage = this.router.url === '/page-not-found';
+        const isGetRequest = request.method === 'GET';
 
-        if (isNotFoundOrServerError && !isAlreadyOnNotFoundPage) {
-          this.router.navigate(['/page-not-found'], {
-            skipLocationChange: true,
-          });
+        // 1. Redireciona APENAS se for uma leitura (GET) inexistente
+        if (error.status === 404 && isGetRequest && !isAlreadyOnNotFoundPage) {
+          this.router.navigate(['/page-not-found']);
         }
 
+        // 2. Erros 404 de escrita (POST/PUT/DELETE), 400 e 500 propagam para o componente
         return throwError(() => error);
       }),
     );

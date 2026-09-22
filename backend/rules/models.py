@@ -6,7 +6,6 @@ class RuleModel(models.Model):
     title = models.CharField(max_length=255, null=True, blank=True)
     useCaseId = models.IntegerField(null=True, blank=True)
     type = models.CharField(max_length=50, null=True, blank=True)
-    syntax = models.CharField(max_length=100, null=True, blank=True)
     ruleCode = models.TextField(null=True, blank=True)
     logsources = ArrayField(models.CharField(max_length=255, blank=True), blank=True, default=list)
 

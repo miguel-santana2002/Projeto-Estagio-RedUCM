@@ -9,17 +9,12 @@ import {
 } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { TagInputModule } from 'ngx-chips';
-import {
-  CodeEditorComponent,
-  CodeEditorModule,
-  CodeModel,
-  CodeModelChangedEvent,
-} from '@ngstack/code-editor';
 
 import { RulesService } from '../../services/rules.service';
 import { UsecasesService } from '../../services/usecases.service';
 import { HeaderComponent } from '../../layout/header/header.component';
 import { TitlebannerComponent } from '../../layout/titlebanner/titlebanner.component';
+import { AppCodeEditorComponent } from '../../shared/components/app-code-editor/app-code-editor.component';
 
 @Component({
   selector: 'app-edit-rule-model',
@@ -30,9 +25,9 @@ import { TitlebannerComponent } from '../../layout/titlebanner/titlebanner.compo
     ReactiveFormsModule,
     RouterModule,
     TagInputModule,
-    CodeEditorModule,
     HeaderComponent,
     TitlebannerComponent,
+    AppCodeEditorComponent,
   ],
   templateUrl: './edit-rule-model.component.html',
   styleUrl: './edit-rule-model.component.css',
@@ -52,7 +47,6 @@ export class EditRuleModelComponent implements OnInit {
       'KQL (Sentinel)',
       'EQL (Elastic)',
       'Sigma Rule',
-      'Elastic Lucene Rule',
     ],
     EDR: ['CQL (CrowdStrike)'],
     SOAR: ['YARA Rule'],
@@ -61,6 +55,7 @@ export class EditRuleModelComponent implements OnInit {
   selectedType: string = 'SIEM';
   selectedSyntax: string = 'AQL (QRadar)';
   selectedUseCase: any = '';
+  code: string = '';
 
   editRuleModelForm = new FormGroup({
     title: new FormControl('', Validators.required),
@@ -69,21 +64,6 @@ export class EditRuleModelComponent implements OnInit {
     syntax: new FormControl('AQL (QRadar)', Validators.required),
     logsources: new FormControl<any>(null, Validators.required),
   });
-
-  options = {
-    language: 'sql',
-    minimap: { enabled: true },
-    automaticLayout: true,
-    dragAndDrop: true,
-  };
-
-  selectedModel: CodeModel = {
-    value: '',
-    language: 'sql',
-    uri: 'rule-model-edit-editor',
-  };
-
-  theme = 'vs';
 
   constructor(
     private route: ActivatedRoute,
@@ -109,6 +89,7 @@ export class EditRuleModelComponent implements OnInit {
         this.selectedUseCase = data.useCaseId || data.useCase || '';
         this.selectedType = data.type || 'SIEM';
         this.selectedSyntax = data.syntax || 'AQL (QRadar)';
+        this.code = data.ruleCode || '';
 
         const formattedLogs = Array.isArray(data.logsources)
           ? data.logsources.map((l: any) =>
@@ -123,14 +104,6 @@ export class EditRuleModelComponent implements OnInit {
           syntax: this.selectedSyntax,
           logsources: formattedLogs,
         });
-
-        const lang = this.getMonacoLanguage(this.selectedSyntax);
-        this.options.language = lang;
-        this.selectedModel = {
-          value: data.ruleCode || '',
-          language: lang,
-          uri: `rule-model-edit-${this.ruleModelId}`,
-        };
 
         this.isLoading = false;
       },
@@ -154,48 +127,11 @@ export class EditRuleModelComponent implements OnInit {
     if (syntaxes.length > 0) {
       this.selectedSyntax = syntaxes[0];
       this.editRuleModelForm.patchValue({ syntax: this.selectedSyntax });
-      this.updateEditorLanguage(this.selectedSyntax);
     }
   }
 
-  onSyntaxChange(): void {
-    this.updateEditorLanguage(this.selectedSyntax);
-  }
-
-  updateEditorLanguage(syntax: string): void {
-    const lang = this.getMonacoLanguage(syntax);
-    this.options.language = lang;
-    this.selectedModel = {
-      ...this.selectedModel,
-      language: lang,
-    };
-  }
-
-  getMonacoLanguage(syntax: string): string {
-    switch (syntax) {
-      case 'Elastic Lucene Rule':
-        return 'json';
-      case 'AQL (QRadar)':
-      case 'SPL (Splunk)':
-      case 'SPL2 (Splunk)':
-      case 'KQL (Sentinel)':
-      case 'CQL (CrowdStrike)':
-        return 'sql';
-      default:
-        return 'yaml';
-    }
-  }
-
-  onEditorLoaded(editor: CodeEditorComponent): void {}
-
-  onCodeModelChanged(event: CodeModelChangedEvent): void {
-    setTimeout(() => {
-      event.sender.formatDocument();
-    }, 100);
-  }
-
-  onCodeChanged(value: any): void {
-    this.selectedModel.value = value;
+  onCodeChanged(value: string): void {
+    this.code = value;
   }
 
   updateRuleModel(): void {
@@ -213,13 +149,13 @@ export class EditRuleModelComponent implements OnInit {
       useCaseId: this.editRuleModelForm.value.selectedUseCase,
       type: this.editRuleModelForm.value.selectedType,
       syntax: this.editRuleModelForm.value.syntax,
-      ruleCode: this.selectedModel.value,
+      ruleCode: this.code,
       logsources: logsources,
     };
 
     this.rulesService.updateRuleModel(this.ruleModelId, payload).subscribe({
       next: () => {
-        this.router.navigate(['/ruleModelDetails', this.ruleModelId]);
+        this.router.navigate(['/ruleModel-Details', this.ruleModelId]);
       },
       error: (err) => console.error('Erro ao atualizar modelo de regra:', err),
     });

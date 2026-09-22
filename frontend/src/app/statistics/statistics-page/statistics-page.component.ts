@@ -1,163 +1,186 @@
-import { ChangeDetectorRef, Component, EventEmitter, Output, Type } from '@angular/core';
-import { HeaderComponent } from "../../layout/header/header.component";
-import { TitlebannerComponent } from "../../layout/titlebanner/titlebanner.component";
-import ApexCharts from 'apexcharts';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+
+import { HeaderComponent } from '../../layout/header/header.component';
+import { TitlebannerComponent } from '../../layout/titlebanner/titlebanner.component';
 import { RulesService } from '../../services/rules.service';
 import { UsecasesService } from '../../services/usecases.service';
-import { RulesPerSyntaxComponent } from "../rules-per-syntax/rules-per-syntax.component";
-import { RulesPerLogsourceComponent } from "../rules-per-logsource/rules-per-logsource.component";
-import { RulesPerTypeComponent } from "../rules-per-type/rules-per-type.component";
-import { CommonModule } from '@angular/common';
 import { AuthService } from '../../services/auth.service';
-import { FormsModule } from '@angular/forms';
-import { RadarTacticsComponent } from "../radar-tactics/radar-tactics.component";
+
+import { RulesPerSyntaxComponent } from '../rules-per-syntax/rules-per-syntax.component';
+import { RulesPerLogsourceComponent } from '../rules-per-logsource/rules-per-logsource.component';
+import { RulesPerTypeComponent } from '../rules-per-type/rules-per-type.component';
+import { RadarTacticsComponent } from '../radar-tactics/radar-tactics.component';
 
 @Component({
-    selector: 'app-statistics-page',
-    standalone: true,
-    templateUrl: './statistics-page.component.html',
-    styleUrl: './statistics-page.component.css',
-    imports: [HeaderComponent, FormsModule, TitlebannerComponent, RulesPerSyntaxComponent, CommonModule, RulesPerLogsourceComponent, RulesPerTypeComponent, RadarTacticsComponent]
+  selector: 'app-statistics-page',
+  standalone: true,
+  templateUrl: './statistics-page.component.html',
+  styleUrl: './statistics-page.component.css',
+  imports: [
+    HeaderComponent,
+    FormsModule,
+    TitlebannerComponent,
+    RulesPerSyntaxComponent,
+    CommonModule,
+    RulesPerLogsourceComponent,
+    RulesPerTypeComponent,
+    RadarTacticsComponent,
+  ],
 })
-export class StatisticsPageComponent {
+export class StatisticsPageComponent implements OnInit {
+  rules: any[] = [];
+  filteredRules: any[] = [];
+  useCases: any[] = [];
+  ruleModels: any[] = [];
+  users: any[] = [];
+  clientsFromBd: any[] = [];
 
+  mitreTechniques: string[] = [];
+  mitreTechniquesCount: number[] = [];
 
+  clients: string[] = [];
+  clientsCount: number[] = [];
 
-    constructor(    private cdr: ChangeDetectorRef,private rulesService : RulesService, private useCasesService : UsecasesService, private authService : AuthService) { }
+  uniqueClientsName: string[] = [];
+  selectedClients: string[] = [];
 
-filteredRules : any = [];
-rules : any;
-useCases : any;
+  // Controlo do Painel de Filtros
+  showFilters: boolean = false;
 
- mitreTechniques : any= [];
- mitreTechniquesCount : any = [];
+  constructor(
+    private cdr: ChangeDetectorRef,
+    private rulesService: RulesService,
+    private useCasesService: UsecasesService,
+    private authService: AuthService,
+  ) {}
 
-  clients : any = [];
-  clientsCount : any = [];
-
-  uniqueClientsName : any = [];
-  clientsFromBd : any = [];
-  users : any = [];
-
-      ruleModels : any = [];
-
-      ngOnInit() {
-
-
-this.rulesService.getRules().subscribe((value) => {
-this.rules = value;
-this.filteredRules = value;
-
-this.useCasesService.getUseCases().subscribe((value) => {
-
-this.useCases = value;
-
-
-this.rulesService.getRuleModels().subscribe((value) => {
-this.ruleModels = value;
-
-this.authService.getUsers().subscribe((value) => {
-
-    this.users = value;
-
-
-    this.authService.getClients().subscribe((value) => {   
-this.clientsFromBd = value;
-
- this.uniqueClientsName = this.clientsFromBd.map((item: { name: any; }) => item.name)
- this.mitreTableGenerate();
- this.clientsTableGenerate();
- 
-
-});
-});
-});
-});
-
-});
-
-
-      }
-
-
-        
-     
-
-
-
-
-
- selectedClients : any = [];
-
- applyFilters() {
-    if (this.selectedClients.length === 0) {
-      console.log("no clients selected");
-      this.filteredRules = this.rules;
-    } else {
-      this.filteredRules = this.rules.filter((rule: { client: { name: any; }; }) => this.selectedClients.includes(rule.client.name));
-    }
-    console.log(this.filteredRules);
+  ngOnInit(): void {
+    this.loadAllStatistics();
   }
 
-  clearSelectedClients() {
-    this.selectedClients = [];
-    this.filteredRules = this.rules;
-  }
+  loadAllStatistics(): void {
+    this.rulesService.getRules().subscribe((rulesData: any) => {
+      console.log('Regras recebidas nas estatísticas:', rulesData);
+      this.rules = Array.isArray(rulesData) ? rulesData : [];
+      this.filteredRules = [...this.rules];
 
+      this.useCasesService.getUseCases().subscribe((useCasesData: any) => {
+        this.useCases = Array.isArray(useCasesData) ? useCasesData : [];
 
+        this.rulesService.getRuleModels().subscribe((ruleModelsData: any) => {
+          this.ruleModels = Array.isArray(ruleModelsData) ? ruleModelsData : [];
 
+          this.authService.getUsers().subscribe((usersData: any) => {
+            this.users = Array.isArray(usersData) ? usersData : [];
 
+            this.authService.getClients().subscribe((clientsData: any) => {
+              this.clientsFromBd = Array.isArray(clientsData)
+                ? clientsData
+                : [];
 
-  mitreTableGenerate() {
-    console.log(this.useCases);
-            //get all mitre technique names and number of use cases associated with them. 1 use case has multiple mitre techniques (array)
-           
-    
-            (this.useCases).forEach((useCase: { mitreTechniques: any; }) => {
-                (useCase.mitreTechniques).forEach((mitreTechnique: any) => {
-                    if(this.mitreTechniques.includes(mitreTechnique) == false) {
-                    this.mitreTechniques.push(mitreTechnique);
-                    this.mitreTechniquesCount.push(1);
-                    } else {
-                    var index = this.mitreTechniques.indexOf(mitreTechnique);
-                    this.mitreTechniquesCount[index] = this.mitreTechniquesCount[index] + 1;
-                    }
-                });
-                });
-    
-                //order both arrays by count
-                var temp = [];
-                for (var i = 0; i < this.mitreTechniques.length; i++) {
-                    temp.push({'mitreTechnique': this.mitreTechniques[i], 'count': this.mitreTechniquesCount[i]});
-                }
-                temp.sort(function(a, b) {
-                    return b.count - a.count;
-                });
-                for (var i = 0; i < temp.length; i++) {
-                    this.mitreTechniques[i] = temp[i].mitreTechnique;
-                    this.mitreTechniquesCount[i] = temp[i].count;
-                }
-                
-          }
-    
-          clientsTableGenerate() {
-            //generate statistic around client name and number of rules. 1 rule has 1 client and client object has a name, etc.
-            //make an object with client.name and count. in the same object
-    
-            (this.rules).forEach((rule: { client: any; }) => {
-                if(this.clients.includes(rule.client.name) == false) {
-                this.clients.push(rule.client.name);
-                this.clientsCount.push(1);
-                } else {
-                var index = this.clients.indexOf(rule.client.name);
-                this.clientsCount[index] = this.clientsCount[index] + 1;
-                }
+              this.uniqueClientsName = Array.from(
+                new Set(
+                  this.clientsFromBd
+                    .map((item: any) => item.name)
+                    .filter((name: string) => Boolean(name)),
+                ),
+              ).sort();
+
+              this.mitreTableGenerate();
+              this.clientsTableGenerate();
             });
-    
+          });
+        });
+      });
+    });
+  }
 
-  
+  // Toggles e Métodos de Filtro por Pills
+  toggleClient(client: string): void {
+    if (this.selectedClients.includes(client)) {
+      this.selectedClients = this.selectedClients.filter((c) => c !== client);
+    } else {
+      this.selectedClients = [...this.selectedClients, client];
+    }
+    this.applyFilters();
+  }
+
+  isClientSelected(client: string): boolean {
+    return this.selectedClients.includes(client);
+  }
+
+  applyFilters(): void {
+    if (this.selectedClients.length === 0) {
+      this.filteredRules = [...this.rules];
+    } else {
+      this.filteredRules = this.rules.filter((rule: any) =>
+        this.selectedClients.includes(rule.client?.name),
+      );
+    }
+  }
+
+  clearSelectedClients(): void {
+    this.selectedClients = [];
+    this.filteredRules = [...this.rules];
+  }
+
+  clearAllFilters(): void {
+    this.clearSelectedClients();
+  }
+
+  mitreTableGenerate(): void {
+    this.mitreTechniques = [];
+    this.mitreTechniquesCount = [];
+
+    this.useCases.forEach((useCase: any) => {
+      if (Array.isArray(useCase.mitreTechniques)) {
+        useCase.mitreTechniques.forEach((technique: any) => {
+          const techName =
+            typeof technique === 'string'
+              ? technique
+              : technique?.id || technique?.name;
+          if (!techName) return;
+
+          const index = this.mitreTechniques.indexOf(techName);
+          if (index === -1) {
+            this.mitreTechniques.push(techName);
+            this.mitreTechniquesCount.push(1);
+          } else {
+            this.mitreTechniquesCount[index]++;
+          }
+        });
+      }
+    });
+
+    // Ordenar por frequência decrescente
+    const combined = this.mitreTechniques.map((tech, i) => ({
+      technique: tech,
+      count: this.mitreTechniquesCount[i],
+    }));
+
+    combined.sort((a, b) => b.count - a.count);
+
+    this.mitreTechniques = combined.map((item) => item.technique);
+    this.mitreTechniquesCount = combined.map((item) => item.count);
+  }
+
+  clientsTableGenerate(): void {
+    this.clients = [];
+    this.clientsCount = [];
+
+    this.rules.forEach((rule: any) => {
+      const clientName = rule.client?.name;
+      if (!clientName) return;
+
+      const index = this.clients.indexOf(clientName);
+      if (index === -1) {
+        this.clients.push(clientName);
+        this.clientsCount.push(1);
+      } else {
+        this.clientsCount[index]++;
+      }
+    });
+  }
 }
-
-
-}
-

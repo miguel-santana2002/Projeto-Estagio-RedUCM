@@ -1,11 +1,57 @@
 /* You can add global styles to this file, and also import other style files */
 
-
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+html,
+body {
+  height: 100%;
+}
+body {
+  margin: 0;
+  font-family: Roboto, "Helvetica Neue", sans-serif;
+}
 
-html, body { height: 100%; }
-body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+/* Remove o fundo branco do contentor interno do ngx-chips no Dark Mode */
+.dark tag-input .ng2-tag-input,
+.dark tag-input .ng2-tag-input.ng2-tag-input--focus {
+  background-color: transparent !important;
+  border: none !important;
+}
+
+/* Corrige a cor do texto enquanto escreves (input) para branco e remove o fundo */
+.dark tag-input input.ng2-tag-input__text-input {
+  color: #ffffff !important;
+  background-color: transparent !important;
+}
+
+/* Ajusta a cor do placeholder interno para o padrão gray-400 do Tailwind */
+.dark tag-input input.ng2-tag-input__text-input::placeholder {
+  color: #9ca3af !important;
+}
+
+/* Ajusta as tags já inseridas para condizerem com o Dark Mode */
+.dark tag-input tag {
+  background-color: #374151 !important; /* gray-700 */
+  color: #ffffff !important;
+}
+
+/* Ajusta a cor da cruz de remoção da tag para branco no Dark Mode */
+.dark tag-input tag delete-icon {
+  color: #ffffff !important;
+}
+
+.dark tag-input tag delete-icon svg path,
+.dark tag-input tag delete-icon svg rect,
+.dark tag-input tag delete-icon svg polygon {
+  fill: #ffffff !important;
+  transition: fill 0.2s ease;
+}
+
+/* Feedback visual: a cruz fica vermelha ao passar o rato */
+.dark tag-input tag delete-icon:hover svg path,
+.dark tag-input tag delete-icon:hover svg rect,
+.dark tag-input tag delete-icon:hover svg polygon {
+  fill: #ef4444 !important; /* Cor red-500 do Tailwind */
+}

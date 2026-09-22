@@ -279,7 +279,7 @@ def deleteLogSourceById(request, id):
 
 @extend_schema(
     request=ConvertRuleSerializer,
-    description='Converte queries SIEM entre formatos (SPL, KQL, AQL, Lucene, EQL, Sigma) via Ollama e pySigma.',
+    description='Converte queries SIEM entre formatos (SPL, KQL, AQL, EQL, Sigma) via Ollama e pySigma.',
     responses={
         200: OpenApiResponse(response=ConvertRuleResponseSerializer, description='Regra convertida com sucesso.'),
         400: OpenApiResponse(description='Erro de validação ou estrutura Sigma inválida.'),
