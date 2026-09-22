@@ -1,100 +1,107 @@
 <app-header></app-header>
 <app-titlebanner [title]="'Editar RedModel ' + ruleModelId" image="./assets/bannercover.jpg"></app-titlebanner>
 
-<div *ngIf="isLoading" class="text-center py-20 text-gray-500 dark:text-gray-400 font-medium">
-    A carregar dados do modelo de regra...
+<!-- Estado de Carregamento -->
+<div *ngIf="isLoading" class="flex justify-center items-center py-20">
+    <div class="flex items-center gap-3 text-gray-500 dark:text-gray-400 text-sm font-medium">
+        <i class="fas fa-spinner fa-spin text-redshift-red"></i> A carregar dados do modelo de regra...
+    </div>
 </div>
 
 <form *ngIf="!isLoading"
-    class="grid grid-cols-2 gap-12 px-32 pt-12 pb-20 dark:bg-gray-900 transition-colors duration-200"
+    class="grid grid-cols-1 md:grid-cols-2 gap-8 px-8 md:px-24 lg:px-32 pt-10 pb-16 dark:text-white"
     (ngSubmit)="updateRuleModel()" [formGroup]="editRuleModelForm">
 
-    <!-- Título -->
-    <div class="space-y-4 col-span-2 md:col-span-1">
-        <label for="title" class="block text-sm font-medium leading-6 text-gray-900 dark:text-white">Título da
-            Regra</label>
-        <div class="flex flex-col">
-            <input id="title" type="text" formControlName="title" required
-                class="block w-full rounded-md border-0 px-3 py-2.5 text-gray-900 bg-white dark:bg-gray-700 dark:text-white shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-600 placeholder:text-gray-400 dark:placeholder-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 dark:focus:ring-indigo-500 sm:text-sm sm:leading-6">
-            <div *ngIf="editRuleModelForm.get('title')?.touched && editRuleModelForm.get('title')?.invalid"
-                class="text-red-600 dark:text-red-400 text-sm mt-1">
-                O título da regra é obrigatório.
+    <!-- 1. Linha Superior: Use Case, Tipo e Sintaxe na mesma linha -->
+    <div class="col-span-1 md:col-span-2 grid grid-cols-1 md:grid-cols-12 gap-6">
+
+        <!-- Use Case Associado (6 colunas) -->
+        <div class="space-y-2 md:col-span-6">
+            <label for="selectedUseCase" class="block text-sm font-semibold text-gray-900 dark:text-white">
+                Use Case Associado <span class="text-redshift-red">*</span>
+            </label>
+            <select id="selectedUseCase" formControlName="selectedUseCase" [(ngModel)]="selectedUseCase"
+                (change)="onUseCaseChange()"
+                class="block w-full py-2.5 px-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 dark:text-white rounded-lg shadow-sm focus:ring-2 focus:ring-redshift-red text-sm transition">
+                <option value="" disabled selected class="text-gray-400">Selecione um Use Case</option>
+                <option *ngFor="let option of usecases" [value]="option.id">
+                    RedUC{{ option.id }} - {{ option.title }}
+                </option>
+            </select>
+            <div *ngIf="editRuleModelForm.get('selectedUseCase')?.touched && editRuleModelForm.get('selectedUseCase')?.invalid"
+                class="text-red-600 dark:text-red-400 text-xs mt-1">
+                O Use Case associado é obrigatório.
             </div>
         </div>
-    </div>
 
-    <!-- Use Case Associado -->
-    <div class="space-y-4 col-span-2 md:col-span-1">
-        <label for="selectedUseCase" class="block text-sm font-medium leading-6 text-gray-900 dark:text-white">Use Case
-            Associado</label>
-        <select id="selectedUseCase" formControlName="selectedUseCase" [(ngModel)]="selectedUseCase"
-            class="mt-1 block w-full py-2.5 px-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 dark:focus:ring-indigo-500 sm:text-sm">
-            <option value="" disabled selected>Selecione um Use Case</option>
-            <option *ngFor="let option of usecases" [value]="option.id">
-                RedUC{{ option.id }} - {{ option.title }}
-            </option>
-        </select>
-        <div *ngIf="editRuleModelForm.get('selectedUseCase')?.touched && editRuleModelForm.get('selectedUseCase')?.invalid"
-            class="text-red-600 dark:text-red-400 text-sm mt-1">
-            O Use Case Associado é obrigatório.
+        <!-- Tipo (3 colunas) -->
+        <div class="space-y-2 md:col-span-3">
+            <label for="selectedType" class="block text-sm font-semibold text-gray-900 dark:text-white">Tipo</label>
+            <select id="selectedType" formControlName="selectedType" [(ngModel)]="selectedType"
+                (change)="onTypeChange()"
+                class="block w-full py-2.5 px-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 dark:text-white rounded-lg shadow-sm focus:ring-2 focus:ring-redshift-red text-sm transition">
+                <option *ngFor="let option of typeKeys()" [value]="option">{{ option }}</option>
+            </select>
+        </div>
+
+        <!-- Sintaxe (3 colunas) -->
+        <div class="space-y-2 md:col-span-3">
+            <label for="syntax" class="block text-sm font-semibold text-gray-900 dark:text-white">Sintaxe</label>
+            <select id="syntax" formControlName="syntax" [(ngModel)]="selectedSyntax" (change)="onSyntaxChange()"
+                class="block w-full py-2.5 px-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 dark:text-white rounded-lg shadow-sm focus:ring-2 focus:ring-redshift-red text-sm transition">
+                <option *ngFor="let option of getAvailableSyntaxes()" [value]="option">{{ option }}</option>
+            </select>
         </div>
     </div>
 
-    <!-- Tipo (SIEM / SOAR / EDR) -->
-    <div class="space-y-4 col-span-2 md:col-span-1">
-        <label for="selectedType" class="block text-sm font-medium leading-6 text-gray-900 dark:text-white">Tipo</label>
-        <select id="selectedType" formControlName="selectedType" [(ngModel)]="selectedType" (change)="onTypeChange()"
-            class="mt-1 block w-full py-2.5 px-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 dark:focus:ring-indigo-500 sm:text-sm">
-            <option *ngFor="let option of typeKeys()" [value]="option">{{ option }}</option>
-        </select>
-    </div>
-
-    <!-- Sintaxe -->
-    <div class="space-y-4 col-span-2 md:col-span-1">
-        <label for="syntax" class="block text-sm font-medium leading-6 text-gray-900 dark:text-white">Sintaxe</label>
-        <select id="syntax" formControlName="syntax" [(ngModel)]="selectedSyntax"
-            class="mt-1 block w-full py-2.5 px-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 dark:focus:ring-indigo-500 sm:text-sm">
-            <option *ngFor="let option of getAvailableSyntaxes()" [value]="option">{{ option }}</option>
-        </select>
-        <div *ngIf="editRuleModelForm.get('syntax')?.touched && editRuleModelForm.get('syntax')?.invalid"
-            class="text-red-600 dark:text-red-400 text-sm mt-1">
-            A Sintaxe é obrigatória.
+    <!-- 2. Título da Regra -->
+    <div class="space-y-2 col-span-1 md:col-span-2">
+        <label for="title" class="block text-sm font-semibold text-gray-900 dark:text-white">
+            Título da Regra <span class="text-redshift-red">*</span>
+        </label>
+        <input id="title" type="text" formControlName="title" placeholder="ex: Brute Force Detection - SPL para Azure"
+            class="block w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2.5 text-gray-900 bg-white dark:bg-gray-700 dark:text-white shadow-sm focus:ring-2 focus:ring-redshift-red text-sm transition">
+        <div *ngIf="editRuleModelForm.get('title')?.touched && editRuleModelForm.get('title')?.invalid"
+            class="text-red-600 dark:text-red-400 text-xs mt-1">
+            O título da regra é obrigatório.
         </div>
     </div>
 
-    <!-- LogSources -->
-    <div class="space-y-4 col-span-2">
-        <label for="logsources" class="block text-sm font-medium leading-6 text-gray-900 dark:text-white">LogSources
-            Associadas</label>
+    <!-- 3. LogSources Associadas (Opcional) -->
+    <div class="space-y-2 col-span-1 md:col-span-2">
+        <div class="flex items-center justify-between">
+            <label for="logsources" class="block text-sm font-semibold text-gray-900 dark:text-white">LogSources
+                Associadas</label>
+            <span class="text-xs text-gray-400 font-normal">Opcional</span>
+        </div>
         <tag-input [onlyFromAutocomplete]="true" theme="minimal" [secondaryPlaceholder]="'+ Nova Log Source'"
             [placeholder]="''" formControlName="logsources"
-            class="block w-full rounded-md border-0 px-2 text-gray-900 bg-white dark:bg-gray-700 dark:text-white shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-600 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 dark:focus:ring-indigo-500 sm:text-sm sm:leading-6">
+            class="block w-full rounded-lg border border-gray-300 dark:border-gray-600 px-2 py-1 bg-white dark:bg-gray-700 text-sm">
             <tag-input-dropdown [showDropdownIfEmpty]="true" [autocompleteItems]="registeredLogsources">
             </tag-input-dropdown>
         </tag-input>
-        <div *ngIf="editRuleModelForm.get('logsources')?.touched && editRuleModelForm.get('logsources')?.invalid"
-            class="text-red-600 dark:text-red-400 text-sm mt-1">
-            Pelo menos uma LogSource é obrigatória.
+    </div>
+
+    <!-- 4. Editor de Código -->
+    <div class="space-y-3 col-span-1 md:col-span-2">
+        <label class="block text-sm font-semibold text-gray-900 dark:text-white mb-0">
+            Regra ({{ selectedSyntax }})
+        </label>
+        <div class="w-full border border-gray-300 dark:border-gray-700 rounded-lg overflow-hidden">
+            <app-code-editor [code]="code" [language]="selectedSyntax" height="420px"
+                (codeChange)="onCodeChanged($event)">
+            </app-code-editor>
         </div>
     </div>
 
-    <!-- Editor de Código -->
-    <div class="space-y-4 col-span-2">
-        <label class="block text-sm font-medium leading-6 text-gray-900 dark:text-white">
-            Regra ({{ selectedSyntax }})
-        </label>
-        <app-code-editor [code]="code" [language]="selectedSyntax" height="450px" (codeChange)="onCodeChanged($event)">
-        </app-code-editor>
-    </div>
-
-    <!-- Botões de Ação -->
-    <div class="flex items-center space-x-4 col-span-2">
+    <!-- 5. Ações (Submit e Cancelar) -->
+    <div class="col-span-1 md:col-span-2 flex items-center gap-4 pt-2">
         <button type="submit" [disabled]="!editRuleModelForm.valid"
-            class="disabled:opacity-60 w-full md:w-[25rem] py-2.5 px-5 text-white font-semibold bg-redshift-red rounded-md hover:bg-redshift-hover transition duration-150">
+            class="disabled:opacity-50 disabled:cursor-not-allowed w-full md:w-60 py-2.5 px-5 text-white font-medium bg-redshift-red rounded-lg hover:bg-redshift-hover transition shadow-sm text-sm">
             Guardar Alterações
         </button>
         <a [routerLink]="['/ruleModel-Details', ruleModelId]"
-            class="px-6 py-2.5 border border-gray-300 dark:border-gray-600 rounded-md text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition cursor-pointer">
+            class="w-full md:w-32 py-2.5 px-4 text-center text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg font-medium transition text-sm">
             Cancelar
         </a>
     </div>

@@ -144,13 +144,9 @@
               <tr>
                 <th (click)="sortTable('id')"
                   class="w-28 px-5 py-3.5 bg-gray-100 dark:bg-gray-700 text-left text-xs font-bold text-gray-700 dark:text-gray-200 uppercase tracking-wider cursor-pointer select-none">
-                  Red ID
+                  ID
                   <i
                     [class]="sortType === 'id' ? (sortReverse ? 'fas fa-caret-up ml-1' : 'fas fa-caret-down ml-1') : ''"></i>
-                </th>
-                <th
-                  class="w-72 px-5 py-3.5 bg-gray-100 dark:bg-gray-700 text-left text-xs font-bold text-gray-700 dark:text-gray-200 uppercase tracking-wider select-none">
-                  Técnicas Mitre
                 </th>
                 <th (click)="sortTable('title')"
                   class="w-64 px-5 py-3.5 bg-gray-100 dark:bg-gray-700 text-left text-xs font-bold text-gray-700 dark:text-gray-200 uppercase tracking-wider cursor-pointer select-none">
@@ -158,13 +154,16 @@
                   <i
                     [class]="sortType === 'title' ? (sortReverse ? 'fas fa-caret-up ml-1' : 'fas fa-caret-down ml-1') : ''"></i>
                 </th>
+                <th
+                  class="w-72 px-5 py-3.5 bg-gray-100 dark:bg-gray-700 text-left text-xs font-bold text-gray-700 dark:text-gray-200 uppercase tracking-wider select-none">
+                  Técnicas Mitre
+                </th>
                 <th (click)="sortTable('cncsClass')"
                   class="w-44 px-5 py-3.5 bg-gray-100 dark:bg-gray-700 text-left text-xs font-bold text-gray-700 dark:text-gray-200 uppercase tracking-wider cursor-pointer select-none">
                   Classe CNCS
                   <i
                     [class]="sortType === 'cncsClass' ? (sortReverse ? 'fas fa-caret-up ml-1' : 'fas fa-caret-down ml-1') : ''"></i>
                 </th>
-                <!-- NOVA COLUNA: Tipo CNCS -->
                 <th (click)="sortTable('cncsType')"
                   class="w-44 px-5 py-3.5 bg-gray-100 dark:bg-gray-700 text-left text-xs font-bold text-gray-700 dark:text-gray-200 uppercase tracking-wider cursor-pointer select-none">
                   Tipo CNCS
@@ -185,12 +184,18 @@
                 [routerLink]="'/usecase-Details/' + u.id"
                 class="hover:bg-gray-100 dark:hover:bg-gray-700 transition duration-150 h-16 cursor-pointer">
 
-                <!-- Red ID -->
+                <!-- ID -->
                 <td class="px-5 py-3 text-left whitespace-nowrap">
                   <div class="flex items-center text-sm">
                     <span class="text-redshift-red font-bold">Red</span>
                     <span class="font-semibold text-gray-900 dark:text-white">UC{{ u.id }}</span>
                   </div>
+                </td>
+
+                <!-- Nome -->
+                <td class="px-5 py-3 text-left truncate" [title]="u.title">
+                  <span class="text-base font-semibold text-gray-900 dark:text-white truncate block">{{ u.title
+                    }}</span>
                 </td>
 
                 <!-- Técnicas Mitre -->
@@ -211,12 +216,6 @@
                       Nenhuma
                     </span>
                   </div>
-                </td>
-
-                <!-- Nome -->
-                <td class="px-5 py-3 text-left truncate" [title]="u.title">
-                  <span class="text-base font-semibold text-gray-900 dark:text-white truncate block">{{ u.title
-                    }}</span>
                 </td>
 
                 <!-- Classe CNCS -->

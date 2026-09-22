@@ -12,7 +12,7 @@ import {
 import { UsecasesService } from '../../services/usecases.service';
 import { RulesService } from '../../services/rules.service';
 import { TagInputModule } from 'ngx-chips';
-import { Router } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { AppCodeEditorComponent } from '../../shared/components/app-code-editor/app-code-editor.component';
 
 @Component({
@@ -27,6 +27,7 @@ import { AppCodeEditorComponent } from '../../shared/components/app-code-editor/
     TagInputModule,
     FormsModule,
     ReactiveFormsModule,
+    RouterModule,
     AppCodeEditorComponent,
   ],
 })
@@ -54,12 +55,13 @@ export class CreateRuleModelComponent implements OnInit {
   code: string = '';
   isAutoDetecting = false;
 
+  // Removida obrigatoriedade estrita de logsources
   createRuleModelForm = new FormGroup({
     title: new FormControl('', Validators.required),
     selectedUseCase: new FormControl('', Validators.required),
-    selectedType: new FormControl('SIEM', Validators.required),
-    syntax: new FormControl('AQL (QRadar)', Validators.required),
-    logsources: new FormControl<any>(null, Validators.required),
+    selectedType: new FormControl('SIEM'),
+    syntax: new FormControl('AQL (QRadar)'),
+    logsources: new FormControl<any>([]), // Opcional
   });
 
   examples: { [key: string]: string } = {
@@ -139,6 +141,19 @@ level: medium`,
 
   getAvailableSyntaxes(): string[] {
     return this.types[this.selectedType] || [];
+  }
+
+  onUseCaseChange(): void {
+    const selectedId = Number(
+      this.createRuleModelForm.get('selectedUseCase')?.value,
+    );
+    const uc = this.usecases.find((item: any) => item.id === selectedId);
+
+    if (uc) {
+      this.createRuleModelForm.patchValue({
+        title: `${uc.title} - `,
+      });
+    }
   }
 
   onTypeChange(): void {
@@ -251,9 +266,13 @@ level: medium`,
     }
 
     const arrayLogsources: any = this.createRuleModelForm.value.logsources;
-    const logsources = arrayLogsources?.map((logsource: any) =>
-      typeof logsource === 'string' ? logsource : logsource.value,
-    );
+
+    // Tratamento seguro para tags opcionais
+    const logsources = Array.isArray(arrayLogsources)
+      ? arrayLogsources.map((logsource: any) =>
+          typeof logsource === 'string' ? logsource : logsource.value,
+        )
+      : [];
 
     const payload = {
       title: this.createRuleModelForm.value.title,

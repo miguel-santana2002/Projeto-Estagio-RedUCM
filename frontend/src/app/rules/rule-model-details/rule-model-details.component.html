@@ -167,10 +167,16 @@
       <div
         class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-4 rounded-lg shadow-sm cursor-pointer hover:shadow-md hover:border-gray-300 dark:hover:border-gray-600 transition duration-200"
         [routerLink]="'/rule-Details/' + rule.id">
-        <h1 class="font-inter font-semibold text-lg text-gray-800 dark:text-white truncate">
-          {{ rule.client?.name }}
+
+        <!-- Mostra a sintaxe ou 'Sem Cliente' quando client for null -->
+        <h1 class="font-inter font-semibold text-base text-gray-800 dark:text-white truncate"
+          [title]="rule.client?.name || rule.syntax">
+          {{ rule.client?.name || (rule.syntax + ' (Geral)') }}
         </h1>
-        <p class="text-gray-500 dark:text-gray-400 text-sm mt-1 truncate">{{ rule.logsources }}</p>
+
+        <p class="text-gray-500 dark:text-gray-400 text-xs mt-1 truncate">
+          {{ (rule.logsources && rule.logsources.length) ? rule.logsources.join(', ') : 'Sem logsources' }}
+        </p>
       </div>
     </div>
 
@@ -418,7 +424,7 @@
       <div class="flex items-center justify-end p-4 border-t border-gray-200 dark:border-gray-700 space-x-3">
         <button (click)="applyConvertedRule()" [disabled]="!convertedRuleContent || isConverting" type="button"
           class="py-2 px-4 text-sm font-medium text-white bg-redshift-red hover:bg-redshift-hover disabled:opacity-50 disabled:cursor-not-allowed rounded-lg shadow-sm transition">
-          Aplicar à Regra
+          Criar Regra Convertida
         </button>
         <button (click)="closeConvertModal()" type="button"
           class="py-2 px-4 text-sm font-medium text-gray-500 dark:text-gray-300 bg-white dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600 hover:text-gray-900 dark:hover:text-white transition">

@@ -57,12 +57,13 @@ export class EditRuleModelComponent implements OnInit {
   selectedUseCase: any = '';
   code: string = '';
 
+  // LogSources tornado opcional (sem Validators.required)
   editRuleModelForm = new FormGroup({
     title: new FormControl('', Validators.required),
     selectedUseCase: new FormControl<any>('', Validators.required),
-    selectedType: new FormControl('SIEM', Validators.required),
-    syntax: new FormControl('AQL (QRadar)', Validators.required),
-    logsources: new FormControl<any>(null, Validators.required),
+    selectedType: new FormControl('SIEM'),
+    syntax: new FormControl('AQL (QRadar)'),
+    logsources: new FormControl<any>([]),
   });
 
   constructor(
@@ -75,7 +76,7 @@ export class EditRuleModelComponent implements OnInit {
   ngOnInit(): void {
     this.ruleModelId = Number(this.route.snapshot.paramMap.get('id'));
 
-    // Carregar Use Cases e Logsources
+    // 1. Carregar Use Cases e Logsources disponíveis
     this.useCasesService.getUseCases().subscribe((data) => {
       this.usecases = data;
       this.rulesService.getRegisteredLogSources().subscribe((res: any) => {
@@ -83,7 +84,7 @@ export class EditRuleModelComponent implements OnInit {
       });
     });
 
-    // Carregar dados existentes do modelo
+    // 2. Carregar dados existentes do modelo
     this.rulesService.getRuleModelById(this.ruleModelId).subscribe({
       next: (data: any) => {
         this.selectedUseCase = data.useCaseId || data.useCase || '';
@@ -122,12 +123,33 @@ export class EditRuleModelComponent implements OnInit {
     return this.types[this.selectedType] || [];
   }
 
+  /**
+   * Atualiza o prefixo do título quando o Use Case for alterado na edição.
+   */
+  onUseCaseChange(): void {
+    const selectedId = Number(
+      this.editRuleModelForm.get('selectedUseCase')?.value,
+    );
+    const uc = this.usecases.find((item: any) => item.id === selectedId);
+
+    if (uc) {
+      this.editRuleModelForm.patchValue({
+        title: `${uc.title} - `,
+      });
+    }
+  }
+
   onTypeChange(): void {
     const syntaxes = this.getAvailableSyntaxes();
     if (syntaxes.length > 0) {
       this.selectedSyntax = syntaxes[0];
       this.editRuleModelForm.patchValue({ syntax: this.selectedSyntax });
     }
+  }
+
+  onSyntaxChange(): void {
+    // Sincronização disparada pelo evento (change) do select
+    this.editRuleModelForm.patchValue({ syntax: this.selectedSyntax });
   }
 
   onCodeChanged(value: string): void {
@@ -140,9 +162,15 @@ export class EditRuleModelComponent implements OnInit {
     }
 
     const arrayLogsources: any = this.editRuleModelForm.value.logsources;
-    const logsources = arrayLogsources?.map((logsource: any) =>
-      typeof logsource === 'string' ? logsource : logsource.value,
-    );
+
+    // Mapeamento seguro: extrai strings independentemente de virem de ngx-chips ou arrays planos
+    const logsources = Array.isArray(arrayLogsources)
+      ? arrayLogsources.map((logsource: any) =>
+          typeof logsource === 'string'
+            ? logsource
+            : logsource.value || logsource.display || logsource,
+        )
+      : [];
 
     const payload = {
       title: this.editRuleModelForm.value.title,
