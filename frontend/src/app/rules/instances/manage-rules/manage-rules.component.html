@@ -306,20 +306,13 @@
 
                 <!-- Sintaxe -->
                 <td class="px-5 py-3 text-left">
-                  <div class="flex items-center">
-                    <img *ngIf="(u.syntax || u.ruleModel?.syntax) === 'Sigma Rule'" src="./assets/sigmalogo.svg"
-                      class="h-5 w-5 mr-1.5 flex-shrink-0" alt="Sigma">
-                    <img *ngIf="(u.syntax || u.ruleModel?.syntax) === 'Splunk Rule'" src="./assets/splunklogo.svg"
-                      class="h-5 w-5 mr-1.5 flex-shrink-0" alt="Splunk">
-                    <img *ngIf="(u.syntax || u.ruleModel?.syntax) === 'QRadar Rule'" src="./assets/qradarlogo.png"
-                      class="h-5 w-5 mr-1.5 flex-shrink-0" alt="QRadar">
-                    <img *ngIf="(u.syntax || u.ruleModel?.syntax) === 'Elastic Rule'" src="./assets/elasticlogo.png"
-                      class="h-5 w-5 mr-1.5 flex-shrink-0" alt="Elastic">
-                    <span class="text-xs font-medium text-gray-900 dark:text-gray-200 truncate"
-                      [title]="u.syntax || u.ruleModel?.syntax">
+                  <span
+                    class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-gray-100 text-gray-800 border border-gray-200 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600">
+                    <i class="fas fa-code mr-1.5 text-redshift-red text-[10px]"></i>
+                    <span class="truncate max-w-[120px]" [title]="u.syntax || u.ruleModel?.syntax">
                       {{ u.syntax || u.ruleModel?.syntax || 'N/D' }}
                     </span>
-                  </div>
+                  </span>
                 </td>
 
                 <!-- Logsources (Badges uniformizadas com truncagem e tooltip) -->
