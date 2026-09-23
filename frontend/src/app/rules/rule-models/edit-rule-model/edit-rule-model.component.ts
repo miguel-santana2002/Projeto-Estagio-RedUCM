@@ -10,11 +10,11 @@ import {
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { TagInputModule } from 'ngx-chips';
 
-import { RulesService } from '../../services/rules.service';
-import { UsecasesService } from '../../services/usecases.service';
-import { HeaderComponent } from '../../layout/header/header.component';
-import { TitlebannerComponent } from '../../layout/titlebanner/titlebanner.component';
-import { AppCodeEditorComponent } from '../../shared/components/app-code-editor/app-code-editor.component';
+import { RulesService } from '../../../services/rules.service';
+import { UsecasesService } from '../../../services/usecases.service';
+import { HeaderComponent } from '../../../layout/header/header.component';
+import { TitlebannerComponent } from '../../../layout/titlebanner/titlebanner.component';
+import { AppCodeEditorComponent } from '../../../shared/components/app-code-editor/app-code-editor.component';
 
 @Component({
   selector: 'app-edit-rule-model',

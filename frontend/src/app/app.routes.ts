@@ -11,10 +11,10 @@ import { ManageClientsComponent } from './clients/manage-clients/manage-clients.
 import { CreateUseCaseComponent } from './usecases/create-use-case/create-use-case.component';
 import { ManageUseCasesComponent } from './usecases/manage-use-cases/manage-use-cases.component';
 import { UsecaseDetailsComponent } from './usecases/usecase-details/usecase-details.component';
-import { CreateRuleModelComponent } from './rules/create-rule-model/create-rule-model.component';
+import { CreateRuleModelComponent } from './rules/rule-models/create-rule-model/create-rule-model.component';
 import { TechniqueDetailsComponent } from './techniques/technique-details/technique-details.component';
-import { ManageRuleModelsComponent } from './rules/manage-rule-models/manage-rule-models.component';
-import { RuleModelDetailsComponent } from './rules/rule-model-details/rule-model-details.component';
+import { ManageRuleModelsComponent } from './rules/rule-models/manage-rule-models/manage-rule-models.component';
+import { RuleModelDetailsComponent } from './rules/rule-models/rule-model-details/rule-model-details.component';
 import { ManageRulesComponent } from './rules/instances/manage-rules/manage-rules.component';
 import { RuleDetailsComponent } from './rules/instances/rule-details/rule-details.component';
 import { ReadRuleModelsComponent } from './rules/OperatorRead/read-rule-models/read-rule-models.component';
@@ -26,9 +26,10 @@ import { ManageLogsourcesComponent } from './rules/manage-logsources/manage-logs
 import { isAdminGuard } from './helper/is-admin.guard';
 import { UpdateUserComponent } from './users/update-user/update-user.component';
 import { EditClientComponent } from './clients/edit-client/edit-client.component';
-import { EditRuleModelComponent } from './rules/edit-rule-model/edit-rule-model.component';
+import { EditRuleModelComponent } from './rules/rule-models/edit-rule-model/edit-rule-model.component';
 import { numericIdGuard } from './guards/numeric-id.guard';
 import { AuditListComponent } from './audit/audit-list.component';
+import { EditRuleComponent } from './rules/instances/edit-rule/edit-rule.component';
 
 export const routes: Routes = [
   { path: '', component: LandingpageComponent, pathMatch: 'full' },
@@ -119,6 +120,11 @@ export const routes: Routes = [
   {
     path: 'edit-rule-model/:id',
     component: EditRuleModelComponent,
+    canActivate: [isAdminGuard, numericIdGuard],
+  },
+  {
+    path: 'edit-rule/:id',
+    component: EditRuleComponent,
     canActivate: [isAdminGuard, numericIdGuard],
   },
   {

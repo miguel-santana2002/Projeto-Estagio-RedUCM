@@ -106,7 +106,7 @@
 
       <div>
         <h3 class="text-xs uppercase font-semibold text-gray-500 dark:text-gray-400">Número de regras associadas</h3>
-        <p class="text-sm font-semibold text-gray-800 dark:text-gray-200">{{ruleModels?.length || 0}}</p>
+        <p class="text-sm font-semibold text-gray-800 dark:text-gray-200">{{ruleModels.length || 0}}</p>
       </div>
 
       <div>
@@ -154,16 +154,110 @@
             <td class="px-5 py-3 text-gray-800 dark:text-gray-200">
               {{ rule.type }}
             </td>
+            <!-- Sintaxe (Modelos) -->
             <td class="px-5 py-3">
-              <div class="flex items-center">
-                <img *ngIf="rule.syntax === 'Sigma Rule'" src="./assets/sigmalogo.svg"
-                  class="h-5 w-5 mr-1.5 flex-shrink-0" alt="Sigma">
-                <img *ngIf="rule.syntax === 'Splunk Rule'" src="./assets/splunklogo.svg"
-                  class="h-5 w-5 mr-1.5 flex-shrink-0" alt="Splunk">
-                <img *ngIf="rule.syntax === 'QRadar Rule'" src="./assets/qradarlogo.png"
-                  class="h-5 w-5 mr-1.5 flex-shrink-0" alt="QRadar">
-                <span class="text-xs font-medium text-gray-900 dark:text-gray-200">{{ rule.syntax }}</span>
+              <span
+                class="inline-flex items-center gap-1.5 text-xs font-semibold text-gray-800 dark:text-gray-200 bg-gray-100 dark:bg-gray-700/60 px-2.5 py-1 rounded border border-gray-200 dark:border-gray-600">
+                <i class="fas fa-code text-[11px] text-redshift-red"></i>
+                {{ rule.syntax || 'N/D' }}
+              </span>
+            </td>
+          </tr>
+
+          <!-- Empty State quando não existem modelos -->
+          <tr *ngIf="!ruleModels || ruleModels.length === 0">
+            <td colspan="4" class="py-8 text-center text-sm text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-800">
+              <i class="fas fa-inbox text-2xl mb-2 block opacity-40"></i>
+              Nenhum modelo de regra associado a este Use Case.
+            </td>
+          </tr>
+
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Tabela de Regras Associadas -->
+  <div class="mb-8 mt-6">
+    <div class="flex items-center justify-between">
+      <div>
+        <h1 class="font-inter font-semibold text-2xl text-gray-700 dark:text-white">Regras Associadas</h1>
+        <p class="text-sm text-gray-500 dark:text-gray-400">Instâncias ativas criadas a partir dos modelos deste Use
+          Case
+        </p>
+      </div>
+      <span
+        class="text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700">
+        {{ rules.length || 0 }} regra(s)
+      </span>
+    </div>
+
+    <div class="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden mt-3 shadow-sm">
+      <table class="min-w-full leading-normal text-sm divide-y divide-gray-200 dark:divide-gray-700">
+        <thead class="bg-gray-100 dark:bg-gray-700 text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase">
+          <tr>
+            <th class="w-24 px-5 py-3 text-left">ID</th>
+            <th class="w-48 px-5 py-3 text-left">Cliente</th>
+            <th class="px-5 py-3 text-left">Modelo Base</th>
+            <th class="w-44 px-5 py-3 text-left">Sintaxe</th>
+            <th class="w-64 px-5 py-3 text-left">LogSources</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+          <tr *ngFor="let r of rules; let i = index" [routerLink]="'/rule-Details/' + r.id"
+            [ngClass]="i % 2 === 0 ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-900'"
+            class="hover:bg-gray-100 dark:hover:bg-gray-700 transition cursor-pointer h-14">
+
+            <!-- ID Regra -->
+            <td class="px-5 py-3 font-mono font-bold text-xs text-redshift-red dark:text-red-400">
+              #{{ r.id }}
+            </td>
+
+            <!-- Cliente -->
+            <td class="px-5 py-3 text-gray-900 dark:text-white font-medium">
+              <span class="inline-flex items-center gap-1.5">
+                <i class="fas" [ngClass]="r.client?.name ? 'fa-building text-gray-400' : 'fa-globe text-gray-400'"></i>
+                <span class="truncate max-w-[170px]" [title]="r.client?.name || 'Geral (Sem Cliente)'">
+                  {{ r.client?.name || 'Geral (Sem Cliente)' }}
+                </span>
+              </span>
+            </td>
+
+            <!-- Modelo Base -->
+            <td class="px-5 py-3 font-medium text-gray-700 dark:text-gray-300">
+              {{ r.ruleModel?.title || ('RedModel ' + (r.ruleModel?.id || r.ruleModel)) }}
+            </td>
+
+            <!-- Sintaxe -->
+            <td class="px-5 py-3">
+              <span
+                class="inline-flex items-center gap-1 text-xs font-semibold text-gray-800 dark:text-gray-200 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded border border-gray-200 dark:border-gray-600">
+                <i class="fas fa-code text-[10px] text-redshift-red"></i>
+                {{ r.syntax || 'N/D' }}
+              </span>
+            </td>
+
+            <!-- Logsources -->
+            <td class="px-5 py-3">
+              <div class="flex items-center gap-1 max-w-[240px] truncate" [title]="r.logsources?.join(', ') || 'N/D'">
+                <span *ngFor="let log of r.logsources?.slice(0, 2)"
+                  class="bg-[#0d2f52] text-white text-[11px] px-2 py-0.5 rounded font-medium truncate">
+                  {{ log }}
+                </span>
+                <span *ngIf="r.logsources?.length > 2"
+                  class="bg-[#0d2f52] text-white text-[10px] px-1.5 py-0.5 rounded font-bold">
+                  +{{ r.logsources.length - 2 }}
+                </span>
+                <span *ngIf="!r.logsources?.length" class="text-xs text-gray-400 italic">N/D</span>
               </div>
+            </td>
+          </tr>
+
+          <!-- Empty State -->
+          <tr *ngIf="rules.length === 0">
+            <td colspan="5" class="py-8 text-center text-sm text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-800">
+              <i class="fas fa-inbox text-2xl mb-2 block opacity-40"></i>
+              Nenhuma regra instanciada para este Use Case.
             </td>
           </tr>
         </tbody>

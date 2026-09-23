@@ -47,6 +47,7 @@ class RuleSerializer(serializers.ModelSerializer):
         extra_kwargs = {
             'client': {'required': False, 'allow_null': True},
             'ruleModel': {'required': True},
+            'status': {'required': False, 'allow_blank': True, 'allow_null': True},
         }
 
     def to_representation(self, instance):

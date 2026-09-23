@@ -22,11 +22,13 @@ class Rule(models.Model):
     logsources = ArrayField(models.CharField(max_length=255, blank=True), blank=True, default=list)
     client = models.ForeignKey(
         Company, 
-        on_delete=models.SET_NULL,  # Não apaga a regra se o cliente for removido
+        on_delete=models.SET_NULL,  
         null=True, 
-        blank=True,                 # Permite salvar sem cliente via forms/DRF
+        blank=True,                 
         related_name='rules'
     )
+
+    status = models.CharField(max_length=50, null=True, blank=True, default='')
 
     def __str__(self):
         model_name = self.ruleModel.title if self.ruleModel and self.ruleModel.title else f"Modelo #{self.ruleModel_id}"
