@@ -49,13 +49,16 @@ export class AuthService {
     );
   }
 
-  generateTOTP(): Observable<string | null> {
+  generateTOTP(email: string): Observable<string | null> {
     const headers = new HttpHeaders({
       Authorization: `Bearer ${this.accessToken}`,
     });
-    return this.http.get(AUTH_URL + 'generate-totp', { headers }).pipe(
+    return this.http.get(AUTH_URL + 'generate-totp', { 
+      headers, 
+      params: { email } 
+    }).pipe(
       map((response: any) => {
-        console.log('TOTP Response:', response); // Adicione esta linha
+        console.log('TOTP Response:', response);
         return response.totp_uri;
       }),
       catchError((e) => {

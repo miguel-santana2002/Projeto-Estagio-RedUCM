@@ -87,7 +87,7 @@ export class LoginComponent {
           }
         },
         (error) => {
-          this.errorMessage = 'Credenciais inválidas para início de sessão'; // Add this line
+          this.errorMessage = 'Credenciais inválidas para início de sessão';
         },
       );
     }
@@ -105,13 +105,15 @@ export class LoginComponent {
           }
         },
         (error) => {
-          this.errorMessage = 'Código de Verificação Inválido'; // Add this line
+          this.errorMessage = 'Código de Verificação Inválido';
         },
       );
     }
   }
+
   onGenerateTOTP() {
-    this.authService.generateTOTP().subscribe((response) => {
+    const email = this.loginForm.value.email;
+    this.authService.generateTOTP(email).subscribe((response) => {
       console.log(response);
       if (response) {
         this.qrCodeUrl =

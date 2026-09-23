@@ -44,7 +44,7 @@
     </div>
   </div>
 
-  <div *ngIf="qrCodeUrl" class="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-75 z-50">
+  <div *ngIf="qrCodeUrl && otpMethod === 'totp'" class="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-75 z-50">
     <div class="bg-white rounded-lg shadow-lg p-6 text-center">
       <h2 class="text-2xl font-semibold text-gray-900">Bem-Vindo ao RedUCM</h2>
       <p class="mt-4 text-gray-600">Configure uma aplicação de autenticação para prosseguir com a configuração do TOTP.</p>
