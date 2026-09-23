@@ -41,12 +41,19 @@ export class UsecasesService {
     return this.http.post<any>(`${AUTH_URL}updateUseCase/${id}`, useCase);
   }
 
-  getTechniqueTacticBasedOnListIds(ids: any) {
-    return this.http.get<any>(`${AUTH_URL}getTechniqueTacticBasedOnListIds/?ids=`+ids.join(',') );
-  }
-  
+  getTechniqueTacticBasedOnListIds(techniqueIds: string[] | string) {
+  const ids = Array.isArray(techniqueIds)
+    ? techniqueIds.join(',')
+    : techniqueIds;
 
-  
+  return this.http.get<any[]>(
+    `${AUTH_URL}getTechniqueTacticBasedOnListIds/`,
+    {
+      params: { ids }
+    }
+  );
+}
+
 
 
 

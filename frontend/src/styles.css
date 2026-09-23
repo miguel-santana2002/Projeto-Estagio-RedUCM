@@ -55,3 +55,51 @@ body {
 .dark tag-input tag delete-icon:hover svg polygon {
   fill: #ef4444 !important; /* Cor red-500 do Tailwind */
 }
+/* --- ESTILOS GLOBAIS PARA DROPDOWNS DO ANGULAR MATERIAL --- */
+
+/* Modo Claro (Padrão) */
+.mat-mdc-text-field-wrapper {
+  background-color: #ffffff !important;
+  border-radius: 0.5rem !important;
+}
+
+/* Modo Escuro */
+.dark .mat-mdc-text-field-wrapper {
+  background-color: #1f2937 !important; /* bg-gray-800 */
+}
+
+.dark .mdc-notched-outline__leading,
+.dark .mdc-notched-outline__notch,
+.dark .mdc-notched-outline__trailing {
+  border-color: #374151 !important;
+}
+
+.dark .mat-mdc-select-value, 
+.dark .mat-mdc-select-placeholder,
+.dark .mat-mdc-select-arrow {
+  color: #ffffff !important;
+}
+
+/* Painel da lista que abre (Dropdown Options) no Modo Escuro */
+.dark .mat-mdc-select-panel {
+  background-color: #1f2937 !important;
+}
+
+.dark .mat-mdc-option .mdc-list-item__primary-text {
+  color: #ffffff !important;
+}
+
+.dark .mat-mdc-option:hover {
+  background-color: #374151 !important;
+}
+
+/* --- Painel flutuante do Angular Material em Modo Escuro --- */
+.dark .mat-mdc-select-panel {
+  background-color: #1f2937 !important;
+}
+.dark .mat-mdc-option .mdc-list-item__primary-text {
+  color: #ffffff !important;
+}
+.dark .mat-mdc-option:hover {
+  background-color: #374151 !important;
+}

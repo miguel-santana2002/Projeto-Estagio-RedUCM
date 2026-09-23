@@ -60,7 +60,7 @@ describe('CreateUseCaseComponent', () => {
     expect(form.get('mitreTechniques')?.value).toEqual([]);
     expect(form.get('cncsClass')?.value).toBe('');
     expect(form.get('cncsType')?.value).toBe('');
-    expect(form.get('attackVectors')?.value).toEqual([]);
+    expect(form.get('tactics')?.value).toEqual([]);
   });
 
 
