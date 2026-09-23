@@ -34,6 +34,8 @@ export class ManageRuleModelsComponent implements OnInit, AfterViewInit {
   @ViewChild('modal') modal!: ElementRef<HTMLElement>;
   modalFlowbite!: Modal;
 
+  isAdmin: boolean = false; // Controlo de permissões (Admin / Superuser)
+
   sortType: string = 'id';
   sortReverse: boolean = false;
   nameSearch: string = '';
@@ -65,6 +67,7 @@ export class ManageRuleModelsComponent implements OnInit, AfterViewInit {
   ) {}
 
   ngOnInit(): void {
+    this.loadUserInfo();
     this.loadRuleModels();
   }
 
@@ -72,6 +75,19 @@ export class ManageRuleModelsComponent implements OnInit, AfterViewInit {
     if (this.modal?.nativeElement) {
       this.modalFlowbite = new Modal(this.modal.nativeElement);
     }
+  }
+
+  loadUserInfo(): void {
+    this.authService.loggedInInfo().subscribe({
+      next: (data: any) => {
+        // Validação hierárquica por permissões de topo
+        this.isAdmin = Boolean(data?.is_superuser || data?.is_admin);
+      },
+      error: (err) => {
+        console.error('Erro ao carregar perfil do utilizador:', err);
+        this.isAdmin = false;
+      },
+    });
   }
 
   loadRuleModels(): void {
@@ -266,10 +282,12 @@ export class ManageRuleModelsComponent implements OnInit, AfterViewInit {
   // Gestão de Modal Eliminar
   updateSelectDelete(event: Event, id: number): void {
     event.stopPropagation();
+    if (!this.isAdmin) return;
     this.selectDelete = id;
   }
 
   openModal(): void {
+    if (!this.isAdmin) return;
     this.modalFlowbite?.show();
   }
 
@@ -278,12 +296,15 @@ export class ManageRuleModelsComponent implements OnInit, AfterViewInit {
   }
 
   deleteRuleModel(): void {
+    if (!this.isAdmin) return;
+
     this.rulesService.deleteRuleModelById(this.selectDelete).subscribe({
       next: () => {
         this.loadRuleModels();
         if (this.page > this.totalPages) {
           this.page = this.totalPages;
         }
+        this.closeModal();
       },
       error: (err) => console.error('Erro ao eliminar modelo de regra:', err),
     });

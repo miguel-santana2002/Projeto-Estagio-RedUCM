@@ -21,16 +21,16 @@
             </a>
           </li>
 
-          <!-- Utilizadores -->
-          <li *ngIf="user?.companies?.length === 0">
+          <!-- Utilizadores (Exclusivo Admin / Superuser) -->
+          <li *ngIf="isAdmin">
             <a [routerLink]="['/manage-users']" routerLinkActive="text-redshift-red font-semibold"
               class="block py-2 text-gray-700 dark:text-gray-400 lg:dark:hover:text-white hover:text-redshift-hover transition-colors">
               Utilizadores
             </a>
           </li>
 
-          <!-- Clientes -->
-          <li *ngIf="user?.companies?.length === 0">
+          <!-- Clientes (Exclusivo Admin / Superuser) -->
+          <li *ngIf="isAdmin">
             <a [routerLink]="['/manage-clients']" routerLinkActive="text-redshift-red font-semibold"
               class="block py-2 text-gray-700 dark:text-gray-400 lg:dark:hover:text-white hover:text-redshift-hover transition-colors">
               Clientes
@@ -52,17 +52,17 @@
               class="z-30 hidden font-normal bg-white divide-y divide-gray-100 rounded-lg shadow-lg w-52 border border-gray-100 dark:bg-gray-700 dark:divide-gray-600 dark:border-gray-600">
               <ul class="py-2 text-sm text-gray-700 dark:text-gray-200" aria-labelledby="dropdownUseCasesButton">
                 <li>
-                  <a [routerLink]="['/manage-usecases']"
-                    routerLinkActive="bg-gray-100 text-redshift-red font-semibold border-l-4 border-redshift-red dark:bg-gray-600 dark:text-white"
-                    class="block px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-600 dark:hover:text-white transition-colors">
-                    Gerir Use Cases
-                  </a>
-                </li>
-                <li *ngIf="user?.companies?.length === 0">
                   <a [routerLink]="['/create-usecase']"
                     routerLinkActive="bg-gray-100 text-redshift-red font-semibold border-l-4 border-redshift-red dark:bg-gray-600 dark:text-white"
                     class="block px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-600 dark:hover:text-white transition-colors">
                     Criar Use Case
+                  </a>
+                </li>
+                <li>
+                  <a [routerLink]="['/manage-usecases']"
+                    routerLinkActive="bg-gray-100 text-redshift-red font-semibold border-l-4 border-redshift-red dark:bg-gray-600 dark:text-white"
+                    class="block px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-600 dark:hover:text-white transition-colors">
+                    Gerir Use Cases
                   </a>
                 </li>
               </ul>
@@ -73,8 +73,8 @@
           <li class="relative">
             <button id="dropdownRulesButton" data-dropdown-toggle="dropdownRules" data-dropdown-placement="bottom-start"
               type="button"
-              [class.text-redshift-red]="isRouteActive(['/manage-rule-models', '/create-rule-model', '/read-rule-models', '/ruleModel-Details', '/manage-rules', '/rule-Details', '/my-instance-rules', '/manage-logsources'])"
-              [class.font-semibold]="isRouteActive(['/manage-rule-models', '/create-rule-model', '/read-rule-models', '/ruleModel-Details', '/manage-rules', '/rule-Details', '/my-instance-rules', '/manage-logsources'])"
+              [class.text-redshift-red]="isRouteActive(['/manage-rule-models', '/create-rule-model', '/ruleModel-Details', '/manage-rules', '/rule-Details', '/manage-logsources'])"
+              [class.font-semibold]="isRouteActive(['/manage-rule-models', '/create-rule-model', '/ruleModel-Details', '/manage-rules', '/rule-Details', '/manage-logsources'])"
               class="flex items-center justify-between w-full py-2 text-gray-700 hover:text-redshift-hover dark:text-gray-400 dark:hover:text-white transition-colors">
               Regras
               <i class="fas fa-chevron-down text-xs ml-1.5"></i>
@@ -83,8 +83,7 @@
             <div id="dropdownRules"
               class="z-30 hidden font-normal bg-white divide-y divide-gray-100 rounded-lg shadow-lg w-56 border border-gray-100 dark:bg-gray-700 dark:divide-gray-600 dark:border-gray-600">
               <ul class="py-2 text-sm text-gray-700 dark:text-gray-200" aria-labelledby="dropdownRulesButton">
-
-                <li *ngIf="user?.companies?.length === 0">
+                <li>
                   <a [routerLink]="['/create-rule-model']"
                     routerLinkActive="bg-gray-100 text-redshift-red font-semibold border-l-4 border-redshift-red dark:bg-gray-600 dark:text-white"
                     class="block px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-600 dark:hover:text-white transition-colors">
@@ -92,7 +91,7 @@
                   </a>
                 </li>
 
-                <li *ngIf="user?.companies?.length === 0">
+                <li>
                   <a [routerLink]="['/manage-rule-models']"
                     routerLinkActive="bg-gray-100 text-redshift-red font-semibold border-l-4 border-redshift-red dark:bg-gray-600 dark:text-white"
                     class="block px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-600 dark:hover:text-white transition-colors">
@@ -100,17 +99,9 @@
                   </a>
                 </li>
 
-                <li *ngIf="user?.companies?.length !== 0">
-                  <a [routerLink]="['/read-rule-models']"
-                    routerLinkActive="bg-gray-100 text-redshift-red font-semibold border-l-4 border-redshift-red dark:bg-gray-600 dark:text-white"
-                    class="block px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-600 dark:hover:text-white transition-colors">
-                    Listagem de Modelos de Regra
-                  </a>
-                </li>
-
                 <hr class="border-gray-200 dark:border-gray-600 my-1">
 
-                <li *ngIf="user?.companies?.length === 0">
+                <li>
                   <a [routerLink]="['/manage-rules']"
                     routerLinkActive="bg-gray-100 text-redshift-red font-semibold border-l-4 border-redshift-red dark:bg-gray-600 dark:text-white"
                     class="block px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-600 dark:hover:text-white transition-colors">
@@ -118,17 +109,9 @@
                   </a>
                 </li>
 
-                <li *ngIf="user?.companies?.length !== 0">
-                  <a [routerLink]="['/my-instance-rules']"
-                    routerLinkActive="bg-gray-100 text-redshift-red font-semibold border-l-4 border-redshift-red dark:bg-gray-600 dark:text-white"
-                    class="block px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-600 dark:hover:text-white transition-colors">
-                    Gerir Regras
-                  </a>
-                </li>
+                <hr class="border-gray-200 dark:border-gray-600 my-1">
 
-                <hr *ngIf="user?.companies?.length === 0" class="border-gray-200 dark:border-gray-600 my-1">
-
-                <li *ngIf="user?.companies?.length === 0">
+                <li>
                   <a [routerLink]="['/manage-logsources']"
                     routerLinkActive="bg-gray-100 text-redshift-red font-semibold border-l-4 border-redshift-red dark:bg-gray-600 dark:text-white"
                     class="block px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-600 dark:hover:text-white transition-colors">
@@ -147,8 +130,8 @@
             </a>
           </li>
 
-          <!-- Auditoria Global -->
-          <li *ngIf="user?.companies?.length === 0">
+          <!-- Auditoria -->
+          <li *ngIf="isAdmin">
             <a [routerLink]="['/audit']" routerLinkActive="text-redshift-red font-semibold"
               class="block py-2 text-gray-700 dark:text-gray-400 lg:dark:hover:text-white hover:text-redshift-hover transition-colors">
               Auditoria
@@ -161,22 +144,18 @@
       <!-- 3. Ações do Extremo Direito -->
       <div class="flex items-center shrink-0 ml-6">
 
-        <!-- BLOCO AUTENTICADO -->
         <ng-container *ngIf="isLoggedIn">
-          <!-- Texto de Boas-Vindas -->
           <span class="text-gray-600 dark:text-gray-300 text-xs xl:text-sm whitespace-nowrap">
             Bem-vindo,&#160;<span class="font-medium text-gray-800 dark:text-white">{{ user?.email || user?.username
               }}</span>
           </span>
 
-          <!-- Botão Logout -->
           <button (click)="logout()" type="button" title="Terminar Sessão"
             class="dark:text-white hover:bg-gray-50 focus:ring-4 focus:ring-gray-300 font-medium rounded-lg text-sm px-2.5 py-1.5 ml-2 text-redshift-red dark:hover:bg-gray-700 focus:outline-none dark:focus:ring-gray-800 transition">
             <i class="fas fa-sign-out-alt text-base"></i>
           </button>
         </ng-container>
 
-        <!-- BLOCO NÃO AUTENTICADO -->
         <ng-container *ngIf="!isLoggedIn">
           <a [routerLink]="['/login']"
             class="text-white bg-redshift-red hover:bg-redshift-hover focus:ring-4 focus:ring-red-200 font-medium rounded-lg text-sm px-4 py-2 focus:outline-none transition">
@@ -184,17 +163,14 @@
           </a>
         </ng-container>
 
-        <!-- Separador Vertical -->
         <div class="h-5 w-px bg-gray-300 dark:bg-gray-600 mx-2"></div>
 
-        <!-- Botão Dark Mode -->
         <button (click)="themeService.toggleTheme()" type="button" title="Alternar Tema"
           class="text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg text-sm p-2 w-9 h-9 flex items-center justify-center transition">
           <i *ngIf="themeService.isDarkMode" class="fas fa-sun text-base text-yellow-400"></i>
           <i *ngIf="!themeService.isDarkMode" class="fas fa-moon text-base text-gray-700 dark:text-gray-300"></i>
         </button>
 
-        <!-- Botão Mobile Menu -->
         <button *ngIf="isLoggedIn" data-collapse-toggle="mobile-menu-2" type="button"
           class="inline-flex items-center p-2 ml-1 text-sm text-gray-500 rounded-lg lg:hidden hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:text-gray-400 dark:hover:bg-gray-700 dark:focus:ring-gray-600"
           aria-controls="mobile-menu-2" aria-expanded="false">

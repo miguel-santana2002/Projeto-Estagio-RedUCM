@@ -29,7 +29,7 @@
                 }}</strong>
             </span>
 
-            <button *ngIf="user.companies?.length === 0" [routerLink]="'/create-usecase'"
+            <button [routerLink]="'/create-usecase'"
               class="h-10 px-5 bg-redshift-red text-white rounded-lg hover:bg-redshift-hover shadow-md transition flex items-center justify-center gap-2 text-sm font-medium flex-shrink-0">
               <i class="fas fa-plus text-xs"></i>
               <span>Adicionar Novo</span>
@@ -233,12 +233,15 @@
                 <!-- Ações -->
                 <td class="px-5 py-3 text-center whitespace-nowrap" (click)="$event.stopPropagation()">
                   <div class="flex items-center justify-center space-x-2">
+                    <!-- Ver Detalhes (Visível para todos) -->
                     <button [routerLink]="'/usecase-Details/' + u.id" title="Ver Detalhes"
                       class="bg-gray-400 hover:bg-gray-500 text-white w-8 h-8 rounded-md shadow transition inline-flex items-center justify-center">
                       <i class="fas fa-right-to-bracket text-xs"></i>
                     </button>
 
-                    <button (click)="updateSelectDelete($event, u.id); openModal()" title="Eliminar Use Case"
+                    <!-- Eliminar Use Case (Visível apenas para Administradores) -->
+                    <button *ngIf="isAdmin" (click)="updateSelectDelete($event, u.id); openModal()"
+                      title="Eliminar Use Case"
                       class="bg-red-500 hover:bg-red-600 text-white w-8 h-8 rounded-md shadow transition inline-flex items-center justify-center">
                       <i class="fas fa-trash-alt text-xs"></i>
                     </button>

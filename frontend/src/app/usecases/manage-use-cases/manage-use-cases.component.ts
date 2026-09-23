@@ -35,6 +35,7 @@ export class ManageUseCasesComponent implements OnInit, AfterViewInit {
 
   useCases: any[] = [];
   user: any = { username: '', companies: [] };
+  isAdmin: boolean = false;
 
   sortType: string = 'id';
   sortReverse: boolean = false;
@@ -89,9 +90,13 @@ export class ManageUseCasesComponent implements OnInit, AfterViewInit {
         if (this.user.companies === null) {
           this.user.companies = [];
         }
+
+        this.isAdmin = Boolean(data?.is_superuser || data?.is_admin);
       },
-      error: (err) =>
-        console.error('Erro ao carregar dados de utilizador:', err),
+      error: (err) => {
+        console.error('Erro ao carregar dados de utilizador:', err);
+        this.isAdmin = false;
+      },
     });
   }
 
@@ -115,7 +120,6 @@ export class ManageUseCasesComponent implements OnInit, AfterViewInit {
     this.uniqueMitreTechniques = Array.from(mitreSet).sort();
   }
 
-  // Toggles de Filtro com Reset de Página
   toggleMitreTechnique(technique: string): void {
     this.page = 1;
     if (this.selectedMitreTechniques.includes(technique)) {
@@ -167,7 +171,6 @@ export class ManageUseCasesComponent implements OnInit, AfterViewInit {
     this.page = 1;
   }
 
-  // Filtragem Reativa
   get filteredUseCases(): any[] {
     const term = this.nameSearch.trim().toLowerCase();
 
@@ -190,7 +193,6 @@ export class ManageUseCasesComponent implements OnInit, AfterViewInit {
     });
   }
 
-  // Segmentação Paginada
   get pagedUseCases(): any[] {
     const start = (this.page - 1) * this.pageSize;
     return this.filteredUseCases.slice(start, start + this.pageSize);
@@ -211,7 +213,6 @@ export class ManageUseCasesComponent implements OnInit, AfterViewInit {
     this.page = 1;
   }
 
-  // Ordenação com suporte para cncsType
   sortTable(column: string): void {
     if (this.sortType === column) {
       this.sortReverse = !this.sortReverse;
@@ -243,13 +244,14 @@ export class ManageUseCasesComponent implements OnInit, AfterViewInit {
     return (a - b) * (this.sortReverse ? -1 : 1);
   }
 
-  // Modal Eliminar
   updateSelectDelete(event: Event, id: number): void {
     event.stopPropagation();
+    if (!this.isAdmin) return;
     this.selectDelete = id;
   }
 
   openModal(): void {
+    if (!this.isAdmin) return;
     this.modalFlowbite?.show();
   }
 
@@ -258,6 +260,8 @@ export class ManageUseCasesComponent implements OnInit, AfterViewInit {
   }
 
   deleteUseCase(): void {
+    if (!this.isAdmin) return;
+
     this.useCasesService.deleteUseCase(this.selectDelete).subscribe({
       next: () => {
         this.useCases = this.useCases.filter(
@@ -266,6 +270,7 @@ export class ManageUseCasesComponent implements OnInit, AfterViewInit {
         if (this.page > this.totalPages) {
           this.page = this.totalPages;
         }
+        this.closeModal();
       },
       error: (err) => console.error('Erro ao eliminar use case:', err),
     });

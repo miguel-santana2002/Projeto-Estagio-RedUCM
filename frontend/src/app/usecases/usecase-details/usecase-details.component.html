@@ -4,7 +4,7 @@
 <div class="px-20 pt-6 dark:text-white">
   <div class="flex items-center">
     <h1 class="font-inter font-semibold text-2xl text-gray-700 dark:text-white">{{usecase.title}}</h1>
-    <button [routerLink]="'/edit-usecase/'+usecase.id" *ngIf="user?.companies?.length === 0"
+    <button [routerLink]="'/edit-usecase/'+usecase.id"
       class="flex justify-center items-center ml-12 bg-gray-200 dark:bg-gray-700 h-8 w-24 rounded-full hover:bg-gray-300 dark:hover:bg-gray-600 transition text-sm font-medium">
       Editar
       <i class="fas fa-pen h-3.5 w-3 ml-2"></i>

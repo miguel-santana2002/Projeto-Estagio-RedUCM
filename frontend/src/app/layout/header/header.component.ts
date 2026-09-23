@@ -95,4 +95,8 @@ export class HeaderComponent implements OnInit, OnDestroy {
     this.user = null;
     this.router.navigate(['/']);
   }
+
+  get isAdmin(): boolean {
+    return Boolean(this.user?.is_superuser || this.user?.is_admin);
+  }
 }

@@ -4,6 +4,7 @@ import { TitlebannerComponent } from '../../layout/titlebanner/titlebanner.compo
 import { FormsModule, ReactiveFormsModule, NgForm } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { RulesService } from '../../services/rules.service';
+import { AuthService } from '../../services/auth.service';
 import { HttpErrorResponse } from '@angular/common/http';
 
 @Component({
@@ -21,6 +22,8 @@ import { HttpErrorResponse } from '@angular/common/http';
 })
 export class ManageLogsourcesComponent implements OnInit {
   @ViewChild('logForm') logForm!: NgForm;
+
+  isAdmin: boolean = false; // Controlo de permissões (Admin / Superuser)
 
   typeOptions = [
     { value: 'windows', label: 'Windows' },
@@ -53,14 +56,30 @@ export class ManageLogsourcesComponent implements OnInit {
   private successTimeout: any;
 
   selectedLog: any = null;
-  selectDelete: any; // Adicionado para gerir o ID da logsource a eliminar
+  selectDelete: any;
   modalElement: HTMLElement | null = null;
 
-  constructor(private rulesService: RulesService) {}
+  constructor(
+    private rulesService: RulesService,
+    private authService: AuthService,
+  ) {}
 
   ngOnInit() {
+    this.loadUserInfo();
     this.rulesService.getRegisteredLogSources().subscribe((data) => {
       this.logsources = data;
+    });
+  }
+
+  loadUserInfo(): void {
+    this.authService.loggedInInfo().subscribe({
+      next: (data: any) => {
+        this.isAdmin = Boolean(data?.is_superuser || data?.is_admin);
+      },
+      error: (err) => {
+        console.error('Erro ao carregar dados do utilizador:', err);
+        this.isAdmin = false;
+      },
     });
   }
 
@@ -224,11 +243,12 @@ export class ManageLogsourcesComponent implements OnInit {
 
   updateSelectDelete(event: Event, log: any) {
     event.stopPropagation();
+    if (!this.isAdmin) return;
     this.selectDelete = log;
   }
 
-  // Abre e fecha o modal de eliminação
   openModal() {
+    if (!this.isAdmin) return;
     this.modalElement = document.getElementById('deleteModal');
     if (this.modalElement) {
       this.modalElement.classList.remove('hidden');
@@ -244,18 +264,18 @@ export class ManageLogsourcesComponent implements OnInit {
   }
 
   deleteLogSource() {
-    if (!this.selectDelete) return;
+    if (!this.isAdmin || !this.selectDelete) return;
 
-    // Acede ao ID através do objeto guardado
     this.rulesService
       .deleteLogSourceById(this.selectDelete.id)
       .subscribe(() => {
         this.rulesService.getRegisteredLogSources().subscribe((data) => {
           this.logsources = data;
-          if (this.editingId === this.selectDelete.id) {
+          if (this.editingId === this.selectDelete?.id) {
             this.cancelEdit();
           }
           this.selectDelete = null;
+          this.closeModal();
         });
       });
   }
