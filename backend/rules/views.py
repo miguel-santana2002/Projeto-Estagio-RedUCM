@@ -119,21 +119,51 @@ def deleteRuleById(request, id):
         return JsonResponse({"error": "Invalid request method"}, status=400)
     
 
-@extend_schema(request=RuleSerializer,
-                description='Rule creation based on the data inserted in the request body.',
-                responses={
-                     200: OpenApiResponse(response=RuleSerializer, description='Rule created successfully'),
-                     400: OpenApiResponse(response=None, description='Invalid request method')
-                })
+@extend_schema(
+    request=RuleSerializer,
+    description='Rule creation based on the data inserted in the request body.',
+    responses={
+        201: OpenApiResponse(response=RuleSerializer, description='Rule created successfully'),
+        400: OpenApiResponse(description='Dados inválidos ou entidades não encontradas')
+    }
+)
 @api_view(['POST'])
 def createRule(request):
-    if request.method == 'POST':
-        data = request.data
-        ruleModel = RuleModel.objects.get(id=data['ruleModel'])
-        client = Company.objects.get(id=data['client'])
-        new_rule = Rule(ruleModel=ruleModel, logsources=data['logsources'], ruleCode=data['ruleCode'], syntax=data['syntax'], client=client)
-        new_rule.save()
-        return JsonResponse(data, safe=False)
+    data = request.data
+    client_id = data.get('client')
+
+    # 1. Trata o cliente como opcional (só pesquisa se client_id não for None/vazio)
+    client = None
+    if client_id:
+        try:
+            client = Company.objects.get(id=client_id)
+        except Company.DoesNotExist:
+            return Response(
+                {'error': f"Empresa com ID '{client_id}' não encontrada."}, 
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+    # 2. Validação do RuleModel associado
+    try:
+        rule_model = RuleModel.objects.get(id=data.get('ruleModel'))
+    except RuleModel.DoesNotExist:
+        return Response(
+            {'error': "Modelo de regra não encontrado."}, 
+            status=status.HTTP_404_NOT_FOUND
+        )
+
+    # 3. Criação da instância da regra
+    new_rule = Rule(
+        ruleModel=rule_model,
+        logsources=data.get('logsources', []),
+        ruleCode=data.get('ruleCode', ''),
+        syntax=data.get('syntax', rule_model.syntax),
+        client=client
+    )
+    new_rule.save()
+
+    # 4. Devolve o objeto serializado com o novo ID gerado para o Angular atualizar o ecrã
+    return Response(RuleSerializer(new_rule).data, status=status.HTTP_201_CREATED)
 
 
 @extend_schema(request=RuleSerializer,
