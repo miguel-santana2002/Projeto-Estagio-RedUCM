@@ -7,7 +7,7 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
 import { MatIconModule } from '@angular/material/icon';
@@ -33,6 +33,7 @@ import { UsecasesService } from '../../services/usecases.service';
     ReactiveFormsModule,
     FormsModule,
     CommonModule,
+    RouterModule, // Adicionado para suportar [routerLink]
   ],
 })
 export class CreateUseCaseComponent implements OnInit {
@@ -45,16 +46,75 @@ export class CreateUseCaseComponent implements OnInit {
   // Táticas escolhidas explicitamente pelo utilizador (separadas das derivadas de técnicas)
   private manualTactics = new Set<string>();
 
-  chavesTaxonomia = ['Código Malicioso', 'Disponibilidade', 'Recolha de Informação', 'Intrusão', 'Tentativa de Intrusão', 'Segurança da Informação', 'Fraude', 'Conteúdo Abusivo', 'Vulnerabilidade', 'Outro'];
+  chavesTaxonomia = [
+    'Código Malicioso',
+    'Disponibilidade',
+    'Recolha de Informação',
+    'Intrusão',
+    'Tentativa de Intrusão',
+    'Segurança da Informação',
+    'Fraude',
+    'Conteúdo Abusivo',
+    'Vulnerabilidade',
+    'Outro',
+  ];
   taxonomiaCNCS: any = [
-    { 'Código Malicioso': ['Sistema Infetado', 'Distribuição de Malware', 'Servidor C2', 'Configuração de Malware'] },
-    { Disponibilidade: ['Negação de Serviço', 'Abuso de Recursos', 'Outage / Indisponibilidade'] },
-    { 'Recolha de Informação': ['Scanners de Vulnerabilidades', 'Social Engineering', 'Scanning / Probing'] },
-    { Intrusão: ['Exploração de Vulnerabilidades', 'Comprometimento de Contas', 'Obtenção de Credenciais'] },
-    { 'Tentativa de Intrusão': ['Tentativa de Exploração de Vulnerabilidades', 'Força Bruta / Password Spraying'] },
-    { 'Segurança da Informação': ['Roubo de Informação', 'Exfiltração de Dados', 'Alteração de Informação'] },
-    { Fraude: ['Burlas', 'Roubo de Identidade / Falsificação', 'Uso Indevido de Recursos'] },
-    { 'Conteúdo Abusivo': ['SPAM', 'Phishing', 'Alojamento Indevido de Conteúdos'] },
+    {
+      'Código Malicioso': [
+        'Sistema Infetado',
+        'Distribuição de Malware',
+        'Servidor C2',
+        'Configuração de Malware',
+      ],
+    },
+    {
+      Disponibilidade: [
+        'Negação de Serviço',
+        'Abuso de Recursos',
+        'Outage / Indisponibilidade',
+      ],
+    },
+    {
+      'Recolha de Informação': [
+        'Scanners de Vulnerabilidades',
+        'Social Engineering',
+        'Scanning / Probing',
+      ],
+    },
+    {
+      Intrusão: [
+        'Exploração de Vulnerabilidades',
+        'Comprometimento de Contas',
+        'Obtenção de Credenciais',
+      ],
+    },
+    {
+      'Tentativa de Intrusão': [
+        'Tentativa de Exploração de Vulnerabilidades',
+        'Força Bruta / Password Spraying',
+      ],
+    },
+    {
+      'Segurança da Informação': [
+        'Roubo de Informação',
+        'Exfiltração de Dados',
+        'Alteração de Informação',
+      ],
+    },
+    {
+      Fraude: [
+        'Burlas',
+        'Roubo de Identidade / Falsificação',
+        'Uso Indevido de Recursos',
+      ],
+    },
+    {
+      'Conteúdo Abusivo': [
+        'SPAM',
+        'Phishing',
+        'Alojamento Indevido de Conteúdos',
+      ],
+    },
     { Vulnerabilidade: ['Sistema Vulnerável', 'Aplicação Vulnerável'] },
     { Outro: ['Outro'] },
   ];
@@ -72,9 +132,9 @@ export class CreateUseCaseComponent implements OnInit {
     mitreTechniques: new FormControl<string[]>([], Validators.required),
     tactics: new FormControl<string[]>([], Validators.required),
     cncsClass: new FormControl(''),
-    cncsClassCustom: new FormControl(''), // NOVO
+    cncsClassCustom: new FormControl(''),
     cncsType: new FormControl(''),
-    cncsTypeCustom: new FormControl(''),  // NOVO
+    cncsTypeCustom: new FormControl(''),
   });
 
   constructor(
@@ -108,12 +168,16 @@ export class CreateUseCaseComponent implements OnInit {
 
         this.allTacticsList = Array.from(tacticSet).sort();
         console.log('EXEMPLO TECNICA:', this.rawMitreData[0]);
-        this.mitreAutocompleteList = this.rawMitreData.map((t: any) => `${t.id} - ${t.name}`);
+        this.mitreAutocompleteList = this.rawMitreData.map(
+          (t: any) => `${t.id} - ${t.name}`,
+        );
         this.filteredTechniquesList = [...this.mitreAutocompleteList];
       },
       error: (error) => {
         console.error('Erro ao carregar técnicas MITRE:', error);
-        this.handleLoadFailure('Não foi possível carregar as técnicas MITRE. Verifique a ligação ao servidor.');
+        this.handleLoadFailure(
+          'Não foi possível carregar as técnicas MITRE. Verifique a ligação ao servidor.',
+        );
       },
     });
   }
@@ -161,32 +225,36 @@ export class CreateUseCaseComponent implements OnInit {
 
     this.tacticsByTechnique.clear();
     this.tacticsByTechnique.set('T1059', ['Execution']);
-    // T1098 pertence a várias táticas (demonstra suporte multi-tática)
     this.tacticsByTechnique.set('T1098', ['Persistence', 'Defense Evasion']);
     this.tacticsByTechnique.set('T1112', ['Defense Evasion']);
   }
 
   // Utilizador alterou as táticas manualmente
   onTacticChange(): void {
-    const selTactics: string[] = this.createUseCaseForm.get('tactics')?.value || [];
+    const selTactics: string[] =
+      this.createUseCaseForm.get('tactics')?.value || [];
     this.manualTactics = new Set(selTactics);
     this.applyTacticFilter();
   }
 
   // Utilizador alterou as técnicas manualmente -> derivar/atualizar as táticas
   onTechniqueChange(): void {
-    const selTechs: string[] = this.createUseCaseForm.get('mitreTechniques')?.value || [];
+    const selTechs: string[] =
+      this.createUseCaseForm.get('mitreTechniques')?.value || [];
     const derived = new Set<string>(
-      selTechs.flatMap((t) => this.tacticsByTechnique.get(this.techId(t)) || []),
+      selTechs.flatMap(
+        (t) => this.tacticsByTechnique.get(this.techId(t)) || [],
+      ),
     );
 
     // União: táticas escolhidas manualmente + todas as táticas das técnicas selecionadas
-    const union = Array.from(new Set([...this.manualTactics, ...derived])).sort();
+    const union = Array.from(
+      new Set([...this.manualTactics, ...derived]),
+    ).sort();
     const tacticsCtrl = this.createUseCaseForm.get('tactics');
     const current: string[] = tacticsCtrl?.value || [];
 
     if (!this.sameSet(union, current)) {
-      // setValue é programático -> não dispara (selectionChange), evitando loops
       tacticsCtrl?.setValue(union);
     }
     this.applyTacticFilter();
@@ -194,7 +262,8 @@ export class CreateUseCaseComponent implements OnInit {
 
   // Recalcula a lista de técnicas visíveis e remove técnicas selecionadas que deixaram de ser válidas
   private applyTacticFilter(): void {
-    const selTactics: string[] = this.createUseCaseForm.get('tactics')?.value || [];
+    const selTactics: string[] =
+      this.createUseCaseForm.get('tactics')?.value || [];
 
     if (selTactics.length === 0) {
       this.filteredTechniquesList = [...this.mitreAutocompleteList];
@@ -206,7 +275,7 @@ export class CreateUseCaseComponent implements OnInit {
       return techTactics.some((t) => selTactics.includes(t));
     });
 
-    // Endurecimento: remover da seleção as técnicas que já não pertencem a nenhuma tática ativa
+    // Remover da seleção as técnicas que já não pertencem a nenhuma tática ativa
     const techCtrl = this.createUseCaseForm.get('mitreTechniques');
     const selTechs: string[] = techCtrl?.value || [];
     const validTechs = selTechs.filter((t) => {
@@ -225,7 +294,8 @@ export class CreateUseCaseComponent implements OnInit {
   }
 
   private techId(t: any): string {
-    const val = typeof t === 'string' ? t : (t?.display || t?.value || t?.id || '');
+    const val =
+      typeof t === 'string' ? t : t?.display || t?.value || t?.id || '';
     return String(val).split(' - ')[0].trim();
   }
 
@@ -235,12 +305,16 @@ export class CreateUseCaseComponent implements OnInit {
       .trim()
       .replace(/\s+/g, ' ')
       .split(' ')
-      .map((w) => (w.toLowerCase() === 'and' ? 'and' : w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()))
+      .map((w) =>
+        w.toLowerCase() === 'and'
+          ? 'and'
+          : w.charAt(0).toUpperCase() + w.slice(1).toLowerCase(),
+      )
       .join(' ');
   }
 
-clearCNCSClass(event: Event): void {
-    event.stopPropagation(); // Impede que o dropdown abra ao clicar no 'X'
+  clearCNCSClass(event: Event): void {
+    event.stopPropagation();
     this.createUseCaseForm.get('cncsClass')?.setValue('');
     this.createUseCaseForm.get('cncsClassCustom')?.setValue('');
     this.selectedCategoryValues = [];
@@ -255,10 +329,12 @@ clearCNCSClass(event: Event): void {
   }
 
   updateCNCSValues(): void {
-    this.selectedCategory = this.createUseCaseForm.get('cncsClass')?.value || '';
+    this.selectedCategory =
+      this.createUseCaseForm.get('cncsClass')?.value || '';
     this.selectedCategoryValues =
-      this.taxonomiaCNCS.find((entry: { [x: string]: any }) => entry[this.selectedCategory])?.[this.selectedCategory] || [];
-    // Ao mudar de classe, o tipo anterior deixa de fazer sentido
+      this.taxonomiaCNCS.find(
+        (entry: { [x: string]: any }) => entry[this.selectedCategory],
+      )?.[this.selectedCategory] || [];
     this.createUseCaseForm.get('cncsType')?.setValue('');
   }
 
@@ -277,23 +353,22 @@ clearCNCSClass(event: Event): void {
 
     const v = this.createUseCaseForm.value;
     const formData = new FormData();
-    
+
     formData.append('title', v.title || '');
     formData.append('description', v.description || '');
     formData.append('mitigation', v.mitigation || '');
 
-    // --- LÓGICA NOVA PARA O "OUTRO" ---
-    // Se selecionou "Outro", envia o que foi escrito à mão. Se não, envia o valor da dropdown.
-    const finalCncsClass = v.cncsClass === 'Outro' ? v.cncsClassCustom : v.cncsClass;
-    const finalCncsType = v.cncsType === 'Outro' ? v.cncsTypeCustom : v.cncsType;
+    const finalCncsClass =
+      v.cncsClass === 'Outro' ? v.cncsClassCustom : v.cncsClass;
+    const finalCncsType =
+      v.cncsType === 'Outro' ? v.cncsTypeCustom : v.cncsType;
 
     formData.append('cncsClass', finalCncsClass || '');
     formData.append('cncsType', finalCncsType || '');
-    // ----------------------------------
 
     formData.append('mitreTechniques', JSON.stringify(v.mitreTechniques || []));
     formData.append('tactics', JSON.stringify(v.tactics || []));
-    
+
     if (this.selectedFile) {
       formData.append('playbook', this.selectedFile);
     }
@@ -302,7 +377,8 @@ clearCNCSClass(event: Event): void {
       next: () => this.router.navigate(['/manage-usecases']),
       error: (err) => {
         console.error('Erro ao criar use case:', err);
-        this.errorMessage = 'Ocorreu um erro ao criar o Use Case. Tente novamente.';
+        this.errorMessage =
+          'Ocorreu um erro ao criar o Use Case. Tente novamente.';
       },
     });
   }
