@@ -21,7 +21,7 @@ class UseCase(models.Model):
     mitreTechniques = ArrayField(models.CharField( blank=True, null=True),blank=True, null=True)
     phaseTasks = ArrayField(models.JSONField(blank=True, null=True), blank=True, null=True)
     rules = ArrayField(models.JSONField(blank=True, null=True), blank=True, null=True)
-    attackVectors = ArrayField(models.CharField( blank=True, null=True),blank=True, null=True)
+    tactics = ArrayField(models.CharField(blank=True, null=True), blank=True, null=True)  # <-- Substituído aqui por tactics (vetores de ataque nao se aplica)
     playbook = models.ImageField(upload_to=upload_to, blank=True, null=True)
 
 

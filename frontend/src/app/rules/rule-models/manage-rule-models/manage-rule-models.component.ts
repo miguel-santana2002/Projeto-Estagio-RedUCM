@@ -10,10 +10,10 @@ import { RouterModule } from '@angular/router';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { Modal } from 'flowbite';
 
-import { HeaderComponent } from '../../../layout/header/header.component';
-import { TitlebannerComponent } from '../../../layout/titlebanner/titlebanner.component';
-import { AuthService } from '../../../services/auth.service';
-import { RulesService } from '../../../services/rules.service';
+import { HeaderComponent } from '../../layout/header/header.component';
+import { TitlebannerComponent } from '../../layout/titlebanner/titlebanner.component';
+import { AuthService } from '../../services/auth.service';
+import { RulesService } from '../../services/rules.service';
 
 @Component({
   selector: 'app-manage-rule-models',
@@ -33,8 +33,6 @@ import { RulesService } from '../../../services/rules.service';
 export class ManageRuleModelsComponent implements OnInit, AfterViewInit {
   @ViewChild('modal') modal!: ElementRef<HTMLElement>;
   modalFlowbite!: Modal;
-
-  isAdmin: boolean = false; // Controlo de permissões (Admin / Superuser)
 
   sortType: string = 'id';
   sortReverse: boolean = false;
@@ -67,7 +65,6 @@ export class ManageRuleModelsComponent implements OnInit, AfterViewInit {
   ) {}
 
   ngOnInit(): void {
-    this.loadUserInfo();
     this.loadRuleModels();
   }
 
@@ -75,19 +72,6 @@ export class ManageRuleModelsComponent implements OnInit, AfterViewInit {
     if (this.modal?.nativeElement) {
       this.modalFlowbite = new Modal(this.modal.nativeElement);
     }
-  }
-
-  loadUserInfo(): void {
-    this.authService.loggedInInfo().subscribe({
-      next: (data: any) => {
-        // Validação hierárquica por permissões de topo
-        this.isAdmin = Boolean(data?.is_superuser || data?.is_admin);
-      },
-      error: (err) => {
-        console.error('Erro ao carregar perfil do utilizador:', err);
-        this.isAdmin = false;
-      },
-    });
   }
 
   loadRuleModels(): void {
@@ -190,6 +174,7 @@ export class ManageRuleModelsComponent implements OnInit, AfterViewInit {
     this.selectedSintaxes = [];
     this.selectedTypes = [];
     this.selectedLogSources = [];
+    this.nameSearch = '';
   }
 
   onSearchChange(): void {
@@ -282,12 +267,10 @@ export class ManageRuleModelsComponent implements OnInit, AfterViewInit {
   // Gestão de Modal Eliminar
   updateSelectDelete(event: Event, id: number): void {
     event.stopPropagation();
-    if (!this.isAdmin) return;
     this.selectDelete = id;
   }
 
   openModal(): void {
-    if (!this.isAdmin) return;
     this.modalFlowbite?.show();
   }
 
@@ -296,17 +279,15 @@ export class ManageRuleModelsComponent implements OnInit, AfterViewInit {
   }
 
   deleteRuleModel(): void {
-    if (!this.isAdmin) return;
-
     this.rulesService.deleteRuleModelById(this.selectDelete).subscribe({
       next: () => {
         this.loadRuleModels();
         if (this.page > this.totalPages) {
           this.page = this.totalPages;
         }
-        this.closeModal();
       },
       error: (err) => console.error('Erro ao eliminar modelo de regra:', err),
     });
   }
 }
+

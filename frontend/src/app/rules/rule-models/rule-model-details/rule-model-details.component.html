@@ -326,7 +326,7 @@
               class="w-full p-3 text-xs font-mono bg-gray-50 dark:bg-gray-700/60 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-0 resize-none"></textarea>
           </div>
 
-          <!-- Painel Central de Ações -->
+          <!-- Painel Central de Ações (Dropdown Atualizado sem Lucene, com EQL e CQL) -->
           <div class="lg:col-span-2 flex flex-col items-center justify-center space-y-4 py-2">
             <div class="w-full">
               <label
@@ -336,9 +336,12 @@
               <select [(ngModel)]="targetSyntax" [disabled]="isConverting"
                 class="bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded-lg focus:ring-redshift-red focus:border-redshift-red block w-full p-2.5 truncate dark:bg-gray-700 dark:border-gray-600 dark:text-white disabled:opacity-50 transition">
                 <option value="" disabled selected>Selecionar</option>
-                <option *ngFor="let syntax of availableSyntaxes" [value]="syntax.id">
-                  {{ syntax.name }}
-                </option>
+                <option value="SPL (Splunk)">SPL (Splunk)</option>
+                <option value="KQL (Sentinel)">KQL (Sentinel)</option>
+                <option value="AQL (QRadar)">AQL (QRadar)</option>
+                <option value="EQL (Elastic)">EQL (Elastic)</option>
+                <option value="CQL (CrowdStrike)">CQL (CrowdStrike)</option>
+                <option value="Sigma Rule">Sigma Rule</option>
               </select>
             </div>
 

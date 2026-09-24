@@ -16,14 +16,14 @@ import {
   CodeModelChangedEvent,
 } from '@ngstack/code-editor';
 
-import { RulesService } from '../../../services/rules.service';
-import { HeaderComponent } from '../../../layout/header/header.component';
-import { TitlebannerComponent } from '../../../layout/titlebanner/titlebanner.component';
-import { UsecasesService } from '../../../services/usecases.service';
-import { AuthService } from '../../../services/auth.service';
-import { SigmaConversionsService } from '../../../services/sigma-conversions.service';
+import { RulesService } from '../../services/rules.service';
+import { HeaderComponent } from '../../layout/header/header.component';
+import { TitlebannerComponent } from '../../layout/titlebanner/titlebanner.component';
+import { UsecasesService } from '../../services/usecases.service';
+import { AuthService } from '../../services/auth.service';
+import { SigmaConversionsService } from '../../services/sigma-conversions.service';
 
-import { AppCodeEditorComponent } from '../../../shared/components/app-code-editor/app-code-editor.component';
+import { AppCodeEditorComponent } from '../../shared/components/app-code-editor/app-code-editor.component';
 
 @Component({
   selector: 'app-rule-model-details',
@@ -42,6 +42,7 @@ import { AppCodeEditorComponent } from '../../../shared/components/app-code-edit
   ],
 })
 export class RuleModelDetailsComponent implements OnInit {
+  conversionSource: string = '';
   selectLogsources: any;
   registeredLogsources: any = [];
   code: any = '';
@@ -113,8 +114,7 @@ export class RuleModelDetailsComponent implements OnInit {
   sourceRuleContent: string = '';
   convertedRuleContent: string = '';
   intermediateSigmaContent: string = '';
-  conversionEngine: string | null = null;
-  conversionSource: string | null = null;
+  conversionEngine: 'pysigma' | 'hybrid' | 'llm' | null = null;
   targetSyntax: string = '';
   isConverting: boolean = false;
   conversionError: string = '';
@@ -272,7 +272,6 @@ export class RuleModelDetailsComponent implements OnInit {
       this.selectedModel.value || this.ruleModel.ruleCode || '';
     this.convertedRuleContent = '';
     this.conversionEngine = null;
-    this.conversionSource = null;
     this.targetSyntax = '';
     this.isConverting = false;
     this.showConvertModal = true;
@@ -295,7 +294,6 @@ export class RuleModelDetailsComponent implements OnInit {
     this.convertedRuleContent = '';
     this.intermediateSigmaContent = '';
     this.conversionEngine = null;
-    this.conversionSource = null;
     this.conversionError = '';
 
     const payload = {
@@ -309,7 +307,6 @@ export class RuleModelDetailsComponent implements OnInit {
         this.convertedRuleContent = res.target_query;
         this.intermediateSigmaContent = res.sigma_rule;
         this.conversionEngine = res.engine || null;
-        this.conversionSource = res.engine || null;
         this.isConverting = false;
       },
       error: (err: any) => {
@@ -331,38 +328,20 @@ export class RuleModelDetailsComponent implements OnInit {
   }
 
   applyConvertedRule(): void {
-    if (!this.convertedRuleContent || this.isConverting) return;
+    if (!this.convertedRuleContent) return;
 
-    const payload = {
-      ruleModel: this.ruleModel.id,
-      ruleCode: this.convertedRuleContent,
-      syntax: this.targetSyntax,
-      logsources: this.ruleModel.logsources || [],
-      client: null, // Cria a instância sem cliente associado
+    this.ruleModel.syntax = this.targetSyntax;
+    const lang = this.getMonacoLanguage(this.targetSyntax);
+    this.options.language = lang;
+
+    this.selectedModel = {
+      value: this.convertedRuleContent,
+      language: lang,
+      uri: `model-${this.ruleModel.id}-${Date.now()}`,
     };
 
-    this.rulesService.createRule(payload).subscribe({
-      next: (createdRule: any) => {
-        // 1. Fecha o modal de conversão
-        this.closeConvertModal();
-
-        // 2. Adiciona a nova regra à grelha de instâncias no ecrã
-        if (createdRule) {
-          this.ruleInstances.push(createdRule);
-        }
-
-        // 3. Ativa o toast de sucesso
-        this.message = `Nova regra (${this.targetSyntax}) criada com sucesso!`;
-        setTimeout(() => {
-          this.message = '';
-        }, 4000);
-      },
-      error: (err: any) => {
-        this.conversionError =
-          'Erro ao registar a nova regra na base de dados.';
-        console.error('Erro ao criar regra convertida:', err);
-      },
-    });
+    this.ruleModel.ruleCode = this.convertedRuleContent;
+    this.closeConvertModal();
   }
 
   // --- Fim da Modal de Conversão ---

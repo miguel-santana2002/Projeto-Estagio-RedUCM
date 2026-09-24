@@ -79,7 +79,7 @@ def createUseCase(request):
             mitreTechniques = json.loads(data.get('mitreTechniques', '[]'))
             phaseTasks = json.loads(data.get('phaseTasks', '[]'))
             rules = json.loads(data.get('rules', '[]'))
-            attackVectors = json.loads(data.get('attackVectors', '[]'))
+            tactics = json.loads(data.get('tactics', '[]'))  # <-- Alterado aqui
 
             # 2. Obtenção do ficheiro playbook (opcional)
             playbook_file = request.FILES.get('playbook', None)
@@ -87,15 +87,15 @@ def createUseCase(request):
             # 3. Criação da entidade
             new_usecase = UseCase(
                 title=data['title'],
-                description=data['description'],
-                mitigation=data['mitigation'],
-                cncsClass=data['cncsClass'],
-                cncsType=data['cncsType'],
-                playbook=playbook_file,  # Não lança KeyError se for None
+                description=data.get('description', ''),
+                mitigation=data.get('mitigation', ''),
+                cncsClass=data.get('cncsClass', ''),
+                cncsType=data.get('cncsType', ''),
+                playbook=playbook_file,
                 mitreTechniques=mitreTechniques,
                 phaseTasks=phaseTasks,
                 rules=rules,
-                attackVectors=attackVectors,
+                tactics=tactics,  # <-- E atribuído aqui
             )
             new_usecase.save()
 
@@ -297,8 +297,8 @@ def updateUseCase(request, id):
     # 4. Listas / Arrays
     if 'mitreTechniques' in data:
         usecase.mitreTechniques = data.get('mitreTechniques')
-    if 'attackVectors' in data:
-        usecase.attackVectors = data.get('attackVectors')
+    if 'tactics' in data:
+        usecase.tactics = data.get('tactics')
     if 'rules' in data:
         usecase.rules = data.get('rules')
 
@@ -320,7 +320,8 @@ def getAllTechniques(request):
         for technique in attack.techniques:
             techniques_list.append({
                 'id': technique.id,
-                'name': technique.name
+                'name': technique.name,
+                'tactics': [tactic.name for tactic in technique.tactics],
             })
         return JsonResponse(techniques_list, safe=False)
     else:
