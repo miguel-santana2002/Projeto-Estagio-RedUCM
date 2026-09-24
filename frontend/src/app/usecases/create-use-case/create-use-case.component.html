@@ -1,7 +1,7 @@
 <app-header></app-header>
 <app-titlebanner title="Criar Use Case" image="./assets/bannercover.jpg"></app-titlebanner>
 
-<div class="max-w-4xl mx-auto p-6 bg-white dark:bg-gray-900 rounded-xl shadow-md mt-6 mb-12">
+<div class="max-w-6xl mx-auto p-6 bg-white dark:bg-gray-900 rounded-xl shadow-md mt-6 mb-12">
   <form [formGroup]="createUseCaseForm" (ngSubmit)="createUseCase()" class="space-y-6">
 
     <!-- Mensagem de Erro -->
@@ -26,21 +26,23 @@
     <!-- Grelha de Seleções (Táticas e Técnicas) -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
       
-      <!-- Táticas (MITRE ATT&CK) -->
+      <!-- Táticas -->
       <div>
         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Táticas (MITRE ATT&CK)</label>
         <mat-form-field appearance="outline" class="w-full">
-          <mat-select formControlName="tactics" multiple placeholder="Selecione as táticas...">
+          <!-- A correção está aqui: panelClass="custom-dark-panel" -->
+          <mat-select formControlName="tactics" multiple placeholder="Selecione as táticas..." (selectionChange)="onTacticChange()" panelClass="custom-dark-panel">
             <mat-option *ngFor="let tactic of allTacticsList" [value]="tactic">{{ tactic }}</mat-option>
           </mat-select>
         </mat-form-field>
       </div>
 
-      <!-- Técnicas MITRE -->
+      <!-- Técnicas -->
       <div>
         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Técnicas MITRE</label>
         <mat-form-field appearance="outline" class="w-full">
-          <mat-select formControlName="mitreTechniques" multiple placeholder="Selecione as técnicas...">
+          <!-- A correção está aqui: panelClass="custom-dark-panel" -->
+          <mat-select formControlName="mitreTechniques" multiple placeholder="Selecione as técnicas..." (selectionChange)="onTechniqueChange()" panelClass="custom-dark-panel">
             <mat-option *ngFor="let tech of filteredTechniquesList" [value]="tech">{{ tech }}</mat-option>
           </mat-select>
         </mat-form-field>
@@ -51,22 +53,35 @@
     <!-- Taxonomia CNCS (Classe e Tipo) -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
       
+      <!-- Classe CNCS -->
       <div>
         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Classe CNCS</label>
         <mat-form-field appearance="outline" class="w-full">
           <mat-select formControlName="cncsClass" (selectionChange)="updateCNCSValues()" placeholder="Selecione a classe...">
+            <!-- Opção para limpar a seleção à moda antiga -->
+            <mat-option value="">-- Nenhuma --</mat-option>
             <mat-option *ngFor="let chave of chavesTaxonomia" [value]="chave">{{ chave }}</mat-option>
           </mat-select>
         </mat-form-field>
+        
+        <!-- Aparece apenas se selecionar "Outro" -->
+        <input *ngIf="createUseCaseForm.get('cncsClass')?.value === 'Outro'" type="text" formControlName="cncsClassCustom" placeholder="Especifique a classe..." 
+               class="mt-2 w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition" />
       </div>
 
+      <!-- Tipo CNCS -->
       <div>
         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Tipo CNCS</label>
         <mat-form-field appearance="outline" class="w-full">
           <mat-select formControlName="cncsType" placeholder="Selecione o tipo...">
+            <mat-option value="">-- Nenhuma --</mat-option>
             <mat-option *ngFor="let val of selectedCategoryValues" [value]="val">{{ val }}</mat-option>
           </mat-select>
         </mat-form-field>
+        
+        <!-- Aparece apenas se selecionar "Outro" -->
+        <input *ngIf="createUseCaseForm.get('cncsType')?.value === 'Outro'" type="text" formControlName="cncsTypeCustom" placeholder="Especifique o tipo..." 
+               class="mt-2 w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition" />
       </div>
 
     </div>

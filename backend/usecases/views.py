@@ -320,7 +320,8 @@ def getAllTechniques(request):
         for technique in attack.techniques:
             techniques_list.append({
                 'id': technique.id,
-                'name': technique.name
+                'name': technique.name,
+                'tactics': [tactic.name for tactic in technique.tactics],
             })
         return JsonResponse(techniques_list, safe=False)
     else:

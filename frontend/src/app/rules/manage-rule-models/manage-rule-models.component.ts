@@ -174,6 +174,7 @@ export class ManageRuleModelsComponent implements OnInit, AfterViewInit {
     this.selectedSintaxes = [];
     this.selectedTypes = [];
     this.selectedLogSources = [];
+    this.nameSearch = '';
   }
 
   onSearchChange(): void {
@@ -289,3 +290,4 @@ export class ManageRuleModelsComponent implements OnInit, AfterViewInit {
     });
   }
 }
+

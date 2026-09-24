@@ -4,6 +4,7 @@ import { RulesService } from '../../services/rules.service';
 import { of, throwError } from 'rxjs';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ManageLogsourcesComponent } from '../../rules/manage-logsources/manage-logsources.component';
+import { RouterTestingModule } from '@angular/router/testing';
 
 describe('ManageLogsourcesComponent', () => {
   let component: ManageLogsourcesComponent;
@@ -13,7 +14,7 @@ describe('ManageLogsourcesComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [HttpClientTestingModule],
+      imports: [HttpClientTestingModule, RouterTestingModule],
       providers: [RulesService]
     })
     .compileComponents();
@@ -48,7 +49,7 @@ describe('ManageLogsourcesComponent', () => {
     component.newLog = { name: 'New Logsource', description: 'Description' };
     component.createLogSource();
 
-    expect(rulesService.createRegisteredLogSource).toHaveBeenCalledWith(component.newLog);
+    expect(rulesService.createRegisteredLogSource).toHaveBeenCalledWith(jasmine.objectContaining({ name: 'New Logsource', description: 'Description' }));
     expect(component.logsources).toEqual(logsourcesMock);
     expect(component.errorMessage).toBeNull();
   });
@@ -76,7 +77,7 @@ describe('ManageLogsourcesComponent', () => {
     spyOn(rulesService, 'getRegisteredLogSources').and.returnValue(of(updatedLogsourcesMock));
 
     component.logsources = logsourcesMock;
-    component.deleteLogSourceById(1);
+    component.selectDelete = { id: 1 }; component.deleteLogSource();
 
     expect(rulesService.deleteLogSourceById).toHaveBeenCalledWith(1);
     expect(component.logsources).toEqual(updatedLogsourcesMock);
