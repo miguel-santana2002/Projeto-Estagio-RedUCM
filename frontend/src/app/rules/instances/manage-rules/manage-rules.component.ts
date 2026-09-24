@@ -33,6 +33,8 @@ export class ManageRulesComponent implements OnInit, AfterViewInit {
   @ViewChild('modal') modal!: ElementRef<HTMLElement>;
   modalFlowbite!: Modal;
 
+  isAdmin: boolean = false; // Controlo de permissões (Admin / Superuser)
+
   sortType = 'id';
   sortReverse = false;
   nameSearch: string = '';
@@ -68,6 +70,7 @@ export class ManageRulesComponent implements OnInit, AfterViewInit {
   ) {}
 
   ngOnInit(): void {
+    this.loadUserInfo();
     this.loadRules();
   }
 
@@ -75,6 +78,19 @@ export class ManageRulesComponent implements OnInit, AfterViewInit {
     if (this.modal?.nativeElement) {
       this.modalFlowbite = new Modal(this.modal.nativeElement);
     }
+  }
+
+  loadUserInfo(): void {
+    this.authService.loggedInInfo().subscribe({
+      next: (data: any) => {
+        // Superuser ou Admin têm privilégios totais; staff/operador fica como false
+        this.isAdmin = Boolean(data?.is_superuser || data?.is_admin);
+      },
+      error: (err) => {
+        console.error('Erro ao carregar dados do utilizador:', err);
+        this.isAdmin = false;
+      },
+    });
   }
 
   loadRules(): void {
@@ -252,36 +268,30 @@ export class ManageRulesComponent implements OnInit, AfterViewInit {
     const term = this.nameSearch.trim().toLowerCase();
 
     return this.rules.filter((rule: any) => {
-      // 1. Pesquisa por Título do Modelo ou Código da Regra
       const ruleTitle = rule.ruleModel?.title?.toLowerCase() || '';
       const ruleCode = rule.ruleCode?.toLowerCase() || '';
       const matchesName =
         !term || ruleTitle.includes(term) || ruleCode.includes(term);
 
-      // 2. Filtro Tipo
       const matchesType =
         this.selectedTypes.length === 0 ||
         (rule.ruleModel?.type &&
           this.selectedTypes.includes(rule.ruleModel.type));
 
-      // 3. Filtro Sintaxe
       const currentSyntax = rule.syntax || rule.ruleModel?.syntax;
       const matchesSyntax =
         this.selectedSintaxes.length === 0 ||
         (currentSyntax && this.selectedSintaxes.includes(currentSyntax));
 
-      // 4. Filtro Use Case
       const matchesUseCase =
         this.selectedUseCases.length === 0 ||
         (rule.ruleModel?.useCaseId != null &&
           this.selectedUseCases.includes(rule.ruleModel.useCaseId));
 
-      // 5. Filtro Cliente
       const matchesClient =
         this.selectedClients.length === 0 ||
         (rule.client?.name && this.selectedClients.includes(rule.client.name));
 
-      // 6. Filtro Logsources
       const logs = rule.logsources ?? rule.ruleModel?.logsources ?? [];
       const matchesLogs =
         this.selectedLogsources.length === 0 ||
@@ -319,13 +329,15 @@ export class ManageRulesComponent implements OnInit, AfterViewInit {
     this.page = 1;
   }
 
-  // Modal Eliminar
+  // Gestão de Modal Eliminar
   updateSelectDelete(event: Event, id: number): void {
     event.stopPropagation();
+    if (!this.isAdmin) return;
     this.selectDelete = id;
   }
 
   openModal(): void {
+    if (!this.isAdmin) return;
     this.modalFlowbite?.show();
   }
 
@@ -334,12 +346,15 @@ export class ManageRulesComponent implements OnInit, AfterViewInit {
   }
 
   deleteRuleModel(): void {
+    if (!this.isAdmin) return;
+
     this.rulesService.deleteRuleById(this.selectDelete).subscribe({
       next: () => {
         this.loadRules();
         if (this.page > this.totalPages) {
           this.page = this.totalPages;
         }
+        this.closeModal();
       },
       error: (err) => console.error('Erro ao eliminar regra:', err),
     });

@@ -46,6 +46,8 @@ export class RuleDetailsComponent implements OnInit {
         this.rule = {
           ...data,
           client: data.client || { name: 'Sem Cliente' },
+          status: data.status || '',
+          logsources: Array.isArray(data.logsources) ? data.logsources : [],
         };
         this.code = this.rule.ruleCode || '';
 

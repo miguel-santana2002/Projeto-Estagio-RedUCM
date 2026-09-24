@@ -158,7 +158,8 @@ def createRule(request):
         logsources=data.get('logsources', []),
         ruleCode=data.get('ruleCode', ''),
         syntax=data.get('syntax', rule_model.syntax),
-        client=client
+        client=client,
+        status=data.get('status', '')
     )
     new_rule.save()
 
@@ -259,6 +260,43 @@ def updateRuleCode(request,id):
         return JsonResponse({'message': 'Regra Atualizada com Sucesso'})
     else:
         return JsonResponse({'error': 'Invalid request method'})
+
+@extend_schema(
+    request=RuleSerializer,
+    description='Atualiza os dados de uma regra (cliente, status, sintaxe, logsources e código).',
+    responses={
+        200: OpenApiResponse(response=RuleSerializer, description='Regra atualizada com sucesso'),
+        404: OpenApiResponse(description='Regra ou Cliente não encontrado')
+    }
+)
+
+@api_view(['POST'])
+def updateRule(request, id):
+    try:
+        rule = Rule.objects.get(id=id)
+    except Rule.DoesNotExist:
+        return Response({'error': 'Regra não encontrada.'}, status=status.HTTP_404_NOT_FOUND)
+
+    data = request.data
+    client_id = data.get('client')
+
+    # Trata cliente (permite None / sem cliente)
+    if client_id:
+        try:
+            rule.client = Company.objects.get(id=client_id)
+        except Company.DoesNotExist:
+            return Response({'error': f"Empresa #{client_id} não encontrada."}, status=status.HTTP_404_NOT_FOUND)
+    else:
+        rule.client = None
+
+    # Atualiza os restantes campos
+    rule.status = data.get('status', '')
+    rule.syntax = data.get('syntax', rule.syntax)
+    rule.logsources = data.get('logsources', rule.logsources)
+    rule.ruleCode = data.get('ruleCode', rule.ruleCode)
+    rule.save()
+
+    return Response(RuleSerializer(rule).data, status=status.HTTP_200_OK)
 
 @api_view(['POST'])
 def updateRuleModel(request, id):

@@ -80,26 +80,49 @@
       </div>
     </div>
 
-    <!-- LogSources -->
+    <!-- Estado -->
+    <div class="flex items-center gap-3">
+      <i class="fas fa-circle-dot text-gray-500 dark:text-gray-400 text-2xl"></i>
+      <div class="flex flex-col justify-center">
+        <span class="text-base font-bold text-gray-900 dark:text-white leading-tight">
+          {{ rule?.status || rule?.state || '-' }}
+        </span>
+        <span class="text-xs text-gray-500 dark:text-gray-400 font-normal">Estado</span>
+      </div>
+    </div>
+
+    <!-- Logsources -->
     <div class="flex items-center gap-3">
       <i class="fas fa-network-wired text-gray-500 dark:text-gray-400 text-2xl"></i>
       <div class="flex flex-col justify-center">
         <div class="flex items-center gap-2 max-w-xl">
-          <span *ngIf="rule?.logsources?.length"
-            class="bg-[#0d2f52] text-white text-xs px-2.5 py-1 rounded font-medium truncate max-w-[220px]"
-            [title]="rule.logsources">
-            {{ rule.logsources }}
+          <span *ngFor="let log of rule.logsources?.slice(0, 2)" [title]="log"
+            class="bg-[#0d2f52] text-white text-xs px-2.5 py-1 rounded font-medium truncate max-w-[220px]">
+            {{ log }}
           </span>
-          <span *ngIf="!rule?.logsources?.length" class="text-sm text-gray-400 dark:text-gray-500">N/D</span>
+
+          <span *ngIf="rule.logsources?.length > 2" [title]="rule.logsources.slice(2).join(', ')"
+            class="bg-[#0d2f52] hover:bg-[#15467a] text-white text-xs px-2 py-0.5 rounded-full font-bold cursor-help">
+            +{{ rule.logsources.length - 2 }}
+          </span>
+
+          <span *ngIf="!rule.logsources?.length" class="text-sm text-gray-400 dark:text-gray-500">N/D</span>
         </div>
-        <span class="text-xs text-gray-500 dark:text-gray-400 font-normal mt-0.5">LogSources</span>
+        <span class="text-xs text-gray-500 dark:text-gray-400 font-normal">LogSources</span>
       </div>
     </div>
 
+    <!-- Botão Editar Regra -->
+    <a [routerLink]="['/edit-rule', rule?.id]"
+      class="ml-auto inline-flex items-center gap-2 py-2 px-4 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-200 font-semibold rounded-lg drop-shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-redshift-red dark:hover:text-white transition duration-200 focus:ring-2 focus:ring-redshift-red focus:outline-none text-sm cursor-pointer self-center">
+      <i class="fas fa-pen-to-square text-redshift-red text-sm"></i>
+      <span>Editar Regra</span>
+    </a>
+
   </div>
 
-  <!-- Área Principal (Editor + Info) -->
-  <div class="flex flex-col lg:flex-row gap-8 my-10 mx-4">
+  <!-- Área Principal (Editor + Coluna Lateral) -->
+  <div class="flex flex-col lg:flex-row gap-8 mt-8">
 
     <!-- Editor de Código -->
     <div class="w-full lg:w-[80%]">
@@ -108,9 +131,10 @@
       </app-code-editor>
     </div>
 
-    <!-- Painel Lateral -->
+    <!-- Coluna Lateral -->
     <div class="w-full lg:w-[20%] flex flex-col gap-4">
 
+      <!-- Painel de Informação Geral -->
       <div
         class="bg-gray-100 dark:bg-gray-800 rounded-xl drop-shadow-md border border-transparent dark:border-gray-700 p-5 transition">
         <h1
@@ -137,10 +161,16 @@
             </h1>
             <p class="text-gray-500 dark:text-gray-400 text-sm">Nome do Use Case</p>
           </div>
+          <div>
+            <h1 class="font-inter font-semibold text-lg text-gray-700 dark:text-white leading-tight">
+              {{ rule?.status || rule?.state || '-' }}
+            </h1>
+            <p class="text-gray-500 dark:text-gray-400 text-sm">Estado</p>
+          </div>
         </div>
       </div>
 
-      <!-- Botão Guardar Alterações -->
+      <!-- Botão Guardar Alterações do Código -->
       <button type="button" (click)="updateRuleCode()"
         class="w-full inline-flex items-center justify-center gap-2 py-3 px-4 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-200 font-semibold rounded-xl drop-shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-redshift-red dark:hover:text-white transition duration-200 focus:ring-2 focus:ring-redshift-red focus:outline-none">
         <i class="fas fa-save text-base"></i>
