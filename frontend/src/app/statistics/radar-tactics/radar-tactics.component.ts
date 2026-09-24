@@ -6,6 +6,7 @@ import {
   ApexTitleSubtitle,
   ApexChart,
   ApexXAxis,
+  ApexYAxis,
   ChartComponent,
   NgApexchartsModule
 } from "ng-apexcharts";
@@ -23,69 +24,69 @@ export type ChartOptions = {
 @Component({
   selector: 'app-radar-tactics',
   standalone: true,
-  imports: [CommonModule,NgApexchartsModule],
+  imports: [CommonModule, NgApexchartsModule],
   templateUrl: './radar-tactics.component.html',
   styleUrl: './radar-tactics.component.css'
 })
 export class RadarTacticsComponent {
-tacticsCount : any = [];
-useCases : any = [];
-allTactics: string[] = [
-  "Execution",
-  "Persistence",
-  "Privilege Escalation",
-  "Defense Evasion",
-  "Credential Access",
-  "Discovery",
-  "Lateral Movement",
-  "Collection",
-  "Exfiltration",
-  "Command and Control",
-  "Impact",
-];
+  tacticsCount: any = [];
+  useCases: any = [];
+  allTactics: string[] = [
+    "Execution",
+    "Persistence",
+    "Privilege Escalation",
+    "Defense Evasion",
+    "Credential Access",
+    "Discovery",
+    "Lateral Movement",
+    "Collection",
+    "Exfiltration",
+    "Command and Control",
+    "Impact",
+  ];
 
-ngOnInit() {
-this.useCasesService.getUseCases().subscribe((data) => {
-  this.useCases = data;
-  console.log(this.useCases);
+  ngOnInit() {
+    this.useCasesService.getUseCases().subscribe((data: any) => {
+      this.useCases = data;
+      console.log(this.useCases);
 
-var ids : any = [];
-  this.useCases.forEach((useCase: any) => {
-    useCase.mitreTechniques.forEach((mitreTechnique: any) => {
-      ids.push(mitreTechnique);
+      var ids: any = [];
+      this.useCases.forEach((useCase: any) => {
+        useCase.mitreTechniques.forEach((mitreTechnique: any) => {
+          ids.push(mitreTechnique);
+        });
+      });
+
+      this.useCasesService.getTechniqueTacticBasedOnListIds(ids).subscribe((data: any) => {
+        console.log(data);
+
+        this.tacticsCount = data;
+
+        // Inicializar objeto de contagem com todas as táticas
+        let tacticCounts: { [key: string]: number } = {};
+        this.allTactics.forEach((tactic) => {
+          tacticCounts[tactic] = 0;
+        });
+
+        // Atualizar contagens reais
+        this.tacticsCount.forEach((item: any) => {
+          tacticCounts[item.tactic] = item.count;
+        });
+
+        // Extrair contagens em ordem das táticas
+        const seriesData = this.allTactics.map((tactic) => tacticCounts[tactic]);
+
+        // Atualizar as séries e categorias do gráfico
+        this.chartOptions.series = [{ data: seriesData }];
+        this.chartOptions.xaxis = { categories: this.allTactics };
+      });
     });
-  });
-
-  this.useCasesService.getTechniqueTacticBasedOnListIds(ids).subscribe((data) => {
-    console.log(data);
-
-this.tacticsCount = data;
-
- // Inicializar objeto de contagem com todas as táticas
- let tacticCounts: { [key: string]: number } = {};
- this.allTactics.forEach((tactic) => {
-   tacticCounts[tactic] = 0;
- });
-
- // Atualizar contagens reais
- this.tacticsCount.forEach((item : any) => {
-   tacticCounts[item.tactic] = item.count;
- });
-
- // Extrair contagens em ordem das táticas
- const seriesData = this.allTactics.map((tactic) => tacticCounts[tactic]);
-
- // Atualizar as séries e categorias do gráfico
- this.chartOptions.series = [{ data: seriesData }];
- this.chartOptions.xaxis = { categories: this.allTactics };
-});
-});
-}
+  }
 
   @ViewChild("chart") chart!: ChartComponent;
   public chartOptions: Partial<ChartOptions>;
 
-  constructor(private useCasesService : UsecasesService, private rulesService: RulesService) {
+  constructor(private useCasesService: UsecasesService, private rulesService: RulesService) {
     this.chartOptions = {
       series: [
         {
@@ -106,7 +107,6 @@ this.tacticsCount = data;
       xaxis: {
         categories: ["Por preencher"]
       }
-     
     };
   }
 }

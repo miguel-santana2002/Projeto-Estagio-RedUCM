@@ -42,6 +42,7 @@ import { AppCodeEditorComponent } from '../../../shared/components/app-code-edit
   ],
 })
 export class RuleModelDetailsComponent implements OnInit {
+  conversionSource: string = '';
   selectLogsources: any;
   registeredLogsources: any = [];
   code: any = '';

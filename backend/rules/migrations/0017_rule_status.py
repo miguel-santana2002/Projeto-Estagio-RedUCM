@@ -6,6 +6,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
+        ('rules', '0016_alter_rule_rulecode_alter_rule_syntax'),
         ('rules', '0015_alter_registeredlogsource_description_and_more'),
     ]
 

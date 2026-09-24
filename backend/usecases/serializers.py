@@ -8,4 +8,4 @@ class UseCaseSerializer(serializers.ModelSerializer):
    
     class Meta:
         model = UseCase
-        fields = ['id', 'title', 'cncsClass', 'cncsType', 'description', 'mitigation', 'mitreTechniques', 'phaseTasks', 'rules', 'attackVectors', 'playbook']
+        fields = ['id', 'title', 'cncsClass', 'cncsType', 'description', 'mitigation', 'mitreTechniques', 'phaseTasks', 'rules', 'tactics', 'playbook']

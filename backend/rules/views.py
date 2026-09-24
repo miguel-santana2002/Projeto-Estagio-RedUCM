@@ -7,6 +7,7 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from drf_spectacular.utils import extend_schema, OpenApiResponse
+from django.utils import timezone
 
 from accounts.models import Company
 from rules.models import RegisteredLogSource, Rule, RuleModel
@@ -230,25 +231,6 @@ def getRegisteredLogSources(request):
     else:
         return JsonResponse({'error': 'Invalid request method'})
     
-def updateLogSourceById(request, id):
-    try:
-        logsource = RegisteredLogSource.objects.get(id=id)
- 
-        new_name = request.data.get('name', logsource.name)
-        if new_name != logsource.name and RegisteredLogSource.objects.filter(name=new_name).exists():
-            return JsonResponse({'error': 'A logsource já existe'}, status=status.HTTP_400_BAD_REQUEST)
- 
-        logsource.name = new_name
-        logsource.description = request.data.get('description', logsource.description)
-        logsource.type = request.data.get('type', logsource.type)
-        logsource.collectionMethod = request.data.get('collectionMethod', logsource.collectionMethod)
-        logsource.products = request.data.get('products', logsource.products)
-        logsource.save()
-        return JsonResponse({'message': 'LogSource atualizada com sucesso'})
-    except RegisteredLogSource.DoesNotExist:
-        return JsonResponse({'error': 'LogSource não encontrada'}, status=404)
-
-    
 
 @api_view(['POST'])
 def updateRuleModelCode(request, id):
@@ -409,3 +391,19 @@ def convertRule(request):
         return Response({'error': f"Erro no serviço/compilação: {str(re)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     except Exception as e:
         return Response({'error': f"Erro inesperado: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['POST'])
+def validateRuleById(request, id):
+    try:
+        rule = Rule.objects.get(id=id)
+        validated_by = request.data.get('validatedBy')
+        if not validated_by:
+            return JsonResponse({'error': 'validatedBy é obrigatório'}, status=400)
+
+        rule.validatedManually = True
+        rule.validatedBy = validated_by
+        rule.validatedAt = timezone.now()
+        rule.save()
+        return JsonResponse({'message': 'Regra marcada como validada manualmente'})
+    except Rule.DoesNotExist:
+        return JsonResponse({'error': 'Regra não encontrada'}, status=404)

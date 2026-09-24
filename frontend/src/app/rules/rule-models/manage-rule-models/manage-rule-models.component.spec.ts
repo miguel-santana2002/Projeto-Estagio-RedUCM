@@ -92,7 +92,7 @@ describe('ManageRuleModelsComponent', () => {
     component.selectedLogSources = ['Logsource A'];
     component.nameSearch = 'Rule';
 
-    component.clearFilters();
+    component.clearAllFilters();
 
     expect(component.selectedSintaxes.length).toBe(0);
     expect(component.selectedTypes.length).toBe(0);

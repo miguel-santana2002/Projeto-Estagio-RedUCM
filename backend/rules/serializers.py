@@ -8,9 +8,11 @@ SUPPORTED_TARGET_SYNTAXES = [
     "KQL (Sentinel)",
     "AQL (QRadar)",
     "EQL (Elastic)",
+    "CQL (CrowdStrike)",
     "Sigma Rule",
     "CQL (CrowdStrike)",
 ]
+
 
 
 class ConvertRuleSerializer(serializers.Serializer):
