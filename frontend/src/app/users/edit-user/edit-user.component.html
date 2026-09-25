@@ -1,0 +1,264 @@
+<app-header></app-header>
+
+<app-titlebanner title="Editar Utilizador" image="./assets/bannercover.jpg"></app-titlebanner>
+
+<div class="max-w-6xl mx-auto px-6 py-10 space-y-8">
+
+    <!-- BLOCO 1: Tipo de Perfil & Permissões -->
+    <div
+        class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 space-y-6 transition-colors duration-200">
+        <h3
+            class="text-base font-semibold text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700 pb-3 flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-redshift-red"></span>
+            1. Perfil & Nível de Acesso
+        </h3>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Opção Administrador -->
+            <button (click)="trueIsAdminSelected()" type="button"
+                class="text-left p-5 rounded-xl border-2 transition-all flex items-start gap-4 relative"
+                [ngClass]="isAdminSelected 
+                    ? 'border-redshift-red bg-red-50/40 dark:bg-redshift-red/10 shadow-sm ring-1 ring-redshift-red' 
+                    : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-gray-300 dark:hover:border-gray-600 opacity-60 hover:opacity-100'">
+                <div class="p-3 rounded-lg bg-red-100 dark:bg-redshift-red/20 text-redshift-red shrink-0">
+                    <i class="fas fa-user-shield text-2xl"></i>
+                </div>
+                <div class="flex-1">
+                    <div class="flex items-center justify-between mb-1">
+                        <h4 class="text-lg font-bold text-gray-900 dark:text-white">Administrador</h4>
+                        <span *ngIf="isAdminSelected"
+                            class="text-xs font-semibold px-2 py-0.5 rounded bg-redshift-red text-white">Ativo</span>
+                    </div>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
+                        Acesso total ao sistema, gestão de utilizadores, configuração de clientes e Use Cases globais.
+                    </p>
+                </div>
+            </button>
+
+            <!-- Opção Operador -->
+            <button (click)="falseIsAdminSelected()" type="button"
+                class="text-left p-5 rounded-xl border-2 transition-all flex items-start gap-4 relative"
+                [ngClass]="!isAdminSelected 
+                    ? 'border-redshift-red bg-red-50/40 dark:bg-redshift-red/10 shadow-sm ring-1 ring-redshift-red' 
+                    : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-gray-300 dark:hover:border-gray-600 opacity-60 hover:opacity-100'">
+                <div class="p-3 rounded-lg bg-red-100 dark:bg-redshift-red/20 text-redshift-red shrink-0">
+                    <i class="fas fa-user-gear text-2xl"></i>
+                </div>
+                <div class="flex-1">
+                    <div class="flex items-center justify-between mb-1">
+                        <h4 class="text-lg font-bold text-gray-900 dark:text-white">Operador Redshift</h4>
+                        <span *ngIf="!isAdminSelected"
+                            class="text-xs font-semibold px-2 py-0.5 rounded bg-redshift-red text-white">Ativo</span>
+                    </div>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
+                        Acesso operacional restrito aos clientes e às regras explicitamente autorizadas.
+                    </p>
+                </div>
+            </button>
+        </div>
+    </div>
+
+    <!-- BLOCO 2: Dados da Conta & Atribuição de Clientes -->
+    <div
+        class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 space-y-6 transition-colors duration-200">
+        <h3
+            class="text-base font-semibold text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700 pb-3 flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-redshift-red"></span>
+            2. Detalhes da Conta
+        </h3>
+
+        <form class="space-y-6" (ngSubmit)="updateUser()" [formGroup]="updateUserForm" *ngIf="updateUserForm">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                <!-- Nome -->
+                <div class="space-y-2">
+                    <label for="username" class="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">
+                        Nome de Utilizador <span class="text-red-500">*</span>
+                    </label>
+                    <input id="username" [(ngModel)]="user.username" name="username" type="text"
+                        formControlName="username" required
+                        class="block w-full rounded-md border-0 bg-white dark:bg-gray-700 px-3 py-2.5 text-gray-900 dark:text-white shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-600 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-redshift-red sm:text-sm sm:leading-6 transition">
+                    <div *ngIf="username?.invalid && (username?.touched || username?.dirty)"
+                        class="text-red-600 dark:text-red-400 text-xs">
+                        <span *ngIf="username?.errors?.['required']">Nome é obrigatório.</span>
+                    </div>
+                </div>
+
+                <!-- Email -->
+                <div class="space-y-2">
+                    <label for="email" class="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">
+                        Email <span class="text-red-500">*</span>
+                    </label>
+                    <input id="email" name="email" [(ngModel)]="user.email" type="email" formControlName="email"
+                        required
+                        class="block w-full rounded-md border-0 bg-white dark:bg-gray-700 px-3 py-2.5 text-gray-900 dark:text-white shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-600 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-redshift-red sm:text-sm sm:leading-6 transition">
+                    <div *ngIf="email?.invalid && (email?.touched || email?.dirty)"
+                        class="text-red-600 dark:text-red-400 text-xs">
+                        <span *ngIf="email?.errors?.['required']">Email é obrigatório.</span>
+                        <span *ngIf="email?.errors?.['email']">Formato de email inválido.</span>
+                    </div>
+                </div>
+
+                <!-- Método OTP -->
+                <div class="space-y-2">
+                    <label for="otpMethod" class="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">
+                        Método de Autenticação 2FA <span class="text-red-500">*</span>
+                    </label>
+                    <select id="otpMethod" name="otpMethod" formControlName="otpMethod"
+                        class="block w-full rounded-md border-0 bg-white dark:bg-gray-700 px-3 py-2.5 text-gray-900 dark:text-white shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-600 focus:ring-2 focus:ring-inset focus:ring-redshift-red sm:text-sm sm:leading-6 transition">
+                        <option value="email">Email</option>
+                        <option value="totp">TOTP (Google Authenticator / Authy)</option>
+                    </select>
+                </div>
+
+                <!-- Painel Moderno de Seleção de Clientes -->
+                <div class="space-y-2 col-span-1 md:col-span-2">
+                    <div class="flex items-center justify-between">
+                        <label class="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">
+                            Clientes Atribuídos <span *ngIf="!isAdminSelected" class="text-red-500">*</span>
+                        </label>
+                        <div *ngIf="!isAdminSelected" class="flex items-center gap-3">
+                            <span class="text-xs text-gray-500 dark:text-gray-400">
+                                {{ (updateUserForm.get('companies')?.value || []).length }} selecionado(s)
+                            </span>
+                            <button type="button" (click)="clearAllCompanies()"
+                                class="text-xs text-redshift-red hover:underline">
+                                Limpar
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Mensagem informativa quando perfil for Administrador -->
+                    <div *ngIf="isAdminSelected"
+                        class="p-4 rounded-lg bg-gray-50 dark:bg-gray-700/40 border border-gray-200 dark:border-gray-600 flex items-center gap-3 text-sm text-gray-500 dark:text-gray-400">
+                        <i class="fas fa-shield-halved text-redshift-red text-base"></i>
+                        <span>Os administradores têm acesso global a todas as organizações. A atribuição individual de
+                            clientes está inativa.</span>
+                    </div>
+
+                    <!-- Grelha de Seleção com Pills Interativas quando for Operador -->
+                    <div *ngIf="!isAdminSelected" class="space-y-3">
+                        <div
+                            class="p-4 rounded-lg bg-gray-50 dark:bg-gray-900/40 border border-gray-200 dark:border-gray-700 max-h-56 overflow-y-auto">
+                            <div class="flex flex-wrap gap-2">
+                                <button *ngFor="let client of clientNames" type="button" (click)="toggleCompany(client)"
+                                    class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium border transition-all duration-150"
+                                    [ngClass]="isCompanySelected(client)
+                                        ? 'bg-red-50 dark:bg-redshift-red/20 text-redshift-red border-redshift-red shadow-sm'
+                                        : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700'">
+                                    <i
+                                        [class]="isCompanySelected(client) ? 'fas fa-check-circle text-redshift-red' : 'far fa-circle text-gray-400'"></i>
+                                    <span>{{ client }}</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div *ngIf="!isAdminSelected && companies?.touched && companies?.invalid"
+                            class="text-red-600 dark:text-red-400 text-xs mt-1">
+                            <span *ngIf="companies?.errors?.['required']">Selecione pelo menos um cliente para o
+                                Operador.</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Botões de Ação -->
+            <div
+                class="pt-6 border-t border-gray-200 dark:border-gray-700 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4">
+
+                <!-- Ações de Formulário (Esquerda) -->
+                <div class="flex flex-wrap items-center gap-3">
+                    <button type="submit" [disabled]="updateUserForm.invalid"
+                        class="w-full sm:w-auto py-2.5 px-6 text-white font-semibold bg-redshift-red rounded-lg hover:bg-redshift-hover disabled:opacity-50 disabled:cursor-not-allowed shadow-sm transition flex items-center justify-center gap-2 text-sm">
+                        <i class="fas fa-save text-xs"></i>
+                        <span>Guardar Alterações</span>
+                    </button>
+
+                    <a [routerLink]="['/manage-users']"
+                        class="w-full sm:w-auto py-2.5 px-5 text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-lg border border-gray-300 dark:border-gray-600 text-sm font-medium transition text-center">
+                        Cancelar
+                    </a>
+                </div>
+
+                <!-- Ações de Gestão de Conta & Segurança (Direita) -->
+                <div class="flex flex-wrap items-center gap-3">
+                    <button type="button" (click)="toggleResetTotp()"
+                        class="w-full sm:w-auto py-2.5 px-4 text-sm font-medium rounded-lg border transition flex items-center justify-center gap-2"
+                        [ngClass]="forceTotpReset 
+                            ? 'bg-red-50 dark:bg-redshift-red/20 text-redshift-red border-redshift-red shadow-sm' 
+                            : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600'">
+                        <i class="fas fa-qrcode text-xs"></i>
+                        <span>{{ forceTotpReset ? 'QR Code Forçado no Login' : 'Forçar Novo QR Code' }}</span>
+                    </button>
+
+                    <button type="button" (click)="openChangePasswordModal()"
+                        class="w-full sm:w-auto py-2.5 px-4 text-gray-700 dark:text-gray-200 font-medium bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 border border-gray-300 dark:border-gray-600 rounded-lg transition duration-150 flex items-center justify-center gap-2 text-sm">
+                        <i class="fas fa-key text-xs"></i>
+                        <span>Alterar Password</span>
+                    </button>
+                </div>
+
+            </div>
+        </form>
+    </div>
+
+</div>
+
+<!-- Modal de Alteração de Password -->
+<div *ngIf="isChangePasswordModalOpen"
+    class="fixed inset-0 bg-black/60 backdrop-blur-sm overflow-y-auto h-full w-full z-50 flex items-center justify-center p-4">
+    <div
+        class="relative w-full max-w-md p-6 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-xl rounded-xl transition duration-200">
+        <div class="text-left">
+            <h3
+                class="text-lg font-bold text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700 pb-3 flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-redshift-red"></span>
+                Alterar Password
+            </h3>
+
+            <div class="mt-4">
+                <form [formGroup]="changePasswordForm" (ngSubmit)="changePassword()" class="space-y-4">
+                    <!-- Nova Password -->
+                    <div class="space-y-1.5">
+                        <label for="newPassword" class="block text-sm font-medium text-gray-900 dark:text-gray-200">Nova
+                            Password</label>
+                        <input id="newPassword" formControlName="newPassword" type="password"
+                            class="block w-full rounded-md border-0 px-3 py-2.5 text-gray-900 bg-white dark:bg-gray-700 dark:text-white shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-600 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-redshift-red sm:text-sm transition">
+                        <div *ngIf="newPassword?.invalid && (newPassword?.touched || newPassword?.dirty)"
+                            class="text-red-600 dark:text-red-400 text-xs">
+                            <span *ngIf="newPassword?.errors?.['required']">Nova password é obrigatória.</span>
+                        </div>
+                    </div>
+
+                    <!-- Confirmar Password -->
+                    <div class="space-y-1.5">
+                        <label for="confirmPassword"
+                            class="block text-sm font-medium text-gray-900 dark:text-gray-200">Confirmar
+                            Password</label>
+                        <input id="confirmPassword" formControlName="confirmPassword" type="password"
+                            class="block w-full rounded-md border-0 px-3 py-2.5 text-gray-900 bg-white dark:bg-gray-700 dark:text-white shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-600 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-redshift-red sm:text-sm transition">
+                        <div *ngIf="confirmPassword?.invalid && (confirmPassword?.touched || confirmPassword?.dirty)"
+                            class="text-red-600 dark:text-red-400 text-xs">
+                            <span *ngIf="confirmPassword?.errors?.['required']">Confirmação da password é
+                                obrigatória.</span>
+                            <span *ngIf="confirmPassword?.errors?.['mustMatch']">As passwords não coincidem.</span>
+                        </div>
+                    </div>
+
+                    <!-- Botões Modal -->
+                    <div class="pt-4 flex items-center justify-end gap-3">
+                        <button type="button" (click)="closeChangePasswordModal()"
+                            class="py-2 px-4 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 border border-gray-300 dark:border-gray-600 rounded-lg transition">
+                            Cancelar
+                        </button>
+                        <button type="submit" [disabled]="changePasswordForm.invalid || !passwordsMatch()"
+                            class="py-2 px-5 text-sm font-semibold text-white bg-redshift-red hover:bg-redshift-hover disabled:opacity-50 disabled:cursor-not-allowed rounded-lg shadow-sm transition">
+                            Confirmar
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

@@ -21,7 +21,7 @@ import { StatisticsPageComponent } from './statistics/statistics-page/statistics
 import { EditUseCaseComponent } from './usecases/edit-use-case/edit-use-case.component';
 import { ManageLogsourcesComponent } from './rules/manage-logsources/manage-logsources.component';
 import { isAdminGuard } from './helper/is-admin.guard';
-import { UpdateUserComponent } from './users/update-user/update-user.component';
+import { EditUserComponent } from './users/edit-user/edit-user.component';
 import { EditClientComponent } from './clients/edit-client/edit-client.component';
 import { EditRuleModelComponent } from './rules/rule-models/edit-rule-model/edit-rule-model.component';
 import { numericIdGuard } from './guards/numeric-id.guard';
@@ -96,8 +96,8 @@ export const routes: Routes = [
     component: ManageLogsourcesComponent,
   },
   {
-    path: 'update-user/:id',
-    component: UpdateUserComponent,
+    path: 'edit-user/:id',
+    component: EditUserComponent,
     canActivate: [isAdminGuard, numericIdGuard],
   },
   {

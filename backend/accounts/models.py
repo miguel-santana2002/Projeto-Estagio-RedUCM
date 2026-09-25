@@ -1,59 +1,53 @@
 import random
-from django.db import models
-from django.contrib.auth.models import AbstractUser
-from django.db import models
-from django.db import models
-from django.contrib.auth.models import AbstractBaseUser
-from django.contrib.auth.models import BaseUserManager
-from django.contrib.postgres.fields import ArrayField
-from django.utils import timezone
 import pyotp
 
+from django.db import models
+from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
+from django.contrib.postgres.fields import ArrayField
+from django.utils import timezone
 
-class Company (models.Model):
-    name = models.CharField(max_length=30, unique=True)  
-    logsources = ArrayField(models.CharField( blank=True, null=True),blank=True, null=True)  
+
+class Company(models.Model):
+    name = models.CharField(max_length=30, unique=True)
+    logsources = ArrayField(models.CharField(blank=True, null=True), blank=True, null=True)
     date = models.DateTimeField(auto_now_add=True, null=True)
+
     def __str__(self):
         return self.name
-    
+
 
 class MyAccountManager(BaseUserManager):
-    def create_user(self, email, username, password=None,  companies =None, otpMethod='email'):
+    def create_user(self, email, username, password=None, companies=None, otpMethod='email'):
         if not email:
             raise ValueError("Users must have an email address")
         if not username:
             raise ValueError("Users must have a username")
 
-
         user = self.model(
             email=self.normalize_email(email),
             username=username,
-            companies = companies ,    
-            otpMethod=otpMethod       
+            companies=companies or [],
+            otpMethod=otpMethod,
+            is_staff=True,  # Garante acesso operacional por omissão a operadores
         )
 
         user.set_password(password)
         user.save(using=self._db)
         return user
 
-
-
-    def create_superuser(self, email, password, username ='Administrator', companies = [], otpMethod='totp'):
+    def create_superuser(self, email, password, username='Administrator', companies=[], otpMethod='totp'):
         user = self.create_user(
             email=self.normalize_email(email),
             password=password,
             username=username,
-            companies = companies,
+            companies=companies,
             otpMethod=otpMethod
         )
         user.is_admin = True
         user.is_staff = True
-        
         user.is_superuser = True
         user.save(using=self._db)
         return user
-    
 
 
 class User(AbstractBaseUser):
@@ -72,9 +66,9 @@ class User(AbstractBaseUser):
     otpMethod = models.CharField(max_length=10, choices=[('email', 'Email'), ('totp', 'TOTP')], default='email')
     showTotp = models.BooleanField(default=True)
 
-
     USERNAME_FIELD = "email"
-    
+    REQUIRED_FIELDS = ['username']
+
     objects = MyAccountManager()
 
     def generate_otp(self):
@@ -83,13 +77,19 @@ class User(AbstractBaseUser):
         self.save()
 
     def generate_totp_uri(self):
+        # Proteção: se o segredo estiver vazio ou None, regenera imediatamente
+        if not self.totp_secret:
+            self.totp_secret = pyotp.random_base32()
+            self.save(update_fields=['totp_secret'])
+
         totp = pyotp.TOTP(self.totp_secret)
         return totp.provisioning_uri(self.email, issuer_name="RedUCM")
 
     def verify_totp(self, token):
+        if not self.totp_secret:
+            return False
         totp = pyotp.TOTP(self.totp_secret)
         return totp.verify(token)
-
 
     def __str__(self):
         return self.email
@@ -99,4 +99,3 @@ class User(AbstractBaseUser):
 
     def has_module_perms(self, app_label):
         return True
-    

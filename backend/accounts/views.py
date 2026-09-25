@@ -14,7 +14,7 @@ from django.urls import reverse
 from rest_framework.views import APIView
 from django.core.mail import send_mail
 from django.conf import settings
-
+import pyotp
 
 # Create your views here.
 User = get_user_model()
@@ -35,29 +35,60 @@ def LoggedInInfo(request):
         return JsonResponse({'error': 'Invalid request method'})
     
 
-@extend_schema(request=UserSerializer,     
-               description='User creation based on the data inserted in the request body.',
-                responses={
-                    200: OpenApiResponse(response=None, description='User created successfully'),
-                    400: OpenApiResponse(response=None, description='Invalid request method')}
+@extend_schema(
+    request=UserSerializer,     
+    description='User creation based on the data inserted in the request body.',
+    responses={
+        200: OpenApiResponse(response=None, description='User created successfully'),
+        400: OpenApiResponse(response=None, description='Invalid request method')
+    }
 ) 
 @api_view(['POST'])
 def createUser(request):
-    print(request.data)
     if request.method == 'POST':
-        username = request.data['username']
-        email = request.data['email']
-        password = request.data['password']
-        companies = request.data.get('companies')  
-        otpMethod = request.data.get('otpMethod')
+        username = request.data.get('username')
+        email = request.data.get('email')
+        password = request.data.get('password')
+        companies = request.data.get('companies', [])  
+        otpMethod = request.data.get('otpMethod', 'totp')
+
+        # 1. Administrador (Sem empresas associadas)
+        # Roles: superuser=True, admin=True, staff=True, active=True
         if not companies:
-            User.objects.create_superuser(username=username, email=email, password=password, companies=[], otpMethod=otpMethod)
-            return JsonResponse({'success': 'Admin created successfully'})
-        user = User.objects.create_user(username=username, email=email, password=password, companies=companies, otpMethod=otpMethod)
+            user = User.objects.create_superuser(
+                username=username, 
+                email=email, 
+                password=password, 
+                companies=[], 
+                otpMethod=otpMethod
+            )
+            user.is_superuser = True
+            user.is_admin = True
+            user.is_staff = True
+            user.is_active = True
+            user.showTotp = True
+            user.save()
+            return JsonResponse({'success': 'Admin created successfully'}, status=status.HTTP_201_CREATED)
+
+        # 2. Operador (Com empresas associadas)
+        # Roles: staff=True, active=True | admin=False, superuser=False
+        user = User.objects.create_user(
+            username=username, 
+            email=email, 
+            password=password, 
+            companies=companies, 
+            otpMethod=otpMethod
+        )
+        user.is_staff = True
+        user.is_active = True
+        user.is_admin = False
+        user.is_superuser = False
+        user.showTotp = True
         user.save()
-        return JsonResponse({'success': 'User created successfully'})
+
+        return JsonResponse({'success': 'User created successfully'}, status=status.HTTP_201_CREATED)
     else:
-        return JsonResponse({'error': 'Invalid request method'},status=status.HTTP_400_BAD_REQUEST)
+        return JsonResponse({'error': 'Invalid request method'}, status=status.HTTP_400_BAD_REQUEST)
     
 @extend_schema(description='Endpoint to get a list of all users.',
                responses={
@@ -149,15 +180,35 @@ def getLogsourcesByClient(request, clientName):
 
 @api_view(['POST'])
 def updateUserInfo(request, id):
-    user = User.objects.get(id=id)
-    user.username = request.data['username']
-    user.email = request.data['email']
-    user.companies = request.data['companies']
-    user.otpMethod = request.data['otpMethod']
-    user.showTotp = True
-    user.save()
-    return JsonResponse({'success': 'User updated successfully'})
+    try:
+        user = User.objects.get(id=id)
+    except User.DoesNotExist:
+        return JsonResponse({'error': 'Utilizador não encontrado.'}, status=status.HTTP_404_NOT_FOUND)
 
+    user.username = request.data.get('username')
+    user.email = request.data.get('email')
+    user.otpMethod = request.data.get('otpMethod', user.otpMethod)
+    
+    companies = request.data.get('companies', [])
+    user.companies = companies
+
+    # Sincronização de Roles
+    if not companies:
+        user.is_admin = True
+        user.is_superuser = True
+        user.is_staff = True
+    else:
+        user.is_admin = False
+        user.is_superuser = False
+        user.is_staff = True
+
+    # Forçar reconfiguração do QR Code se solicitado
+    if request.data.get('resetTotp', False):
+        user.showTotp = True
+        user.totp_secret = pyotp.random_base32()
+
+    user.save()
+    return JsonResponse({'success': 'User updated successfully'}, status=status.HTTP_200_OK)
 class ChangePasswordView(APIView):
     permission_classes = [IsAuthenticated]
 
