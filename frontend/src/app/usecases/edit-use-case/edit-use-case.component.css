@@ -1,0 +1,50 @@
+/* ============================================================
+   Selects MITRE (Táticas/Técnicas) — Trigger fechado theme-aware.
+   .dark é aplicado no <html> (theme.service.ts) => :host-context(.dark)
+   ============================================================ */
+
+/* ---------------- TEMA CLARO (default) ---------------- */
+:host ::ng-deep .override-dark-input .mat-mdc-text-field-wrapper,
+:host ::ng-deep .override-dark-input .mat-mdc-form-field-flex,
+:host ::ng-deep .override-dark-input .mat-mdc-form-field-infix,
+:host ::ng-deep .override-dark-input .mdc-text-field {
+  background-color: #ffffff !important;
+  border-radius: 0.5rem !important;
+}
+
+:host ::ng-deep .override-dark-input .mdc-notched-outline__leading,
+:host ::ng-deep .override-dark-input .mdc-notched-outline__notch,
+:host ::ng-deep .override-dark-input .mdc-notched-outline__trailing {
+  border-color: #d1d5db !important;
+}
+
+:host ::ng-deep .override-dark-input .mat-mdc-select-value,
+:host ::ng-deep .override-dark-input .mat-mdc-select-value-text,
+:host ::ng-deep .override-dark-input .mat-mdc-select-placeholder,
+:host ::ng-deep .override-dark-input .mat-mdc-select-arrow {
+  color: #111827 !important;
+}
+
+/* ---------------- TEMA ESCURO (.dark) ---------------- */
+:host-context(.dark) .override-dark-input .mat-mdc-text-field-wrapper,
+:host-context(.dark) .override-dark-input .mat-mdc-form-field-flex,
+:host-context(.dark) .override-dark-input .mat-mdc-form-field-infix,
+:host-context(.dark) .override-dark-input .mdc-text-field {
+  background-color: #1f2937 !important;
+}
+
+:host-context(.dark) .override-dark-input .mdc-notched-outline__leading,
+:host-context(.dark) .override-dark-input .mdc-notched-outline__notch,
+:host-context(.dark) .override-dark-input .mdc-notched-outline__trailing {
+  border-color: #374151 !important;
+}
+
+:host-context(.dark) .override-dark-input .mat-mdc-select-value,
+:host-context(.dark) .override-dark-input .mat-mdc-select-value-text,
+:host-context(.dark) .override-dark-input .mat-mdc-select-arrow {
+  color: #ffffff !important;
+}
+
+:host-context(.dark) .override-dark-input .mat-mdc-select-placeholder {
+  color: #9ca3af !important;
+}
