@@ -51,6 +51,9 @@ export class ManageClientsComponent implements OnInit {
   selectedLogsources: string[] = [];
   uniqueLogsources: string[] = [];
 
+  selectedSiems: string[] = [];
+  uniqueSiems: string[] = []; // Inicializa vazio para ser preenchido dinamicamente pelos clientes reais
+
   // Modais
   isCreateModalOpen: boolean = false;
   selectedClient: any = null;
@@ -58,6 +61,7 @@ export class ManageClientsComponent implements OnInit {
 
   createClientForm = new FormGroup({
     name: new FormControl('', [Validators.required]),
+    siem: new FormControl('', [Validators.required]),
     logsources: new FormControl(null, [Validators.required]),
   });
 
@@ -98,6 +102,7 @@ export class ManageClientsComponent implements OnInit {
   }
 
   startFilters(): void {
+    // Extrair Logsources únicas
     this.uniqueLogsources = Array.from(
       new Set(
         this.clients
@@ -105,15 +110,22 @@ export class ManageClientsComponent implements OnInit {
           .filter((l: string): l is string => Boolean(l)),
       ),
     ).sort();
+
+    // Extrair estritamente os SIEMs que já estão guardados nos clientes existentes
+    this.uniqueSiems = Array.from(
+      new Set(
+        this.clients
+          .map((c: any) => c.siem)
+          .filter((s: string): s is string => Boolean(s)),
+      ),
+    ).sort();
   }
 
-  // Toggles de Filtro
+  // Toggles de Filtro Logsource
   toggleLogsource(log: string): void {
     this.page = 1;
     if (this.selectedLogsources.includes(log)) {
-      this.selectedLogsources = this.selectedLogsources.filter(
-        (l) => l !== log,
-      );
+      this.selectedLogsources = this.selectedLogsources.filter((l) => l !== log);
     } else {
       this.selectedLogsources = [...this.selectedLogsources, log];
     }
@@ -123,16 +135,31 @@ export class ManageClientsComponent implements OnInit {
     return this.selectedLogsources.includes(log);
   }
 
+  // Toggles de Filtro SIEM
+  toggleSiem(siem: string): void {
+    this.page = 1;
+    if (this.selectedSiems.includes(siem)) {
+      this.selectedSiems = this.selectedSiems.filter((s) => s !== siem);
+    } else {
+      this.selectedSiems = [...this.selectedSiems, siem];
+    }
+  }
+
+  isSiemSelected(siem: string): boolean {
+    return this.selectedSiems.includes(siem);
+  }
+
   clearAllFilters(): void {
     this.page = 1;
     this.selectedLogsources = [];
+    this.selectedSiems = [];
   }
 
   onSearchChange(): void {
     this.page = 1;
   }
 
-  // Filtragem Reativa
+  // Filtragem Reativa (Nome + Logsources + SIEM)
   get filteredClients(): any[] {
     const term = this.nameSearch.trim().toLowerCase();
 
@@ -145,12 +172,15 @@ export class ManageClientsComponent implements OnInit {
           c.logsources.some((log: string) =>
             this.selectedLogsources.includes(log),
           ));
+      const matchesSiem =
+        this.selectedSiems.length === 0 ||
+        (c.siem && this.selectedSiems.includes(c.siem));
 
-      return matchesName && matchesLogs;
+      return matchesName && matchesLogs && matchesSiem;
     });
   }
 
-  // Segmentação Paginada (Dados que a tabela efetivamente renderiza)
+  // Segmentação Paginada
   get pagedClients(): any[] {
     const start = (this.page - 1) * this.pageSize;
     return this.filteredClients.slice(start, start + this.pageSize);
@@ -171,7 +201,7 @@ export class ManageClientsComponent implements OnInit {
     this.page = 1;
   }
 
-  // Ordenação
+  // Ordenação (suporta ordenação por 'siem' agora)
   sortTable(column: string): void {
     if (this.sortType === column) {
       this.sortReverse = !this.sortReverse;
@@ -247,6 +277,7 @@ export class ManageClientsComponent implements OnInit {
 
     const clientData = {
       name: this.name!.value!,
+      siem: this.createClientForm.get('siem')?.value,
       logsources: logsources,
     };
 

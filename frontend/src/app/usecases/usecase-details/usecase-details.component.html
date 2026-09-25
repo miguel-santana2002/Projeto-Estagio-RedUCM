@@ -11,48 +11,84 @@
     </button>
   </div>
 
-  <div class="flex ml-4 mt-6">
-    <!-- Bloco 1: Técnicas Mitre (Topo) -->
-    <div class="flex items-center">
-      <img src="./assets/mitrelogo.png" class="rounded-lg size-10 object-contain">
-      <div class="ml-4">
-        <div class="flex flex-wrap gap-1 max-w-sm">
+  <div class="flex ml-4 mt-6 flex-wrap gap-y-6">
+    <!-- Bloco 1: Técnicas Mitre (Topo) com Ícone e Dropdown -->
+    <div class="flex items-start">
+      <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-2 flex items-center justify-center size-12 shadow-sm">
+        <img src="./assets/mitrelogo.png" class="object-contain h-6" alt="MITRE Logo">
+      </div>
+      <div class="ml-4 flex flex-col">
+        <div class="flex flex-wrap gap-1 max-w-sm mb-1">
           <div *ngFor="let technique of usecase.mitreTechniques"
             [routerLink]="'/techniqueDetails/' + getTechniqueId(technique)" [title]="technique"
-            class="cursor-pointer bg-[#0d2f52] hover:bg-[#15467a] text-white text-xs font-semibold rounded px-2 py-0.5 text-center shadow transition select-none">
+            class="cursor-pointer bg-[#0d2f52] hover:bg-[#15467a] text-white text-xs font-semibold rounded px-2.5 py-1 text-center shadow transition select-none">
             {{ getTechniqueId(technique) }}
           </div>
           <span *ngIf="!usecase.mitreTechniques || usecase.mitreTechniques.length === 0"
-            class="text-xs text-gray-400 italic">
+            class="text-xs text-gray-400 italic py-1">
             Nenhuma
           </span>
         </div>
-        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Técnicas Mitre Associadas</p>
+        <a routerLink="/techniqueDetails" class="text-[11px] font-semibold text-gray-500 dark:text-gray-400 hover:text-redshift-red dark:hover:text-redshift-red transition cursor-pointer flex items-center gap-1">
+          Técnicas Mitre Associadas <i class="fas fa-external-link-alt text-[9px]"></i>
+        </a>
       </div>
     </div>
 
-    <!-- Bloco 2: Classificação CNCS -->
-    <div class="flex items-center ml-12">
-      <img src="./assets/cncslogo.png" class="rounded-lg size-10 object-contain">
-      <div class="ml-4">
-        <h1 class="font-inter font-semibold text-lg text-gray-600 dark:text-gray-200">
-          {{usecase.cncsClass}} - {{usecase.cncsType}}
+    <!-- Bloco 2: Táticas Mitre (NOVO - Ao lado das Técnicas) -->
+    <div class="flex items-start ml-12">
+      <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-2 flex items-center justify-center size-12 shadow-sm">
+        <i class="fas fa-shield-alt text-gray-600 dark:text-gray-300 text-lg"></i>
+      </div>
+      <div class="ml-4 flex flex-col">
+        <div class="flex flex-wrap gap-1 max-w-[250px] mb-1">
+          <!-- Mostrar apenas as 2 primeiras táticas por questões de espaço -->
+          <div *ngFor="let tactic of usecase.tactics | slice:0:2"
+            class="bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 text-[11px] font-bold rounded px-2 py-1 border border-gray-200 dark:border-gray-600 truncate max-w-[120px]"
+            [title]="tactic">
+            {{ tactic }}
+          </div>
+          <!-- Contador se houver mais de 2 táticas -->
+          <span *ngIf="usecase.tactics && usecase.tactics.length > 2"
+            class="text-[10px] font-bold text-gray-500 dark:text-gray-400 py-1">
+            +{{usecase.tactics.length - 2}}
+          </span>
+          <span *ngIf="!usecase.tactics || usecase.tactics.length === 0"
+            class="text-[11px] font-semibold text-gray-800 dark:text-gray-200 py-1">
+            N/A
+          </span>
+        </div>
+        <p class="text-[11px] font-semibold text-gray-500 dark:text-gray-400 mt-1">Táticas (MITRE ATT&CK)</p>
+      </div>
+    </div>
+
+    <!-- Bloco 3: Classificação CNCS -->
+    <div class="flex items-start ml-12">
+      <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-2 flex items-center justify-center size-12 shadow-sm">
+        <img src="./assets/cncslogo.png" class="object-contain h-6" alt="CNCS Logo">
+      </div>
+      <div class="ml-4 flex flex-col max-w-[200px]">
+        <h1 class="font-inter font-bold text-[13px] text-gray-900 dark:text-white pt-1 leading-tight" 
+            [title]="usecase.cncsType">
+          {{usecase.cncsType || 'N/A'}}
         </h1>
-        <p class="text-xs text-gray-500 dark:text-gray-400">Classificação CNCS</p>
+        <p class="text-[11px] font-semibold text-gray-500 dark:text-gray-400 mt-1 truncate" [title]="usecase.cncsClass">
+          {{usecase.cncsClass || 'Classificação CNCS'}}
+        </p>
       </div>
     </div>
 
-    <!-- Bloco 3: Playbook -->
-    <div class="flex items-center ml-12">
-      <img (click)="selectImage()" [src]="getPlaybookUrl()"
-        class="rounded-lg size-10 object-cover cursor-pointer hover:opacity-80 transition border border-gray-200 dark:border-gray-700 shadow-sm"
-        alt="Playbook Preview">
-      <div class="ml-4 cursor-pointer" (click)="selectImage()">
-        <h1 class="font-inter font-semibold text-lg text-gray-600 dark:text-gray-200 flex items-center gap-1">
-          Diagrama Playbook <i class="fas fa-angle-right text-xs"></i>
+    <!-- Bloco 4: Playbook -->
+    <div class="flex items-start ml-12">
+      <div (click)="selectImage()" class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-2 flex items-center justify-center size-12 shadow-sm cursor-pointer hover:bg-gray-50 transition">
+        <i class="fas fa-sitemap text-gray-600 dark:text-gray-300 text-lg"></i>
+      </div>
+      <div class="ml-4 flex flex-col justify-center cursor-pointer" (click)="selectImage()">
+        <h1 class="font-inter font-bold text-sm text-gray-900 dark:text-white flex items-center gap-1.5 pt-1 hover:text-redshift-red transition">
+          Diagrama Playbook <i class="fas fa-angle-right text-[10px]"></i>
         </h1>
         <span *ngIf="!usecase.playbook || usecase.playbook.endsWith('/null')"
-          class="text-[11px] text-gray-400 italic block">
+          class="text-[10px] text-gray-400 font-medium italic block mt-1">
           (Diagrama padrão)
         </span>
       </div>
@@ -63,13 +99,15 @@
     <!-- Coluna Esquerda: Descrição e Mitigação -->
     <div class="md:w-[80%]">
       <div class="mb-6">
-        <h1 class="font-inter font-semibold text-2xl text-gray-700 dark:text-white mb-3">Descrição</h1>
-        <p class="text-gray-800 dark:text-gray-300 leading-relaxed" style="white-space: pre-line">
+        <!-- Alterado de text-2xl para text-lg -->
+        <h1 class="font-inter font-bold text-lg text-gray-800 dark:text-white mb-2">Descrição</h1>
+        <p class="text-gray-700 dark:text-gray-300 leading-relaxed text-sm" style="white-space: pre-line">
           {{usecase.description}}</p>
       </div>
       <div class="my-6">
-        <h1 class="font-inter font-semibold text-2xl text-gray-700 dark:text-white mb-3">Mitigação</h1>
-        <p class="text-gray-800 dark:text-gray-300 leading-relaxed" style="white-space: pre-line">{{usecase.mitigation}}
+        <!-- Alterado de text-2xl para text-lg -->
+        <h1 class="font-inter font-bold text-lg text-gray-800 dark:text-white mb-2">Mitigação</h1>
+        <p class="text-gray-700 dark:text-gray-300 leading-relaxed text-sm" style="white-space: pre-line">{{usecase.mitigation}}
         </p>
       </div>
     </div>

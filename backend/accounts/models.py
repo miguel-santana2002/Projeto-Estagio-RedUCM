@@ -12,6 +12,7 @@ import pyotp
 
 class Company (models.Model):
     name = models.CharField(max_length=30, unique=True)  
+    siem = models.CharField(max_length=50, blank=True, null=True)  # <-- ADICIONei ESTA LINHA
     logsources = ArrayField(models.CharField( blank=True, null=True),blank=True, null=True)  
     date = models.DateTimeField(auto_now_add=True, null=True)
     def __str__(self):
