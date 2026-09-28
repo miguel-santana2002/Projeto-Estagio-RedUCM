@@ -131,22 +131,23 @@ def getCompanies(request):
 def createCompany(request):
     if request.method == 'POST':
         name = request.data.get('name', '').strip()
+        siem = request.data.get('siem', '').strip()  # <--- ADICIONADO
         logsources = request.data.get('logsources', [])
 
-        if not name or not logsources:
-            return JsonResponse({'error': 'O Nome e as LogSources são de preenchimento obrigatório.'}, status=400)
+        # Valida também se o SIEM foi preenchido, caso seja obrigatório
+        if not name or not siem or not logsources:
+            return JsonResponse({'error': 'O Nome, o SIEM e as LogSources são de preenchimento obrigatório.'}, status=400)
 
         if Company.objects.filter(name__iexact=name).exists():
             return JsonResponse({'error': 'Já existe um cliente com este nome.'}, status=400)
         
         try:
-            company = Company(name=name, logsources=logsources)
+            company = Company(name=name, siem=siem, logsources=logsources)  # <--- ADICIONADO
             company.save()
             return JsonResponse({'success': 'Company created successfully'}, status=201)
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=400)
     else:
-        # Alterado para status 405 (Method Not Allowed) para maior rigor semântico
         return JsonResponse({'error': 'Invalid request method'}, status=405)
     
 @extend_schema(description=' Endpoint to delete a user based on the user ID.',
@@ -236,6 +237,7 @@ def getCompany(request, id):
         data = {
             'pk': company.pk,
             'name': company.name,
+            'siem': company.siem,  # <--- ADICIONADO
             'logsources': company.logsources,
             'date': company.date
         }
@@ -253,16 +255,17 @@ def updateCompany(request, id):
         return JsonResponse({'error': 'Empresa não encontrada.'}, status=status.HTTP_404_NOT_FOUND)
 
     name = request.data.get('name', '').strip()
+    siem = request.data.get('siem', '').strip()  # <--- ADICIONADO
     logsources = request.data.get('logsources', [])
 
-    if not name or not logsources:
-        return JsonResponse({'error': 'O Nome e as LogSources são obrigatórios.'}, status=status.HTTP_400_BAD_REQUEST)
+    if not name or not siem or not logsources:
+        return JsonResponse({'error': 'O Nome, o SIEM e as LogSources são obrigatórios.'}, status=status.HTTP_400_BAD_REQUEST)
 
-    # Valida duplicados excluindo a própria empresa que está a ser editada
     if Company.objects.filter(name__iexact=name).exclude(pk=id).exists():
         return JsonResponse({'error': 'Já existe outra empresa registada com este nome.'}, status=status.HTTP_400_BAD_REQUEST)
 
     company.name = name
+    company.siem = siem  # <--- ADICIONADO
     company.logsources = logsources
     company.save()
 

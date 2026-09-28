@@ -36,6 +36,7 @@ export class EditClientComponent implements OnInit {
 
   editClientForm = new FormGroup({
     name: new FormControl('', [Validators.required]),
+    siem: new FormControl('', [Validators.required]), // Adicionado o campo SIEM
     logsources: new FormControl<any>(null, [Validators.required]),
   });
 
@@ -75,6 +76,7 @@ export class EditClientComponent implements OnInit {
 
         this.editClientForm.patchValue({
           name: client.name,
+          siem: client.siem || '', // Preenche o SIEM existente do cliente
           logsources: formattedLogs,
         });
 
@@ -103,6 +105,7 @@ export class EditClientComponent implements OnInit {
 
     const payload = {
       name: this.editClientForm.get('name')?.value,
+      siem: this.editClientForm.get('siem')?.value, // Envia o SIEM atualizado
       logsources: logsources,
     };
 

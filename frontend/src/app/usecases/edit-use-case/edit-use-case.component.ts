@@ -48,23 +48,87 @@ export class EditUseCaseComponent implements OnInit {
   allTacticsList: string[] = [];
   private tacticsByTechnique = new Map<string, string[]>();
 
-  taxonomiaCNCS: any = [
-    { 'Código Malicioso': ['Sistema Infetado', 'Distribuição de Malware', 'Servidor C2', 'Configuração de Malware'] },
-    { Disponibilidade: ['Negação de Serviço', 'Abuso de Recursos', 'Outage / Indisponibilidade'] },
-    { 'Recolha de Informação': ['Scanners de Vulnerabilidades', 'Social Engineering', 'Scanning / Probing'] },
-    { Intrusão: ['Exploração de Vulnerabilidades', 'Comprometimento de Contas', 'Obtenção de Credenciais'] },
-    { 'Tentativa de Intrusão': ['Tentativa de Exploração de Vulnerabilidades', 'Força Bruta / Password Spraying'] },
-    { 'Segurança da Informação': ['Roubo de Informação', 'Exfiltração de Dados', 'Alteração de Informação'] },
-    { Fraude: ['Burlas', 'Roubo de Identidade / Falsificação', 'Uso Indevido de Recursos'] },
-    { 'Conteúdo Abusivo': ['SPAM', 'Phishing', 'Alojamento Indevido de Conteúdos'] },
-    { Vulnerabilidade: ['Sistema Vulnerável', 'Aplicação Vulnerável'] },
-    { Outro: ['Outro'] },
+  chavesTaxonomia: string[] = [
+    'Malicious Code', 
+    'Availability', 
+    'Information Gathering', 
+    'Intrusion',
+    'Intrusion Attempt', 
+    'Information Security', 
+    'Fraud',
+    'Abusive Content', 
+    'Vulnerability', 
+    'Other',
   ];
 
-  chavesTaxonomia: string[] = [
-    'Código Malicioso', 'Disponibilidade', 'Recolha de Informação', 'Intrusão',
-    'Tentativa de Intrusão', 'Segurança da Informação', 'Fraude',
-    'Conteúdo Abusivo', 'Vulnerabilidade', 'Outro',
+  taxonomiaCNCS: any = [
+    {
+      'Malicious Code': [
+        'Infected System',
+        'Malware Distribution',
+        'C2 Server',
+        'Malware Configuration',
+      ],
+    },
+    {
+      'Availability': [
+        'Denial of Service',
+        'Resource Abuse',
+        'Outage / Unavailability',
+      ],
+    },
+    {
+      'Information Gathering': [
+        'Vulnerability Scanners',
+        'Social Engineering',
+        'Scanning / Probing',
+      ],
+    },
+    {
+      'Intrusion': [
+        'Vulnerability Exploitation',
+        'Account Compromise',
+        'Credential Access',
+      ],
+    },
+    {
+      'Intrusion Attempt': [
+        'Attempted Vulnerability Exploitation',
+        'Brute Force / Password Spraying',
+      ],
+    },
+    {
+      'Information Security': [
+        'Information Theft',
+        'Data Exfiltration',
+        'Information Alteration',
+      ],
+    },
+    {
+      'Fraud': [
+        'Scams',
+        'Identity Theft / Forgery',
+        'Misuse of Resources',
+      ],
+    },
+    {
+      'Abusive Content': [
+        'SPAM',
+        'Phishing',
+        'Improper Content Hosting',
+      ],
+    },
+    {
+      'Vulnerability': [
+        'Vulnerable System',
+        'Vulnerable Application',
+      ],
+    },
+    {
+      'Other': [
+        'Other',
+      ],
+    },
   ];
 
   selectedCategory: string = '';
@@ -78,7 +142,7 @@ export class EditUseCaseComponent implements OnInit {
     mitreTechniques: new FormControl<any[]>([], [Validators.required]),
     cncsClass: new FormControl('', [Validators.required]),
     cncsType: new FormControl('', [Validators.required]),
-    tactics: new FormControl<any[]>([], [Validators.required]), // Certifica-te que é 'tactics'
+    tactics: new FormControl<any[]>([], [Validators.required]),
   });
 
   constructor(

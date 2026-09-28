@@ -29,12 +29,13 @@ class CompanySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Company
-        fields = ['pk', 'name', 'date', 'logsources']
+        fields = ['pk', 'name', 'siem', 'date', 'logsources'] # <-- ADICIONei 'siem' AQUI
 
     def to_representation(self, instance):
         response = super().to_representation(instance)
         response['pk'] = instance.pk
         response['name'] = instance.name
+        response['siem'] = instance.siem # <-- ADICIONei ESTA LINHA AQUI
         response['date'] = instance.date
         return response
 

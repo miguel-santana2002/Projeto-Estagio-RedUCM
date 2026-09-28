@@ -33,7 +33,7 @@ import { UsecasesService } from '../../services/usecases.service';
     ReactiveFormsModule,
     FormsModule,
     CommonModule,
-    RouterModule, // Adicionado para suportar [routerLink]
+    RouterModule,
   ],
 })
 export class CreateUseCaseComponent implements OnInit {
@@ -46,78 +46,89 @@ export class CreateUseCaseComponent implements OnInit {
   // Táticas escolhidas explicitamente pelo utilizador (separadas das derivadas de técnicas)
   private manualTactics = new Set<string>();
 
-  chavesTaxonomia = [
-    'Código Malicioso',
-    'Disponibilidade',
-    'Recolha de Informação',
-    'Intrusão',
-    'Tentativa de Intrusão',
-    'Segurança da Informação',
-    'Fraude',
-    'Conteúdo Abusivo',
-    'Vulnerabilidade',
-    'Outro',
+  chavesTaxonomia: string[] = [
+    'Malicious Code', 
+    'Availability', 
+    'Information Gathering', 
+    'Intrusion',
+    'Intrusion Attempt', 
+    'Information Security', 
+    'Fraud',
+    'Abusive Content', 
+    'Vulnerability', 
+    'Other',
   ];
+
   taxonomiaCNCS: any = [
     {
-      'Código Malicioso': [
-        'Sistema Infetado',
-        'Distribuição de Malware',
-        'Servidor C2',
-        'Configuração de Malware',
+      'Malicious Code': [
+        'Infected System',
+        'Malware Distribution',
+        'C2 Server',
+        'Malware Configuration',
       ],
     },
     {
-      Disponibilidade: [
-        'Negação de Serviço',
-        'Abuso de Recursos',
-        'Outage / Indisponibilidade',
+      'Availability': [
+        'Denial of Service',
+        'Resource Abuse',
+        'Outage / Unavailability',
       ],
     },
     {
-      'Recolha de Informação': [
-        'Scanners de Vulnerabilidades',
+      'Information Gathering': [
+        'Vulnerability Scanners',
         'Social Engineering',
         'Scanning / Probing',
       ],
     },
     {
-      Intrusão: [
-        'Exploração de Vulnerabilidades',
-        'Comprometimento de Contas',
-        'Obtenção de Credenciais',
+      'Intrusion': [
+        'Vulnerability Exploitation',
+        'Account Compromise',
+        'Credential Access',
       ],
     },
     {
-      'Tentativa de Intrusão': [
-        'Tentativa de Exploração de Vulnerabilidades',
-        'Força Bruta / Password Spraying',
+      'Intrusion Attempt': [
+        'Attempted Vulnerability Exploitation',
+        'Brute Force / Password Spraying',
       ],
     },
     {
-      'Segurança da Informação': [
-        'Roubo de Informação',
-        'Exfiltração de Dados',
-        'Alteração de Informação',
+      'Information Security': [
+        'Information Theft',
+        'Data Exfiltration',
+        'Information Alteration',
       ],
     },
     {
-      Fraude: [
-        'Burlas',
-        'Roubo de Identidade / Falsificação',
-        'Uso Indevido de Recursos',
+      'Fraud': [
+        'Scams',
+        'Identity Theft / Forgery',
+        'Misuse of Resources',
       ],
     },
     {
-      'Conteúdo Abusivo': [
+      'Abusive Content': [
         'SPAM',
         'Phishing',
-        'Alojamento Indevido de Conteúdos',
+        'Improper Content Hosting',
       ],
     },
-    { Vulnerabilidade: ['Sistema Vulnerável', 'Aplicação Vulnerável'] },
-    { Outro: ['Outro'] },
+    {
+      'Vulnerability': [
+        'Vulnerable System',
+        'Vulnerable Application',
+      ],
+    },
+    {
+      'Other': [
+        'Other',
+      ],
+    },
   ];
+
   selectedCategory: string = '';
   selectedCategoryValues: string[] = [];
 
