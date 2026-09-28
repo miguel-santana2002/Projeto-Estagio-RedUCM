@@ -290,4 +290,3 @@ export class ManageRuleModelsComponent implements OnInit, AfterViewInit {
     });
   }
 }
-

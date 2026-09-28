@@ -10,8 +10,6 @@ import {
 import { Clipboard } from '@angular/cdk/clipboard';
 
 import {
-  CodeEditorComponent,
-  CodeEditorModule,
   CodeModel,
   CodeModelChangedEvent,
 } from '@ngstack/code-editor';
@@ -33,7 +31,6 @@ import { AppCodeEditorComponent } from '../../shared/components/app-code-editor/
   imports: [
     HeaderComponent,
     TitlebannerComponent,
-    CodeEditorModule,
     CommonModule,
     RouterModule,
     FormsModule,
@@ -210,8 +207,6 @@ export class RuleModelDetailsComponent implements OnInit {
     }
   }
 
-  onEditorLoaded(editor: CodeEditorComponent): void {}
-
   onCodeModelChanged(event: CodeModelChangedEvent): void {
     setTimeout(() => {
       event.sender.formatDocument();
@@ -284,7 +279,6 @@ export class RuleModelDetailsComponent implements OnInit {
   convertRule(): void {
     if (!this.targetSyntax || !this.sourceRuleContent) return;
 
-    // Se a sintaxe de destino for igual à atual, não precisa de conversão
     if (this.targetSyntax === this.ruleModel.syntax) {
       this.convertedRuleContent = this.sourceRuleContent;
       return;
