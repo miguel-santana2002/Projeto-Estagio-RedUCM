@@ -10,10 +10,10 @@ import { RouterModule } from '@angular/router';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { Modal } from 'flowbite';
 
-import { HeaderComponent } from '../../layout/header/header.component';
-import { TitlebannerComponent } from '../../layout/titlebanner/titlebanner.component';
-import { AuthService } from '../../services/auth.service';
-import { RulesService } from '../../services/rules.service';
+import { HeaderComponent } from '../../../layout/header/header.component';
+import { TitlebannerComponent } from '../../../layout/titlebanner/titlebanner.component';
+import { AuthService } from '../../../services/auth.service';
+import { RulesService } from '../../../services/rules.service';
 
 @Component({
   selector: 'app-manage-rule-models',
@@ -41,6 +41,9 @@ export class ManageRuleModelsComponent implements OnInit, AfterViewInit {
 
   ruleModels: any[] = [];
 
+  // Controlo de permissões (Admin / Superuser)
+  isAdmin: boolean = false;
+
   // Paginação
   page: number = 1;
   pageSize: number = 10;
@@ -65,6 +68,7 @@ export class ManageRuleModelsComponent implements OnInit, AfterViewInit {
   ) {}
 
   ngOnInit(): void {
+    this.loadUserInfo();
     this.loadRuleModels();
   }
 
@@ -72,6 +76,19 @@ export class ManageRuleModelsComponent implements OnInit, AfterViewInit {
     if (this.modal?.nativeElement) {
       this.modalFlowbite = new Modal(this.modal.nativeElement);
     }
+  }
+
+  loadUserInfo(): void {
+    this.authService.loggedInInfo().subscribe({
+      next: (data: any) => {
+        // Superuser ou Admin têm privilégios totais; staff/operador fica como false
+        this.isAdmin = Boolean(data?.is_superuser || data?.is_admin);
+      },
+      error: (err) => {
+        console.error('Erro ao carregar dados do utilizador:', err);
+        this.isAdmin = false;
+      },
+    });
   }
 
   loadRuleModels(): void {
@@ -266,11 +283,13 @@ export class ManageRuleModelsComponent implements OnInit, AfterViewInit {
 
   // Gestão de Modal Eliminar
   updateSelectDelete(event: Event, id: number): void {
+    if (!this.isAdmin) return;
     event.stopPropagation();
     this.selectDelete = id;
   }
 
   openModal(): void {
+    if (!this.isAdmin) return;
     this.modalFlowbite?.show();
   }
 
@@ -279,6 +298,7 @@ export class ManageRuleModelsComponent implements OnInit, AfterViewInit {
   }
 
   deleteRuleModel(): void {
+    if (!this.isAdmin) return;
     this.rulesService.deleteRuleModelById(this.selectDelete).subscribe({
       next: () => {
         this.loadRuleModels();

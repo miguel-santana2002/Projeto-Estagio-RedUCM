@@ -14,14 +14,14 @@ import {
   CodeModelChangedEvent,
 } from '@ngstack/code-editor';
 
-import { RulesService } from '../../services/rules.service';
-import { HeaderComponent } from '../../layout/header/header.component';
-import { TitlebannerComponent } from '../../layout/titlebanner/titlebanner.component';
-import { UsecasesService } from '../../services/usecases.service';
-import { AuthService } from '../../services/auth.service';
-import { SigmaConversionsService } from '../../services/sigma-conversions.service';
+import { RulesService } from '../../../services/rules.service';
+import { HeaderComponent } from '../../../layout/header/header.component';
+import { TitlebannerComponent } from '../../../layout/titlebanner/titlebanner.component';
+import { UsecasesService } from '../../../services/usecases.service';
+import { AuthService } from '../../../services/auth.service';
+import { SigmaConversionsService } from '../../../services/sigma-conversions.service';
 
-import { AppCodeEditorComponent } from '../../shared/components/app-code-editor/app-code-editor.component';
+import { AppCodeEditorComponent } from '../../../shared/components/app-code-editor/app-code-editor.component';
 
 @Component({
   selector: 'app-rule-model-details',

@@ -85,11 +85,7 @@ export class LoginComponent {
             this.router.navigate(['/home']);
           }
         },
-<<<<<<< HEAD
-        (error) => {
-=======
         error: () => {
->>>>>>> origin/dev-miguel
           this.errorMessage = 'Credenciais inválidas para início de sessão';
         },
       });
