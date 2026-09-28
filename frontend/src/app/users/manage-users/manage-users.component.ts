@@ -167,9 +167,9 @@ export class ManageUsersComponent implements OnInit, AfterViewInit {
         (user.companies &&
           user.companies.some((c: string) => this.selectedClients.includes(c)));
 
-      // 3. Filtro por Role
+      // 3. Filtro por Role real (Flags booleanas da API)
       let matchesRole = true;
-      const hasCompanies = user.companies && user.companies.length > 0;
+      const isAdminUser = Boolean(user.is_superuser || user.is_admin);
 
       if (
         this.selectedRoles.length > 0 &&
@@ -179,9 +179,9 @@ export class ManageUsersComponent implements OnInit, AfterViewInit {
         )
       ) {
         if (this.selectedRoles.includes('Operador')) {
-          matchesRole = hasCompanies;
+          matchesRole = !isAdminUser;
         } else if (this.selectedRoles.includes('Administrador')) {
-          matchesRole = !hasCompanies;
+          matchesRole = isAdminUser;
         }
       }
 
@@ -229,10 +229,8 @@ export class ManageUsersComponent implements OnInit, AfterViewInit {
       }
 
       if (column === 'role') {
-        valueA =
-          a.companies && a.companies.length > 0 ? 'Operador' : 'Administrador';
-        valueB =
-          b.companies && b.companies.length > 0 ? 'Operador' : 'Administrador';
+        valueA = a.is_superuser || a.is_admin ? 'Administrador' : 'Operador';
+        valueB = b.is_superuser || b.is_admin ? 'Administrador' : 'Operador';
       }
 
       if (valueA == null && valueB != null) return this.sortReverse ? -1 : 1;

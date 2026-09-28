@@ -14,7 +14,7 @@ from django.urls import reverse
 from rest_framework.views import APIView
 from django.core.mail import send_mail
 from django.conf import settings
-
+import pyotp
 
 # Create your views here.
 User = get_user_model()
@@ -35,29 +35,60 @@ def LoggedInInfo(request):
         return JsonResponse({'error': 'Invalid request method'})
     
 
-@extend_schema(request=UserSerializer,     
-               description='User creation based on the data inserted in the request body.',
-                responses={
-                    200: OpenApiResponse(response=None, description='User created successfully'),
-                    400: OpenApiResponse(response=None, description='Invalid request method')}
+@extend_schema(
+    request=UserSerializer,     
+    description='User creation based on the data inserted in the request body.',
+    responses={
+        200: OpenApiResponse(response=None, description='User created successfully'),
+        400: OpenApiResponse(response=None, description='Invalid request method')
+    }
 ) 
 @api_view(['POST'])
 def createUser(request):
-    print(request.data)
     if request.method == 'POST':
-        username = request.data['username']
-        email = request.data['email']
-        password = request.data['password']
-        companies = request.data.get('companies')  
-        otpMethod = request.data.get('otpMethod')
+        username = request.data.get('username')
+        email = request.data.get('email')
+        password = request.data.get('password')
+        companies = request.data.get('companies', [])  
+        otpMethod = request.data.get('otpMethod', 'totp')
+
+        # 1. Administrador (Sem empresas associadas)
+        # Roles: superuser=True, admin=True, staff=True, active=True
         if not companies:
-            User.objects.create_superuser(username=username, email=email, password=password, companies=[], otpMethod=otpMethod)
-            return JsonResponse({'success': 'Admin created successfully'})
-        user = User.objects.create_user(username=username, email=email, password=password, companies=companies, otpMethod=otpMethod)
+            user = User.objects.create_superuser(
+                username=username, 
+                email=email, 
+                password=password, 
+                companies=[], 
+                otpMethod=otpMethod
+            )
+            user.is_superuser = True
+            user.is_admin = True
+            user.is_staff = True
+            user.is_active = True
+            user.showTotp = True
+            user.save()
+            return JsonResponse({'success': 'Admin created successfully'}, status=status.HTTP_201_CREATED)
+
+        # 2. Operador (Com empresas associadas)
+        # Roles: staff=True, active=True | admin=False, superuser=False
+        user = User.objects.create_user(
+            username=username, 
+            email=email, 
+            password=password, 
+            companies=companies, 
+            otpMethod=otpMethod
+        )
+        user.is_staff = True
+        user.is_active = True
+        user.is_admin = False
+        user.is_superuser = False
+        user.showTotp = True
         user.save()
-        return JsonResponse({'success': 'User created successfully'})
+
+        return JsonResponse({'success': 'User created successfully'}, status=status.HTTP_201_CREATED)
     else:
-        return JsonResponse({'error': 'Invalid request method'},status=status.HTTP_400_BAD_REQUEST)
+        return JsonResponse({'error': 'Invalid request method'}, status=status.HTTP_400_BAD_REQUEST)
     
 @extend_schema(description='Endpoint to get a list of all users.',
                responses={
@@ -100,22 +131,23 @@ def getCompanies(request):
 def createCompany(request):
     if request.method == 'POST':
         name = request.data.get('name', '').strip()
+        siem = request.data.get('siem', '').strip()  # <--- ADICIONADO
         logsources = request.data.get('logsources', [])
 
-        if not name or not logsources:
-            return JsonResponse({'error': 'O Nome e as LogSources são de preenchimento obrigatório.'}, status=400)
+        # Valida também se o SIEM foi preenchido, caso seja obrigatório
+        if not name or not siem or not logsources:
+            return JsonResponse({'error': 'O Nome, o SIEM e as LogSources são de preenchimento obrigatório.'}, status=400)
 
         if Company.objects.filter(name__iexact=name).exists():
             return JsonResponse({'error': 'Já existe um cliente com este nome.'}, status=400)
         
         try:
-            company = Company(name=name, logsources=logsources)
+            company = Company(name=name, siem=siem, logsources=logsources)  # <--- ADICIONADO
             company.save()
             return JsonResponse({'success': 'Company created successfully'}, status=201)
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=400)
     else:
-        # Alterado para status 405 (Method Not Allowed) para maior rigor semântico
         return JsonResponse({'error': 'Invalid request method'}, status=405)
     
 @extend_schema(description=' Endpoint to delete a user based on the user ID.',
@@ -149,15 +181,35 @@ def getLogsourcesByClient(request, clientName):
 
 @api_view(['POST'])
 def updateUserInfo(request, id):
-    user = User.objects.get(id=id)
-    user.username = request.data['username']
-    user.email = request.data['email']
-    user.companies = request.data['companies']
-    user.otpMethod = request.data['otpMethod']
-    user.showTotp = True
-    user.save()
-    return JsonResponse({'success': 'User updated successfully'})
+    try:
+        user = User.objects.get(id=id)
+    except User.DoesNotExist:
+        return JsonResponse({'error': 'Utilizador não encontrado.'}, status=status.HTTP_404_NOT_FOUND)
 
+    user.username = request.data.get('username')
+    user.email = request.data.get('email')
+    user.otpMethod = request.data.get('otpMethod', user.otpMethod)
+    
+    companies = request.data.get('companies', [])
+    user.companies = companies
+
+    # Sincronização de Roles
+    if not companies:
+        user.is_admin = True
+        user.is_superuser = True
+        user.is_staff = True
+    else:
+        user.is_admin = False
+        user.is_superuser = False
+        user.is_staff = True
+
+    # Forçar reconfiguração do QR Code se solicitado
+    if request.data.get('resetTotp', False):
+        user.showTotp = True
+        user.totp_secret = pyotp.random_base32()
+
+    user.save()
+    return JsonResponse({'success': 'User updated successfully'}, status=status.HTTP_200_OK)
 class ChangePasswordView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -185,6 +237,7 @@ def getCompany(request, id):
         data = {
             'pk': company.pk,
             'name': company.name,
+            'siem': company.siem,  # <--- ADICIONADO
             'logsources': company.logsources,
             'date': company.date
         }
@@ -202,16 +255,17 @@ def updateCompany(request, id):
         return JsonResponse({'error': 'Empresa não encontrada.'}, status=status.HTTP_404_NOT_FOUND)
 
     name = request.data.get('name', '').strip()
+    siem = request.data.get('siem', '').strip()  # <--- ADICIONADO
     logsources = request.data.get('logsources', [])
 
-    if not name or not logsources:
-        return JsonResponse({'error': 'O Nome e as LogSources são obrigatórios.'}, status=status.HTTP_400_BAD_REQUEST)
+    if not name or not siem or not logsources:
+        return JsonResponse({'error': 'O Nome, o SIEM e as LogSources são obrigatórios.'}, status=status.HTTP_400_BAD_REQUEST)
 
-    # Valida duplicados excluindo a própria empresa que está a ser editada
     if Company.objects.filter(name__iexact=name).exclude(pk=id).exists():
         return JsonResponse({'error': 'Já existe outra empresa registada com este nome.'}, status=status.HTTP_400_BAD_REQUEST)
 
     company.name = name
+    company.siem = siem  # <--- ADICIONADO
     company.logsources = logsources
     company.save()
 

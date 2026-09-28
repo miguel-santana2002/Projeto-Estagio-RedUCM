@@ -16,11 +16,19 @@ class RuleModel(models.Model):
 
 
 class Rule(models.Model):
-    ruleModel = models.ForeignKey(RuleModel, on_delete=models.CASCADE, null=True)
+    ruleModel = models.ForeignKey(RuleModel, on_delete=models.CASCADE, null=True, related_name='rules')
     ruleCode = models.TextField(null=True, blank=True)
     syntax = models.CharField(max_length=100, null=True, blank=True)
     logsources = ArrayField(models.CharField(max_length=255, blank=True), blank=True, default=list)
-    client = models.ForeignKey(Company, on_delete=models.CASCADE, null=True)
+    client = models.ForeignKey(
+        Company, 
+        on_delete=models.SET_NULL,  
+        null=True, 
+        blank=True,                 
+        related_name='rules'
+    )
+
+    status = models.CharField(max_length=50, null=True, blank=True, default='')
 
     def __str__(self):
         model_name = self.ruleModel.title if self.ruleModel and self.ruleModel.title else f"Modelo #{self.ruleModel_id}"

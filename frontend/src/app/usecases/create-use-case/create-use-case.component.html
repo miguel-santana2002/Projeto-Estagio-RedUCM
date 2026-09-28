@@ -1,116 +1,174 @@
 <app-header></app-header>
+
 <app-titlebanner title="Criar Use Case" image="./assets/bannercover.jpg"></app-titlebanner>
 
-<div class="max-w-6xl mx-auto p-6 bg-white dark:bg-gray-900 rounded-xl shadow-md mt-6 mb-12">
-  <form [formGroup]="createUseCaseForm" (ngSubmit)="createUseCase()" class="space-y-6">
+<div class="max-w-6xl mx-auto px-6 py-12">
+  <form class="space-y-8" [formGroup]="createUseCaseForm" (ngSubmit)="createUseCase()">
 
-    <!-- Mensagem de Erro -->
-    <div *ngIf="errorMessage" class="p-4 bg-red-100 dark:bg-red-900/30 border border-red-400 text-red-700 dark:text-red-300 rounded-lg text-sm">
-      {{ errorMessage }}
+    <!-- Mensagem de Erro do Backend -->
+    <div *ngIf="errorMessage"
+      class="p-4 text-sm text-red-700 bg-red-100 rounded-lg dark:bg-gray-800 dark:text-red-400 border border-red-200 dark:border-red-800"
+      role="alert">
+      <i class="fas fa-exclamation-triangle mr-2"></i> {{ errorMessage }}
     </div>
 
-    <!-- Título -->
-    <div>
-      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Título do Use Case *</label>
-      <input type="text" formControlName="title" placeholder="Ex: Detecção de WMI Malicioso" 
-             class="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition" />
-    </div>
+    <!-- BLOCO 1: Identificação & Classificação -->
+    <div
+      class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 space-y-6 transition-colors duration-200">
+      <h3
+        class="text-base font-semibold text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700 pb-3 flex items-center gap-2">
+        <span class="w-2.5 h-2.5 rounded-full bg-redshift-red"></span>
+        1. Identificação & Classificação
+      </h3>
 
-    <!-- Descrição -->
-    <div>
-      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Descrição</label>
-      <textarea formControlName="description" rows="3" placeholder="Descreva o propósito deste Use Case..."
-                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition"></textarea>
-    </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Título -->
+        <div class="space-y-2 col-span-2">
+          <label for="title" class="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">
+            Título <span class="text-red-500">*</span>
+          </label>
+          <input id="title" required name="title" placeholder="Ex: Deteção de WMI Malicioso" type="text"
+            formControlName="title"
+            class="block w-full rounded-md border-0 bg-white dark:bg-gray-700 px-3 py-2.5 text-gray-900 dark:text-white shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-600 placeholder:text-gray-400 dark:placeholder-gray-400 focus:ring-2 focus:ring-inset focus:ring-redshift-red sm:text-sm sm:leading-6 transition">
+          <div *ngIf="createUseCaseForm.get('title')?.touched && createUseCaseForm.get('title')?.invalid"
+            class="text-red-600 dark:text-red-400 text-xs mt-1">
+            Título é obrigatório.
+          </div>
+        </div>
 
-    <!-- Grelha de Seleções (Táticas e Técnicas) -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-      
-      <!-- Táticas -->
-      <div>
-        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Táticas (MITRE ATT&CK)</label>
-        <mat-form-field appearance="outline" class="w-full">
-          <!-- A correção está aqui: panelClass="custom-dark-panel" -->
-          <mat-select formControlName="tactics" multiple placeholder="Selecione as táticas..." (selectionChange)="onTacticChange()" panelClass="custom-dark-panel">
-            <mat-option *ngFor="let tactic of allTacticsList" [value]="tactic">{{ tactic }}</mat-option>
-          </mat-select>
-        </mat-form-field>
-      </div>
+        <!-- Classe CNCS -->
+        <div class="space-y-2">
+          <label class="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">
+            Classe CNCS
+          </label>
+          <mat-form-field appearance="outline" class="w-full">
+            <mat-select formControlName="cncsClass" (selectionChange)="updateCNCSValues()"
+              placeholder="Selecione a classe..." panelClass="custom-dark-panel">
+              <mat-option value="">-- Nenhuma --</mat-option>
+              <mat-option *ngFor="let chave of chavesTaxonomia" [value]="chave">{{ chave }}</mat-option>
+            </mat-select>
+          </mat-form-field>
 
-      <!-- Técnicas -->
-      <div>
-        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Técnicas MITRE</label>
-        <mat-form-field appearance="outline" class="w-full">
-          <!-- A correção está aqui: panelClass="custom-dark-panel" -->
-          <mat-select formControlName="mitreTechniques" multiple placeholder="Selecione as técnicas..." (selectionChange)="onTechniqueChange()" panelClass="custom-dark-panel">
-            <mat-option *ngFor="let tech of filteredTechniquesList" [value]="tech">{{ tech }}</mat-option>
-          </mat-select>
-        </mat-form-field>
-      </div>
+          <!-- Input customizado caso seja selecionado "Outro" -->
+          <input *ngIf="createUseCaseForm.get('cncsClass')?.value === 'Outro'" type="text"
+            formControlName="cncsClassCustom" placeholder="Especifique a classe..."
+            class="block w-full rounded-md border-0 bg-white dark:bg-gray-700 px-3 py-2 text-gray-900 dark:text-white shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-600 placeholder:text-gray-400 dark:placeholder-gray-400 focus:ring-2 focus:ring-inset focus:ring-redshift-red sm:text-sm transition mt-2" />
+        </div>
 
-    </div>
+        <!-- Tipo CNCS -->
+        <div class="space-y-2">
+          <label class="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">
+            Tipo CNCS
+          </label>
+          <mat-form-field appearance="outline" class="w-full">
+            <mat-select formControlName="cncsType" placeholder="Selecione o tipo..." panelClass="custom-dark-panel">
+              <mat-option value="">-- Nenhuma --</mat-option>
+              <mat-option *ngFor="let val of selectedCategoryValues" [value]="val">{{ val }}</mat-option>
+            </mat-select>
+          </mat-form-field>
 
-    <!-- Taxonomia CNCS (Classe e Tipo) -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-      
-      <!-- Classe CNCS -->
-      <div>
-        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Classe CNCS</label>
-        <mat-form-field appearance="outline" class="w-full">
-          <mat-select formControlName="cncsClass" (selectionChange)="updateCNCSValues()" placeholder="Selecione a classe...">
-            <!-- Opção para limpar a seleção à moda antiga -->
-            <mat-option value="">-- Nenhuma --</mat-option>
-            <mat-option *ngFor="let chave of chavesTaxonomia" [value]="chave">{{ chave }}</mat-option>
-          </mat-select>
-        </mat-form-field>
-        
-        <!-- Aparece apenas se selecionar "Outro" -->
-        <input *ngIf="createUseCaseForm.get('cncsClass')?.value === 'Outro'" type="text" formControlName="cncsClassCustom" placeholder="Especifique a classe..." 
-               class="mt-2 w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition" />
-      </div>
-
-      <!-- Tipo CNCS -->
-      <div>
-        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Tipo CNCS</label>
-        <mat-form-field appearance="outline" class="w-full">
-          <mat-select formControlName="cncsType" placeholder="Selecione o tipo...">
-            <mat-option value="">-- Nenhuma --</mat-option>
-            <mat-option *ngFor="let val of selectedCategoryValues" [value]="val">{{ val }}</mat-option>
-          </mat-select>
-        </mat-form-field>
-        
-        <!-- Aparece apenas se selecionar "Outro" -->
-        <input *ngIf="createUseCaseForm.get('cncsType')?.value === 'Outro'" type="text" formControlName="cncsTypeCustom" placeholder="Especifique o tipo..." 
-               class="mt-2 w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition" />
-      </div>
-
-    </div>
-
-    <!-- Mitigação e Playbook -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-      <div>
-        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Mitigação</label>
-        <textarea formControlName="mitigation" rows="2" placeholder="Passos de mitigação..."
-                  class="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition"></textarea>
-      </div>
-
-      <div>
-        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Playbook (Ficheiro)</label>
-        <input type="file" (change)="onFileSelected($event)"
-               class="w-full text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 dark:file:bg-gray-800 dark:file:text-blue-400 hover:file:bg-blue-100 transition" />
+          <!-- Input customizado caso seja selecionado "Outro" -->
+          <input *ngIf="createUseCaseForm.get('cncsType')?.value === 'Outro'" type="text"
+            formControlName="cncsTypeCustom" placeholder="Especifique o tipo..."
+            class="block w-full rounded-md border-0 bg-white dark:bg-gray-700 px-3 py-2 text-gray-900 dark:text-white shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-600 placeholder:text-gray-400 dark:placeholder-gray-400 focus:ring-2 focus:ring-inset focus:ring-redshift-red sm:text-sm transition mt-2" />
+        </div>
       </div>
     </div>
 
-    <!-- Botões de Ação -->
-    <div class="flex justify-end space-x-4 pt-4 border-t border-gray-200 dark:border-gray-800">
-      <button type="button" routerLink="/manage-usecases" 
-              class="px-6 py-2 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition">
-        Cancelar
-      </button>
-      <button type="submit" 
-              class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg shadow transition">
-        Criar Use Case
-      </button>
+    <!-- BLOCO 2: Análise Técnica & Mapeamento -->
+    <div
+      class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 space-y-6 transition-colors duration-200">
+      <h3
+        class="text-base font-semibold text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700 pb-3 flex items-center gap-2">
+        <span class="w-2.5 h-2.5 rounded-full bg-redshift-red"></span>
+        2. Análise Técnica & Mapeamento
+      </h3>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Táticas MITRE ATT&CK -->
+        <div class="space-y-2">
+          <label class="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">
+            Táticas (MITRE ATT&CK)
+          </label>
+          <mat-form-field appearance="outline" class="w-full">
+            <mat-select formControlName="tactics" multiple placeholder="Selecione as táticas..."
+              (selectionChange)="onTacticChange()" panelClass="custom-dark-panel">
+              <mat-option *ngFor="let tactic of allTacticsList" [value]="tactic">{{ tactic }}</mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+
+        <!-- Técnicas MITRE -->
+        <div class="space-y-2">
+          <label class="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">
+            Técnicas MITRE
+          </label>
+          <mat-form-field appearance="outline" class="w-full">
+            <mat-select formControlName="mitreTechniques" multiple placeholder="Selecione as técnicas..."
+              (selectionChange)="onTechniqueChange()" panelClass="custom-dark-panel">
+              <mat-option *ngFor="let tech of filteredTechniquesList" [value]="tech">{{ tech }}</mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+
+        <!-- Descrição -->
+        <div class="space-y-2 col-span-2">
+          <label for="description" class="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">
+            Descrição
+          </label>
+          <textarea id="description" name="description" formControlName="description" rows="3"
+            placeholder="Descrição do Use Case. Neste parágrafo poderão ser descritos propósito, objetivos, entre outros."
+            class="block w-full rounded-md border-0 bg-white dark:bg-gray-700 px-3 py-2.5 h-32 text-gray-900 dark:text-white shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-600 placeholder:text-gray-400 dark:placeholder-gray-400 focus:ring-2 focus:ring-inset focus:ring-redshift-red sm:text-sm sm:leading-6 transition"></textarea>
+        </div>
+
+        <!-- Mitigação -->
+        <div class="space-y-2 col-span-2">
+          <label for="mitigation" class="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">
+            Mitigação
+          </label>
+          <textarea id="mitigation" name="mitigation" formControlName="mitigation" rows="3"
+            placeholder="Neste parágrafo, poderão ser descritas as estratégias de mitigação..."
+            class="block w-full rounded-md border-0 bg-white dark:bg-gray-700 px-3 py-2.5 h-32 text-gray-900 dark:text-white shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-600 placeholder:text-gray-400 dark:placeholder-gray-400 focus:ring-2 focus:ring-inset focus:ring-redshift-red sm:text-sm sm:leading-6 transition"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- BLOCO 3: Operacionalização & Recursos -->
+    <div
+      class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 space-y-6 transition-colors duration-200">
+      <h3
+        class="text-base font-semibold text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700 pb-3 flex items-center gap-2">
+        <span class="w-2.5 h-2.5 rounded-full bg-redshift-red"></span>
+        3. Operacionalização & Recursos
+      </h3>
+
+      <div class="space-y-4">
+        <!-- Playbook (Upload de Ficheiro) -->
+        <div class="space-y-2">
+          <label for="playbook" class="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">
+            Playbook (Ficheiro)
+          </label>
+          <input id="playbook" type="file" (change)="onFileSelected($event)"
+            class="block w-full text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2.5 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-gray-100 dark:file:bg-gray-700 file:text-gray-700 dark:file:text-gray-200 hover:file:bg-gray-200 dark:hover:file:bg-gray-600 transition">
+          <p class="text-xs text-gray-400 dark:text-gray-500">
+            Carrega o playbook em anexo associado a este Use Case (opcional).
+          </p>
+        </div>
+
+        <!-- Botões de Ação -->
+        <div class="pt-4 flex items-center gap-4">
+          <button type="submit" [disabled]="createUseCaseForm.invalid"
+            class="w-full md:w-auto py-2.5 px-8 text-white font-semibold bg-redshift-red rounded-lg hover:bg-redshift-hover disabled:opacity-50 disabled:cursor-not-allowed shadow transition flex items-center justify-center gap-2">
+            <i class="fas fa-plus text-xs"></i>
+            <span>Criar Use Case</span>
+          </button>
+
+          <a [routerLink]="['/manage-usecases']"
+            class="w-full md:w-auto py-2.5 px-6 text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-lg border border-gray-300 dark:border-gray-600 text-sm font-medium transition text-center">
+            Cancelar
+          </a>
+        </div>
+      </div>
     </div>
 
   </form>

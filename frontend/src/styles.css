@@ -44,7 +44,9 @@ body {
 .dark .mat-mdc-select-panel:not(.custom-dark-panel) {
   background-color: #1f2937 !important;
 }
-.dark .mat-mdc-select-panel:not(.custom-dark-panel) .mdc-list-item__primary-text {
+.dark
+  .mat-mdc-select-panel:not(.custom-dark-panel)
+  .mdc-list-item__primary-text {
   color: #ffffff !important;
 }
 .dark .mat-mdc-select-panel:not(.custom-dark-panel) .mat-mdc-option:hover {
@@ -98,14 +100,14 @@ body {
 .dark .mat-mdc-text-field-wrapper,
 .dark .mdc-text-field,
 .dark .mat-mdc-form-field-flex {
-  background-color: #1f2937 !important; 
+  background-color: #1f2937 !important;
 }
 
 /* Rebordos Escuros */
 .dark .mdc-notched-outline__leading,
 .dark .mdc-notched-outline__notch,
 .dark .mdc-notched-outline__trailing {
-  border-color: #374151 !important; 
+  border-color: #374151 !important;
 }
 
 /* Cor do Texto Selecionado, Ícones e Placeholder a Branco/Cinza */
@@ -120,7 +122,7 @@ body {
 }
 
 .dark .mat-mdc-select-placeholder {
-  color: #9ca3af !important; 
+  color: #9ca3af !important;
 }
 
 /* Cor do Fundo para Tema Claro (Garante que volta ao normal se trocares de tema) */

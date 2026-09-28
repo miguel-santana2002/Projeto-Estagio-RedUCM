@@ -230,6 +230,7 @@ export interface Usecase {
   mitigation?: string | null;
   playbook?: string | null;
   mitreTechniques?: (string | null)[] | null;
+  tactics?: string[] | null;  // <-- ADicionado
   cncsClass?: string | null;
   cncsType?: string | null;
   phaseTasks?: Array<{ [key: string]: any }> | null;

@@ -194,6 +194,7 @@ export class ManageRulesComponent implements OnInit, AfterViewInit {
     this.selectedSintaxes = [];
     this.selectedUseCases = [];
     this.selectedLogsources = [];
+    this.nameSearch = '';
   }
 
   onSearchChange(): void {

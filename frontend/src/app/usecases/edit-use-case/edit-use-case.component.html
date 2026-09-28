@@ -41,11 +41,12 @@
                     <label for="cncsClass" class="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">
                         Classe CNCS <span class="text-red-500">*</span>
                     </label>
-                    <select id="cncsClass" formControlName="cncsClass" (change)="updateCNCSValues()"
-                        class="block w-full py-2.5 px-3 bg-white dark:bg-gray-700 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-redshift-red sm:text-sm transition">
-                        <option value="" disabled>Selecione a Classe...</option>
-                        <option *ngFor="let option of chavesTaxonomia" [value]="option">{{ option }}</option>
-                    </select>
+                    <mat-form-field appearance="outline" class="w-full">
+                        <mat-select formControlName="cncsClass" (selectionChange)="updateCNCSValues()" placeholder="Selecione a Classe...">
+                            <mat-option value="">-- Nenhuma --</mat-option>
+                            <mat-option *ngFor="let option of chavesTaxonomia" [value]="option">{{ option }}</mat-option>
+                        </mat-select>
+                    </mat-form-field>
                     <div *ngIf="editUseCaseForm.get('cncsClass')?.touched && editUseCaseForm.get('cncsClass')?.invalid"
                         class="text-red-600 dark:text-red-400 text-xs mt-1">
                         Classe CNCS é obrigatória.
@@ -57,12 +58,12 @@
                     <label for="cncsType" class="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">
                         Tipo CNCS <span class="text-red-500">*</span>
                     </label>
-                    <select id="cncsType" formControlName="cncsType"
-                        class="block w-full py-2.5 px-3 bg-white dark:bg-gray-700 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-redshift-red sm:text-sm transition">
-                        <option value="" disabled>Selecione o Tipo...</option>
-                        <option *ngFor="let subcategory of selectedCategoryValues" [value]="subcategory">{{ subcategory
-                            }}</option>
-                    </select>
+                    <mat-form-field appearance="outline" class="w-full">
+                        <mat-select formControlName="cncsType" placeholder="Selecione o Tipo...">
+                            <mat-option value="">-- Nenhuma --</mat-option>
+                            <mat-option *ngFor="let subcategory of selectedCategoryValues" [value]="subcategory">{{ subcategory }}</mat-option>
+                        </mat-select>
+                    </mat-form-field>
                     <div *ngIf="editUseCaseForm.get('cncsType')?.touched && editUseCaseForm.get('cncsType')?.invalid"
                         class="text-red-600 dark:text-red-400 text-xs mt-1">
                         Tipo CNCS é obrigatório.
@@ -81,38 +82,39 @@
             </h3>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- Técnicas Mitre -->
+                <!-- Técnicas Mitre Associadas -->
                 <div class="space-y-2">
                     <label for="mitreTechniques"
                         class="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">
                         Técnicas Mitre Associadas <span class="text-red-500">*</span>
                     </label>
-                    <tag-input theme='minimal' [secondaryPlaceholder]="'+ Selecionar Técnica'" [placeholder]="''"
-                        formControlName="mitreTechniques" [onlyFromAutocomplete]="true"
-                        class="block w-full rounded-md border-0 bg-white dark:bg-gray-700 px-2 text-gray-900 dark:text-white shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-600 placeholder:text-gray-400 dark:placeholder-gray-400 focus:ring-2 focus:ring-inset focus:ring-redshift-red sm:text-sm sm:leading-6 transition">
-                        <tag-input-dropdown [autocompleteItems]="mitreAutocompleteList" [showDropdownIfEmpty]="false"
-                            [limitItemsTo]="10">
-                        </tag-input-dropdown>
-                    </tag-input>
+                    <mat-form-field appearance="outline" class="w-full">
+                        <mat-select formControlName="mitreTechniques" multiple placeholder="Selecione as técnicas..." 
+                                    (selectionChange)="onTechniqueChange()" panelClass="custom-dark-panel">
+                            <mat-option *ngFor="let tech of filteredTechniquesList" [value]="tech">{{ tech }}</mat-option>
+                        </mat-select>
+                    </mat-form-field>
                     <div *ngIf="editUseCaseForm.get('mitreTechniques')?.touched && editUseCaseForm.get('mitreTechniques')?.invalid"
                         class="text-red-600 dark:text-red-400 text-xs mt-1">
                         Técnicas Mitre são obrigatórias.
                     </div>
                 </div>
 
-                <!-- Vetores de Ataque -->
+                <!-- Táticas Mitre -->
                 <div class="space-y-2">
-                    <label for="attackVectors"
+                    <label for="tactics"
                         class="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">
-                        Vetores de Ataque <span class="text-red-500">*</span>
+                        Táticas (MITRE ATT&CK) <span class="text-red-500">*</span>
                     </label>
-                    <tag-input theme='minimal' [secondaryPlaceholder]="'+ Novo Vetor'" [placeholder]="''"
-                        formControlName="attackVectors"
-                        class="block w-full rounded-md border-0 bg-white dark:bg-gray-700 px-2 text-gray-900 dark:text-white shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-600 placeholder:text-gray-400 dark:placeholder-gray-400 focus:ring-2 focus:ring-inset focus:ring-redshift-red sm:text-sm sm:leading-6 transition">
-                    </tag-input>
-                    <div *ngIf="editUseCaseForm.get('attackVectors')?.touched && editUseCaseForm.get('attackVectors')?.invalid"
+                    <mat-form-field appearance="outline" class="w-full">
+                        <mat-select formControlName="tactics" multiple placeholder="Selecione as táticas..." 
+                                    (selectionChange)="onTacticChange()" panelClass="custom-dark-panel">
+                            <mat-option *ngFor="let tactic of allTacticsList" [value]="tactic">{{ tactic }}</mat-option>
+                        </mat-select>
+                    </mat-form-field>
+                    <div *ngIf="editUseCaseForm.get('tactics')?.touched && editUseCaseForm.get('tactics')?.invalid"
                         class="text-red-600 dark:text-red-400 text-xs mt-1">
-                        Vetores de Ataque são obrigatórios.
+                        Táticas são obrigatórias.
                     </div>
                 </div>
 
