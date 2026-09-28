@@ -7,6 +7,7 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from drf_spectacular.utils import extend_schema, OpenApiResponse
+from django.utils import timezone
 
 from accounts.models import Company
 from rules.models import RegisteredLogSource, Rule, RuleModel
@@ -118,21 +119,52 @@ def deleteRuleById(request, id):
         return JsonResponse({"error": "Invalid request method"}, status=400)
     
 
-@extend_schema(request=RuleSerializer,
-                description='Rule creation based on the data inserted in the request body.',
-                responses={
-                     200: OpenApiResponse(response=RuleSerializer, description='Rule created successfully'),
-                     400: OpenApiResponse(response=None, description='Invalid request method')
-                })
+@extend_schema(
+    request=RuleSerializer,
+    description='Rule creation based on the data inserted in the request body.',
+    responses={
+        201: OpenApiResponse(response=RuleSerializer, description='Rule created successfully'),
+        400: OpenApiResponse(description='Dados inválidos ou entidades não encontradas')
+    }
+)
 @api_view(['POST'])
 def createRule(request):
-    if request.method == 'POST':
-        data = request.data
-        ruleModel = RuleModel.objects.get(id=data['ruleModel'])
-        client = Company.objects.get(id=data['client'])
-        new_rule = Rule(ruleModel=ruleModel, logsources=data['logsources'], ruleCode=data['ruleCode'], syntax=data['syntax'], client=client)
-        new_rule.save()
-        return JsonResponse(data, safe=False)
+    data = request.data
+    client_id = data.get('client')
+
+    # 1. Trata o cliente como opcional (só pesquisa se client_id não for None/vazio)
+    client = None
+    if client_id:
+        try:
+            client = Company.objects.get(id=client_id)
+        except Company.DoesNotExist:
+            return Response(
+                {'error': f"Empresa com ID '{client_id}' não encontrada."}, 
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+    # 2. Validação do RuleModel associado
+    try:
+        rule_model = RuleModel.objects.get(id=data.get('ruleModel'))
+    except RuleModel.DoesNotExist:
+        return Response(
+            {'error': "Modelo de regra não encontrado."}, 
+            status=status.HTTP_404_NOT_FOUND
+        )
+
+    # 3. Criação da instância da regra
+    new_rule = Rule(
+        ruleModel=rule_model,
+        logsources=data.get('logsources', []),
+        ruleCode=data.get('ruleCode', ''),
+        syntax=data.get('syntax', rule_model.syntax),
+        client=client,
+        status=data.get('status', '')
+    )
+    new_rule.save()
+
+    # 4. Devolve o objeto serializado com o novo ID gerado para o Angular atualizar o ecrã
+    return Response(RuleSerializer(new_rule).data, status=status.HTTP_201_CREATED)
 
 
 @extend_schema(request=RuleSerializer,
@@ -199,25 +231,6 @@ def getRegisteredLogSources(request):
     else:
         return JsonResponse({'error': 'Invalid request method'})
     
-def updateLogSourceById(request, id):
-    try:
-        logsource = RegisteredLogSource.objects.get(id=id)
- 
-        new_name = request.data.get('name', logsource.name)
-        if new_name != logsource.name and RegisteredLogSource.objects.filter(name=new_name).exists():
-            return JsonResponse({'error': 'A logsource já existe'}, status=status.HTTP_400_BAD_REQUEST)
- 
-        logsource.name = new_name
-        logsource.description = request.data.get('description', logsource.description)
-        logsource.type = request.data.get('type', logsource.type)
-        logsource.collectionMethod = request.data.get('collectionMethod', logsource.collectionMethod)
-        logsource.products = request.data.get('products', logsource.products)
-        logsource.save()
-        return JsonResponse({'message': 'LogSource atualizada com sucesso'})
-    except RegisteredLogSource.DoesNotExist:
-        return JsonResponse({'error': 'LogSource não encontrada'}, status=404)
-
-    
 
 @api_view(['POST'])
 def updateRuleModelCode(request, id):
@@ -247,6 +260,43 @@ def updateRuleCode(request,id):
         return JsonResponse({'message': 'Regra Atualizada com Sucesso'})
     else:
         return JsonResponse({'error': 'Invalid request method'})
+
+@extend_schema(
+    request=RuleSerializer,
+    description='Atualiza os dados de uma regra (cliente, status, sintaxe, logsources e código).',
+    responses={
+        200: OpenApiResponse(response=RuleSerializer, description='Regra atualizada com sucesso'),
+        404: OpenApiResponse(description='Regra ou Cliente não encontrado')
+    }
+)
+
+@api_view(['POST'])
+def updateRule(request, id):
+    try:
+        rule = Rule.objects.get(id=id)
+    except Rule.DoesNotExist:
+        return Response({'error': 'Regra não encontrada.'}, status=status.HTTP_404_NOT_FOUND)
+
+    data = request.data
+    client_id = data.get('client')
+
+    # Trata cliente (permite None / sem cliente)
+    if client_id:
+        try:
+            rule.client = Company.objects.get(id=client_id)
+        except Company.DoesNotExist:
+            return Response({'error': f"Empresa #{client_id} não encontrada."}, status=status.HTTP_404_NOT_FOUND)
+    else:
+        rule.client = None
+
+    # Atualiza os restantes campos
+    rule.status = data.get('status', '')
+    rule.syntax = data.get('syntax', rule.syntax)
+    rule.logsources = data.get('logsources', rule.logsources)
+    rule.ruleCode = data.get('ruleCode', rule.ruleCode)
+    rule.save()
+
+    return Response(RuleSerializer(rule).data, status=status.HTTP_200_OK)
 
 @api_view(['POST'])
 def updateRuleModel(request, id):
@@ -341,3 +391,19 @@ def convertRule(request):
         return Response({'error': f"Erro no serviço/compilação: {str(re)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     except Exception as e:
         return Response({'error': f"Erro inesperado: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['POST'])
+def validateRuleById(request, id):
+    try:
+        rule = Rule.objects.get(id=id)
+        validated_by = request.data.get('validatedBy')
+        if not validated_by:
+            return JsonResponse({'error': 'validatedBy é obrigatório'}, status=400)
+
+        rule.validatedManually = True
+        rule.validatedBy = validated_by
+        rule.validatedAt = timezone.now()
+        rule.save()
+        return JsonResponse({'message': 'Regra marcada como validada manualmente'})
+    except Rule.DoesNotExist:
+        return JsonResponse({'error': 'Regra não encontrada'}, status=404)

@@ -61,4 +61,10 @@ export class HomeComponent implements OnInit {
       });
     });
   }
+
+  get userRoleLabel(): string {
+    return this.user?.is_superuser || this.user?.is_admin
+      ? 'Administrador'
+      : 'Operador';
+  }
 }

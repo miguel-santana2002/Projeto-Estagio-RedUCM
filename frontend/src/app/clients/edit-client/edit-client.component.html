@@ -30,6 +30,23 @@
             placeholder="Insira o nome da empresa">
         </div>
 
+        <!-- SIEM (Adicionado aqui) -->
+        <div class="col-span-2">
+          <label for="siem" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+            SIEM <span class="text-red-500">*</span>
+          </label>
+          <select id="siem" formControlName="siem"
+            class="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-redshift-red focus:border-redshift-red block w-full p-2.5 transition">
+            <option value="" disabled>Selecione o SIEM</option>
+            <option value="Splunk">Splunk</option>
+            <option value="Sentinel">Sentinel</option>
+            <option value="Crowdstrike">Crowdstrike</option>
+            <option value="QRadar">QRadar</option>
+            <option value="Elastic">Elastic</option>
+            <option value="FortiSIEM">FortiSIEM</option>
+          </select>
+        </div>
+
         <!-- LogSources -->
         <div class="col-span-2">
           <label for="logsources" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">

@@ -25,10 +25,11 @@ import { AppCodeEditorComponent } from '../../../shared/components/app-code-edit
   ],
 })
 export class RuleDetailsComponent implements OnInit {
-  rule: any = { client: {}, ruleModel: {} };
-  usecase: any = {};
+  rule: any = { client: { name: 'Sem Cliente' }, ruleModel: {} };
+  usecase: any = null;
   code: string = '';
   message: string = '';
+  isLoading: boolean = true;
 
   constructor(
     private route: ActivatedRoute,
@@ -37,19 +38,53 @@ export class RuleDetailsComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    const id = this.route.snapshot.params['id'];
+    const id = Number(this.route.snapshot.params['id']);
 
-    this.rulesService.getRuleById(id).subscribe((data: any) => {
-      this.rule = data;
-      this.code = this.rule.ruleCode || '';
+    this.rulesService.getRuleById(id).subscribe({
+      next: (data: any) => {
+        // Sanitiza o cliente para garantir que o template nunca encontra null
+        this.rule = {
+          ...data,
+          client: data.client || { name: 'Sem Cliente' },
+          status: data.status || '',
+          logsources: Array.isArray(data.logsources) ? data.logsources : [],
+        };
+        this.code = this.rule.ruleCode || '';
 
-      if (this.rule.ruleModel?.useCaseId) {
-        this.useCaseService
-          .getUseCaseById(this.rule.ruleModel.useCaseId)
-          .subscribe((ucData: any) => {
-            this.usecase = ucData;
+        // Cenário 1: ruleModel serializado como objeto com useCaseId
+        if (this.rule.ruleModel?.useCaseId) {
+          this.loadUseCase(this.rule.ruleModel.useCaseId);
+          this.isLoading = false;
+        }
+        // Cenário 2: ruleModel serializado apenas como ID numérico (FK plana)
+        else if (typeof data.ruleModel === 'number') {
+          this.rulesService.getRuleModelById(data.ruleModel).subscribe({
+            next: (modelData: any) => {
+              this.rule.ruleModel = modelData;
+              if (modelData.useCaseId) {
+                this.loadUseCase(modelData.useCaseId);
+              }
+              this.isLoading = false;
+            },
+            error: () => (this.isLoading = false),
           });
-      }
+        } else {
+          this.isLoading = false;
+        }
+      },
+      error: (err) => {
+        console.error('Erro ao carregar detalhes da regra:', err);
+        this.isLoading = false;
+      },
+    });
+  }
+
+  private loadUseCase(useCaseId: number): void {
+    this.useCaseService.getUseCaseById(useCaseId).subscribe({
+      next: (ucData: any) => {
+        this.usecase = ucData;
+      },
+      error: (err) => console.error('Erro ao carregar Use Case:', err),
     });
   }
 
@@ -58,13 +93,16 @@ export class RuleDetailsComponent implements OnInit {
   }
 
   updateRuleCode(): void {
-    this.rulesService
-      .updateRuleCode(this.code, this.rule.id)
-      .subscribe((data: any) => {
-        this.message = data.message || 'Regra atualizada com sucesso!';
+    this.rulesService.updateRuleCode(this.code, this.rule.id).subscribe({
+      next: (data: any) => {
+        this.message = data?.message || 'Regra atualizada com sucesso!';
         setTimeout(() => {
           this.message = '';
         }, 4000);
-      });
+      },
+      error: (err) => {
+        console.error('Erro ao atualizar código da regra:', err);
+      },
+    });
   }
 }

@@ -70,26 +70,25 @@ export class LoginComponent {
   onSubmit() {
     if (this.loginForm.valid) {
       const { email, password } = this.loginForm.value;
-      this.authService.login(email, password).subscribe(
-        (response) => {
-          console.log(response);
+      this.authService.login(email, password).subscribe({
+        next: (response: any) => {
           this.errorMessage = '';
           if (response.otpSent) {
             this.otpMethod = response.otpMethod!;
             this.showOtpForm = true;
 
-            if (this.otpMethod === 'totp') {
-              this.onGenerateTOTP();
+            // Só chama generate-totp se for o 1º acesso (showTotp == true)
+            if (this.otpMethod === 'totp' && response.showTotp) {
+              this.onGenerateTOTP(email);
             }
           } else {
-            console.log('OTP not sent');
             this.router.navigate(['/home']);
           }
         },
-        (error) => {
-          this.errorMessage = 'Credenciais inválidas para início de sessão'; // Add this line
+        error: () => {
+          this.errorMessage = 'Credenciais inválidas para início de sessão';
         },
-      );
+      });
     }
   }
 
@@ -110,14 +109,21 @@ export class LoginComponent {
       );
     }
   }
-  onGenerateTOTP() {
-    this.authService.generateTOTP().subscribe((response) => {
-      console.log(response);
-      if (response) {
-        this.qrCodeUrl =
-          'https://api.qrserver.com/v1/create-qr-code/?data=' +
-          encodeURIComponent(response);
-      }
+
+  onGenerateTOTP(email: string) {
+    this.authService.generateTOTP(email).subscribe({
+      next: (response: any) => {
+        if (response) {
+          const uri =
+            typeof response === 'string'
+              ? response
+              : response.totp_uri || response.uri;
+          this.qrCodeUrl =
+            'https://api.qrserver.com/v1/create-qr-code/?data=' +
+            encodeURIComponent(uri);
+        }
+      },
+      error: (err) => console.error('Erro ao gerar TOTP:', err),
     });
   }
 }

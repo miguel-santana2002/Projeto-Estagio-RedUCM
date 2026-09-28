@@ -13,31 +13,67 @@ body {
   font-family: Roboto, "Helvetica Neue", sans-serif;
 }
 
-/* Remove o fundo branco do contentor interno do ngx-chips no Dark Mode */
+/* Overlay do CDK (onde os dropdowns do Material realmente aparecem) 
+   fica fora da árvore do componente, por cima de tudo, sempre visível */
+.cdk-overlay-container {
+  position: fixed;
+  z-index: 10000 !important;
+}
+.cdk-overlay-pane {
+  z-index: 10000 !important;
+}
+
+/* Painel dos dropdowns MITRE (tactics / mitreTechniques) — SÓ em dark mode */
+.dark .custom-dark-panel {
+  background-color: #1f2937 !important;
+}
+.dark .custom-dark-panel .mdc-list-item__primary-text {
+  color: #ffffff !important;
+}
+.dark .custom-dark-panel .mat-mdc-option:hover {
+  background-color: #374151 !important;
+}
+.dark .custom-dark-panel .mat-pseudo-checkbox {
+  border-color: #9ca3af !important;
+}
+.dark .custom-dark-panel .mat-pseudo-checkbox-checked {
+  background-color: #3b82f6 !important;
+}
+
+/* Outros dropdowns (Classe/Tipo CNCS) — SÓ em dark mode */
+.dark .mat-mdc-select-panel:not(.custom-dark-panel) {
+  background-color: #1f2937 !important;
+}
+.dark
+  .mat-mdc-select-panel:not(.custom-dark-panel)
+  .mdc-list-item__primary-text {
+  color: #ffffff !important;
+}
+.dark .mat-mdc-select-panel:not(.custom-dark-panel) .mat-mdc-option:hover {
+  background-color: #374151 !important;
+}
+
+/* Estilos globais do ngx-chips (tag-input) em Dark Mode. */
 .dark tag-input .ng2-tag-input,
 .dark tag-input .ng2-tag-input.ng2-tag-input--focus {
   background-color: transparent !important;
   border: none !important;
 }
 
-/* Corrige a cor do texto enquanto escreves (input) para branco e remove o fundo */
 .dark tag-input input.ng2-tag-input__text-input {
   color: #ffffff !important;
   background-color: transparent !important;
 }
 
-/* Ajusta a cor do placeholder interno para o padrão gray-400 do Tailwind */
 .dark tag-input input.ng2-tag-input__text-input::placeholder {
   color: #9ca3af !important;
 }
 
-/* Ajusta as tags já inseridas para condizerem com o Dark Mode */
 .dark tag-input tag {
   background-color: #374151 !important; /* gray-700 */
   color: #ffffff !important;
 }
 
-/* Ajusta a cor da cruz de remoção da tag para branco no Dark Mode */
 .dark tag-input tag delete-icon {
   color: #ffffff !important;
 }
@@ -49,9 +85,74 @@ body {
   transition: fill 0.2s ease;
 }
 
-/* Feedback visual: a cruz fica vermelha ao passar o rato */
 .dark tag-input tag delete-icon:hover svg path,
 .dark tag-input tag delete-icon:hover svg rect,
 .dark tag-input tag delete-icon:hover svg polygon {
-  fill: #ef4444 !important; /* Cor red-500 do Tailwind */
+  fill: #ef4444 !important; /* red-500 */
+}
+
+/* ============================================================
+   FORÇAR MODO ESCURO EM TODOS OS INPUTS (SIMPLES OU MÚLTIPLOS)
+   Isto resolve definitivamente o problema do fundo branco
+   ============================================================ */
+
+/* Fundo Escuro para todos os inputs e dropdowns */
+.dark .mat-mdc-text-field-wrapper,
+.dark .mdc-text-field,
+.dark .mat-mdc-form-field-flex {
+  background-color: #1f2937 !important;
+}
+
+/* Rebordos Escuros */
+.dark .mdc-notched-outline__leading,
+.dark .mdc-notched-outline__notch,
+.dark .mdc-notched-outline__trailing {
+  border-color: #374151 !important;
+}
+
+/* Cor do Texto Selecionado, Ícones e Placeholder a Branco/Cinza */
+.dark .mat-mdc-select-value,
+.dark .mat-mdc-select-value-text,
+.dark .mat-mdc-select-arrow,
+.dark .mat-mdc-select-placeholder,
+.dark .mat-mdc-form-field-infix,
+.dark .mat-select-value-text,
+.dark .mat-icon {
+  color: #ffffff !important;
+}
+
+.dark .mat-mdc-select-placeholder {
+  color: #9ca3af !important;
+}
+
+/* Cor do Fundo para Tema Claro (Garante que volta ao normal se trocares de tema) */
+html:not(.dark) .mat-mdc-text-field-wrapper {
+  background-color: #ffffff !important;
+}
+/* Remove o retângulo branco do interior dos inputs múltiplos no modo escuro */
+.dark .mat-mdc-form-field-flex,
+.dark .mat-mdc-form-field-infix,
+.dark .mat-mdc-select,
+.dark .mat-mdc-select-trigger,
+.dark .mat-mdc-select-value {
+  background-color: transparent !important;
+}
+/* ============================================================
+   CORREÇÃO DO CONFLITO COM TAILWIND FORMS
+   Remove as bordas e caixas que o Tailwind injeta nos campos 'multiple'
+   ============================================================ */
+
+mat-select[multiple],
+.mat-mdc-select[multiple] {
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+  background-color: transparent !important;
+}
+
+mat-select[multiple]:focus,
+.mat-mdc-select[multiple]:focus {
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
 }

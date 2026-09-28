@@ -8,9 +8,11 @@ SUPPORTED_TARGET_SYNTAXES = [
     "KQL (Sentinel)",
     "AQL (QRadar)",
     "EQL (Elastic)",
+    "CQL (CrowdStrike)",
     "Sigma Rule",
     "CQL (CrowdStrike)",
 ]
+
 
 
 class ConvertRuleSerializer(serializers.Serializer):
@@ -44,7 +46,38 @@ class RuleSerializer(serializers.ModelSerializer):
     class Meta:
         model = Rule
         fields = '__all__'
-        depth = 1
+        extra_kwargs = {
+            'client': {'required': False, 'allow_null': True},
+            'ruleModel': {'required': True},
+            'status': {'required': False, 'allow_blank': True, 'allow_null': True},
+        }
+
+    def to_representation(self, instance):
+        """Mantém a estrutura aninhada para o frontend no GET sem afetar o POST."""
+        data = super().to_representation(instance)
+
+        # Expande dados do cliente se existir, caso contrário devolve None
+        if instance.client:
+            data['client'] = {
+                'pk': instance.client.pk,
+                'name': getattr(instance.client, 'name', str(instance.client))
+            }
+        else:
+            data['client'] = None
+
+        # Expande dados essenciais do modelo associado
+        if instance.ruleModel:
+            data['ruleModel'] = {
+                'id': instance.ruleModel.id,
+                'title': instance.ruleModel.title,
+                'type': getattr(instance.ruleModel, 'type', None),
+                'syntax': getattr(instance.ruleModel, 'syntax', None),
+                'useCaseId': getattr(instance.ruleModel, 'useCaseId', None),
+            }
+        else:
+            data['ruleModel'] = None
+
+        return data
 
 
 class RegisteredLogSourceSerializer(serializers.ModelSerializer):

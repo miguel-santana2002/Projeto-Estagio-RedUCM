@@ -1,4 +1,10 @@
-import { Component, ElementRef, ViewChild } from '@angular/core';
+import {
+  Component,
+  ElementRef,
+  OnInit,
+  ViewChild,
+  AfterViewInit,
+} from '@angular/core';
 import { HeaderComponent } from '../../layout/header/header.component';
 import { TitlebannerComponent } from '../../layout/titlebanner/titlebanner.component';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
@@ -29,7 +35,7 @@ import { RulesService } from '../../services/rules.service';
     FormsModule,
   ],
 })
-export class UsecaseDetailsComponent {
+export class UsecaseDetailsComponent implements OnInit, AfterViewInit {
   createTaskForm = new FormGroup({
     title: new FormControl(''),
     description: new FormControl(''),
@@ -38,69 +44,30 @@ export class UsecaseDetailsComponent {
   @ViewChild('modal') modal!: ElementRef<HTMLElement>;
   modalFlowbite!: Modal;
 
-  ruleModels: any = [];
-
-  ngAfterViewInit() {
-    this.modalFlowbite = new Modal(this.modal.nativeElement);
-  }
-
-  openTaskModal(phase: string) {
-    this.modalFlowbite.show();
-    this.selectedPhase = phase;
-  }
-
-  closeTaskModal() {
-    this.modalFlowbite.hide();
-    this.createTaskForm.reset();
-  }
+  ruleModels: any[] = [];
+  rules: any[] = []; // Instâncias de regras associadas a este Use Case
 
   user: any = { username: '', companies: [] };
 
   usecase: Usecase = {
     id: 0,
-    title: 'Use Case de Exemplo',
-    description: `Lorem ipsum dolor sit amet, consectetur adipiscing elit. Fusce arcu augue, cursus euismod tristique eget, lobortis a arcu. Phasellus auctor eu justo id fermentum. Pellentesque eu varius magna, et egestas ante. Pellentesque eleifend et lorem sit amet consequat. Cras a eros ut metus vestibulum volutpat. Suspendisse justo urna, interdum ultrices finibus sed, lacinia in sem. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae; Suspendisse enim urna, facilisis quis pulvinar quis, venenatis ut enim. Morbi bibendum massa massa, tempor posuere nibh dictum quis. Aliquam sodales eget sapien et eleifend. Morbi a lectus at diam molestie fringilla id nec tellus.
-
-        Vestibulum posuere fermentum nulla quis varius. Sed cursus egestas laoreet. Curabitur consequat sit amet justo eu imperdiet. Sed sodales, dui vel lacinia molestie, dui ex blandit est, at pharetra est sem sed felis. Morbi mattis, erat a tincidunt efficitur, mi augue euismod lacus, sed condimentum turpis augue eget sem. Cras imperdiet, lacus eget aliquet iaculis, lacus eros dignissim nulla, vel pulvinar enim urna eget diam. In id quam lobortis, mollis lectus feugiat, semper lectus. Vestibulum feugiat accumsan enim non pulvinar. Mauris sed velit nec nulla lobortis feugiat. Suspendisse gravida consequat rutrum. Aliquam erat volutpat.
-        
-        `,
-    mitigation: `Donec consectetur vulputate ex nec venenatis. Mauris a commodo purus, maximus vulputate magna. Mauris vel turpis in lorem sollicitudin tempor. Pellentesque ullamcorper blandit purus, id lacinia risus volutpat eu. Aliquam eleifend risus mi, ut sollicitudin nibh ultricies vitae. Nulla finibus arcu metus, ac eleifend metus ultricies sit amet. Pellentesque in elit aliquet, rhoncus ex in, laoreet ipsum. Cras cursus ante sit amet odio vulputate ultricies. Fusce tincidunt pharetra arcu nec pulvinar. Orci varius natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Ut at tortor sed velit molestie ultricies at eu quam. Curabitur sapien arcu, varius eget pretium ac, tristique sed lectus.
-
-        Maecenas iaculis, erat vel fermentum consequat, risus lacus consectetur justo, id aliquam metus ipsum vel nisi. Proin ultricies odio augue, a vulputate massa lacinia at. Nulla molestie magna urna, in scelerisque urna elementum a. Nulla faucibus lectus a posuere iaculis. Proin eget dui nec justo volutpat pellentesque vel sit amet erat. Integer est tellus, aliquam nec convallis in, interdum quis massa. Quisque maximus, libero quis elementum ultricies, leo metus fringilla diam, in ultrices massa leo sit amet purus..`,
+    title: '',
+    description: '',
+    mitigation: '',
     playbook: null,
-
-    mitreTechniques: ['T1552', 'T1547'],
-    cncsClass: 'Classe 1',
-    cncsType: 'Tipo X',
-    phaseTasks: [
-      {
-        Preparation: {
-          'Tarefa 1': `Este é um texto exemplificativo da tarefa 1 que visa X Y Z. 
-            É assim necessário H Y J K L M N O P Q R S T U V W X Y Z. `,
-          'Fazer X': 'tarefa2',
-        },
-        'Detection and Analysis': {
-          titulo1: 'tarefa1',
-          'Construir Y': 'tarefa2',
-          'Detetar W': 'tarefa3',
-        },
-        'Containment, Eradication and Recovery': {
-          titulo1: 'tarefa1',
-          titulo2: 'tarefa2',
-          titulo3: 'tarefa3',
-        },
-        'Post-Event Activity': {
-          titulo1: 'tarefa1',
-          titulo2: 'tarefa2',
-          titulo3: 'tarefa3',
-        },
-      },
-    ],
-    attackVectors: ['Phishing', 'Compromised Credentials'],
+    mitreTechniques: [],
+    cncsClass: '',
+    cncsType: '',
+    phaseTasks: [],
+    attackVectors: [],
   };
 
-  detection = [] as any;
-  showTaskDetails: any;
+  detection: any[] = [];
+  showTaskDetails: boolean = false;
+  showModal: boolean = false;
+  selectedTask: any;
+  selectedPhase: any;
+  isEditing: boolean = false;
 
   constructor(
     private route: ActivatedRoute,
@@ -109,10 +76,6 @@ export class UsecaseDetailsComponent {
     private authService: AuthService,
     private rulesService: RulesService,
   ) {}
-
-  showLog() {
-    console.log('funciono');
-  }
 
   ngOnInit(): void {
     this.authService.loggedInInfo().subscribe((value) => {
@@ -124,21 +87,67 @@ export class UsecaseDetailsComponent {
 
     const id = Number(this.route.snapshot.params['id']);
 
-    this.usecasesService.getUseCaseById(id).subscribe((data: any) => {
-      this.usecase = data;
+    this.usecasesService.getUseCaseById(id).subscribe({
+      next: (data: any) => {
+        this.usecase = data;
 
-      this.rulesService.getRuleModelsByUseCase(this.usecase.id).subscribe({
-        next: (ruleData: any) => {
-          this.ruleModels = ruleData;
-        },
-        error: (err) => console.error('Erro ao obter rule models:', err),
-      });
+        // 1. Carrega os modelos deste Use Case
+        this.rulesService.getRuleModelsByUseCase(this.usecase.id).subscribe({
+          next: (ruleData: any) => {
+            this.ruleModels = ruleData;
+            // 2. Carrega as instâncias de regras logo após termos os modelos disponíveis
+            this.loadAssociatedRules(this.usecase.id);
+          },
+          error: (err) => console.error('Erro ao obter rule models:', err),
+        });
+      },
+      error: (err) => console.error('Erro ao obter Use Case:', err),
     });
   }
 
-  showModal: boolean = false;
+  ngAfterViewInit(): void {
+    if (this.modal?.nativeElement) {
+      this.modalFlowbite = new Modal(this.modal.nativeElement);
+    }
+  }
 
-  selectedTask: any;
+  /**
+   * Obtém todas as regras da aplicação e filtra as que pertencem a este Use Case.
+   */
+  loadAssociatedRules(useCaseId: number): void {
+    this.rulesService.getRules().subscribe({
+      next: (allRules: any[]) => {
+        this.rules = allRules.filter((r: any) => {
+          // Correspondência direta via campo expandido no ruleModel
+          const directMatch = Number(r.ruleModel?.useCaseId) === useCaseId;
+          // Correspondência cruzada com a lista de modelos deste Use Case
+          const modelMatch = this.ruleModels.some(
+            (rm: any) => rm.id === (r.ruleModel?.id || r.ruleModel),
+          );
+          return directMatch || modelMatch;
+        });
+      },
+      error: (err) => console.error('Erro ao obter regras associadas:', err),
+    });
+  }
+
+  openTaskModal(phase: string): void {
+    this.selectedPhase = phase;
+    this.modalFlowbite?.show();
+  }
+
+  closeTaskModal(): void {
+    this.modalFlowbite?.hide();
+    this.createTaskForm.reset();
+  }
+
+  getPlaybookUrl(): string {
+    const pb = this.usecase?.playbook;
+    if (!pb || pb === 'null' || pb.endsWith('/null')) {
+      return './assets/examplediagram.png';
+    }
+    return pb;
+  }
 
   selectImage(): void {
     this.showModal = true;
@@ -148,7 +157,7 @@ export class UsecaseDetailsComponent {
     this.showModal = false;
   }
 
-  clickTask(task: any) {
+  clickTask(task: any): void {
     this.selectedTask = task;
     this.showTaskDetails = true;
   }
@@ -157,26 +166,23 @@ export class UsecaseDetailsComponent {
     this.showTaskDetails = false;
   }
 
-  selectedPhase: any;
-
-  isEditing: boolean = false;
-  enableEdit() {
+  enableEdit(): void {
     this.isEditing = true;
   }
 
-  saveTask() {
-    console.log(this.usecase.phaseTasks);
-
+  saveTask(): void {
     this.usecasesService
       .updatePhaseTasks(this.usecase.id, this.usecase.phaseTasks)
-      .subscribe((data: any) => {
-        console.log(data);
-        this.isEditing = false;
-        this.showTaskDetails = false;
+      .subscribe({
+        next: () => {
+          this.isEditing = false;
+          this.showTaskDetails = false;
+        },
+        error: (err) => console.error('Erro ao atualizar tarefas:', err),
       });
   }
 
-  cancelEdit() {
+  cancelEdit(): void {
     this.isEditing = false;
     this.showTaskDetails = false;
   }
@@ -193,22 +199,27 @@ export class UsecaseDetailsComponent {
       author: this.user.email,
     };
 
-    console.log(this.selectedPhase);
-    console.log(task);
-
     this.usecase.phaseTasks
-      ?.find((phase) => phase['phase'] == this.selectedPhase)
+      ?.find((phase) => phase['phase'] === this.selectedPhase)
       ?.['tasks'].push(task);
-
-    console.log(this.usecase.phaseTasks);
 
     this.usecasesService
       .updatePhaseTasks(this.usecase.id, this.usecase.phaseTasks)
-      .subscribe((data: any) => {
-        console.log(data);
-
-        this.closeTaskModal();
+      .subscribe({
+        next: () => {
+          this.closeTaskModal();
+        },
+        error: (err) => console.error('Erro ao criar tarefa:', err),
       });
+  }
+
+  getTechniqueId(technique: any): string {
+    if (!technique) return '';
+    const str =
+      typeof technique === 'string'
+        ? technique
+        : technique.id || technique.value || technique.display || '';
+    return str.split(' - ')[0].trim();
   }
 }
 
@@ -219,6 +230,7 @@ export interface Usecase {
   mitigation?: string | null;
   playbook?: string | null;
   mitreTechniques?: (string | null)[] | null;
+  tactics?: string[] | null;  // <-- ADicionado
   cncsClass?: string | null;
   cncsType?: string | null;
   phaseTasks?: Array<{ [key: string]: any }> | null;

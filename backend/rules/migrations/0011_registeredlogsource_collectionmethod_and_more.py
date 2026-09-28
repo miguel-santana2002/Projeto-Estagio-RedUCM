@@ -53,11 +53,6 @@ class Migration(migrations.Migration):
         ),
         migrations.AlterField(
             model_name='rulemodel',
-            name='syntax',
-            field=models.CharField(null=True),
-        ),
-        migrations.AlterField(
-            model_name='rulemodel',
             name='title',
             field=models.CharField(null=True),
         ),

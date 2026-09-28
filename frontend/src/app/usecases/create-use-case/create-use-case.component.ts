@@ -1,138 +1,396 @@
-import { Component, OnInit } from '@angular/core';
-import { TitlebannerComponent } from "../../layout/titlebanner/titlebanner.component";
-import { HeaderComponent } from "../../layout/header/header.component";
-import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MitreService } from '../../services/mitre.service';
+import { Component, OnInit, isDevMode } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { UsecasesService } from '../../services/usecases.service';
-import { CdkPortal } from '@angular/cdk/portal';
-import { Router } from '@angular/router';
-import { TagInputModule } from 'ngx-chips';
-import { Binary } from '@angular/compiler';
+import {
+  FormControl,
+  FormGroup,
+  FormsModule,
+  ReactiveFormsModule,
+  Validators,
+} from '@angular/forms';
+import { Router, RouterModule } from '@angular/router';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
 import { MatIconModule } from '@angular/material/icon';
+import { TagInputModule } from 'ngx-chips';
+
+import { TitlebannerComponent } from '../../layout/titlebanner/titlebanner.component';
+import { HeaderComponent } from '../../layout/header/header.component';
+import { MitreService } from '../../services/mitre.service';
+import { UsecasesService } from '../../services/usecases.service';
 
 @Component({
-    selector: 'app-create-use-case',
-    standalone: true,
-    templateUrl: './create-use-case.component.html',
-    styleUrls: ['./create-use-case.component.css'],
-    imports: [TitlebannerComponent, HeaderComponent, MatFormFieldModule, MatSelectModule, MatIconModule, TagInputModule, ReactiveFormsModule, FormsModule, CommonModule]
+  selector: 'app-create-use-case',
+  standalone: true,
+  templateUrl: './create-use-case.component.html',
+  styleUrls: ['./create-use-case.component.css'],
+  imports: [
+    TitlebannerComponent,
+    HeaderComponent,
+    MatFormFieldModule,
+    MatSelectModule,
+    MatIconModule,
+    TagInputModule,
+    ReactiveFormsModule,
+    FormsModule,
+    CommonModule,
+    RouterModule,
+  ],
 })
 export class CreateUseCaseComponent implements OnInit {
+  rawMitreData: any[] = [];
+  mitreAutocompleteList: string[] = [];
+  filteredTechniquesList: string[] = [];
+  allTacticsList: string[] = [];
+  private tacticsByTechnique = new Map<string, string[]>();
 
-    constructor(private mitreService: MitreService, private usecasesService: UsecasesService, private router: Router) { }
+  // Táticas escolhidas explicitamente pelo utilizador (separadas das derivadas de técnicas)
+  private manualTactics = new Set<string>();
 
-    chavesTaxonomia = ["Código Malicioso", "Disponibilidade", "Recolha de Informação", "Intrusão", "Tentativa de Intrusão", "Segurança da Informação", "Fraude", "Conteúdo Abusivo", "Vulnerabilidade", "Outro"];
-    selectedCategory: string = '';
-    selectedSubcategory: string = '';
-    selectedCategoryValues: string[] = [];
+  chavesTaxonomia: string[] = [
+    'Malicious Code', 
+    'Availability', 
+    'Information Gathering', 
+    'Intrusion',
+    'Intrusion Attempt', 
+    'Information Security', 
+    'Fraud',
+    'Abusive Content', 
+    'Vulnerability', 
+    'Other',
+  ];
 
-    // Lista para alimentar o autocomplete do MITRE ATT&CK
-    mitreAutocompleteList: string[] = [];
+  taxonomiaCNCS: any = [
+    {
+      'Malicious Code': [
+        'Infected System',
+        'Malware Distribution',
+        'C2 Server',
+        'Malware Configuration',
+      ],
+    },
+    {
+      'Availability': [
+        'Denial of Service',
+        'Resource Abuse',
+        'Outage / Unavailability',
+      ],
+    },
+    {
+      'Information Gathering': [
+        'Vulnerability Scanners',
+        'Social Engineering',
+        'Scanning / Probing',
+      ],
+    },
+    {
+      'Intrusion': [
+        'Vulnerability Exploitation',
+        'Account Compromise',
+        'Credential Access',
+      ],
+    },
+    {
+      'Intrusion Attempt': [
+        'Attempted Vulnerability Exploitation',
+        'Brute Force / Password Spraying',
+      ],
+    },
+    {
+      'Information Security': [
+        'Information Theft',
+        'Data Exfiltration',
+        'Information Alteration',
+      ],
+    },
+    {
+      'Fraud': [
+        'Scams',
+        'Identity Theft / Forgery',
+        'Misuse of Resources',
+      ],
+    },
+    {
+      'Abusive Content': [
+        'SPAM',
+        'Phishing',
+        'Improper Content Hosting',
+      ],
+    },
+    {
+      'Vulnerability': [
+        'Vulnerable System',
+        'Vulnerable Application',
+      ],
+    },
+    {
+      'Other': [
+        'Other',
+      ],
+    },
+  ];
 
-    ngOnInit(): void {
-        this.loadMitreTechniques();
-    }
+  selectedCategory: string = '';
+  selectedCategoryValues: string[] = [];
 
-    loadMitreTechniques() {
-        this.mitreService.getAllTechniques().subscribe({
-            next: (data: any[]) => {
-                // Mapeia para o formato "ID: Nome" ou "ID - Nome" para facilitar a correspondência no input
-                this.mitreAutocompleteList = data.map((t: any) => `${t.id} - ${t.name}`);
-            },
-            error: (error) => {
-                console.error('Erro ao carregar as técnicas do MITRE do backend', error);
-            }
+  selectedFile: File | null = null;
+  errorMessage: string = '';
+
+  createUseCaseForm = new FormGroup({
+    title: new FormControl('', Validators.required),
+    description: new FormControl(''),
+    mitigation: new FormControl(''),
+    playbook: new FormControl(''),
+    mitreTechniques: new FormControl<string[]>([], Validators.required),
+    tactics: new FormControl<string[]>([], Validators.required),
+    cncsClass: new FormControl(''),
+    cncsClassCustom: new FormControl(''),
+    cncsType: new FormControl(''),
+    cncsTypeCustom: new FormControl(''),
+  });
+
+  constructor(
+    private mitreService: MitreService,
+    private usecasesService: UsecasesService,
+    private router: Router,
+  ) {}
+
+  ngOnInit(): void {
+    this.loadMitreTechniques();
+  }
+
+  loadMitreTechniques(): void {
+    this.mitreService.getAllTechniques().subscribe({
+      next: (data: any[]) => {
+        if (!data || data.length === 0) {
+          this.handleLoadFailure('A API MITRE devolveu uma lista vazia.');
+          return;
+        }
+
+        this.errorMessage = '';
+        this.rawMitreData = data;
+        this.tacticsByTechnique.clear();
+        const tacticSet = new Set<string>();
+
+        this.rawMitreData.forEach((tech: any) => {
+          const names = this.extractTactics(tech);
+          this.tacticsByTechnique.set(tech.id, names);
+          names.forEach((n) => tacticSet.add(n));
         });
+
+        this.allTacticsList = Array.from(tacticSet).sort();
+        console.log('EXEMPLO TECNICA:', this.rawMitreData[0]);
+        this.mitreAutocompleteList = this.rawMitreData.map(
+          (t: any) => `${t.id} - ${t.name}`,
+        );
+        this.filteredTechniquesList = [...this.mitreAutocompleteList];
+      },
+      error: (error) => {
+        console.error('Erro ao carregar técnicas MITRE:', error);
+        this.handleLoadFailure(
+          'Não foi possível carregar as técnicas MITRE. Verifique a ligação ao servidor.',
+        );
+      },
+    });
+  }
+
+  // Parsing defensivo: suporta tactics como string, objeto {name|shortname}, ou kill_chain_phases[].phase_name
+  private extractTactics(tech: any): string[] {
+    const raw: any[] = Array.isArray(tech?.tactics)
+      ? tech.tactics
+      : Array.isArray(tech?.kill_chain_phases)
+        ? tech.kill_chain_phases
+        : [];
+
+    return raw
+      .map((t: any) => {
+        if (typeof t === 'string') return this.prettyTactic(t);
+        const val = t?.name || t?.shortname || t?.phase_name || '';
+        return this.prettyTactic(val);
+      })
+      .filter((n: string) => !!n);
+  }
+
+  // Falha visível em produção; dados dummy apenas em ambiente de desenvolvimento
+  private handleLoadFailure(message: string): void {
+    if (isDevMode()) {
+      console.warn(`[DEV] ${message} A usar dados de teste (dummy).`);
+      this.loadDummyData();
+    } else {
+      this.errorMessage = message;
+      this.rawMitreData = [];
+      this.tacticsByTechnique.clear();
+      this.allTacticsList = [];
+      this.mitreAutocompleteList = [];
+      this.filteredTechniquesList = [];
+    }
+  }
+
+  loadDummyData(): void {
+    this.allTacticsList = ['Defense Evasion', 'Execution', 'Persistence'];
+    this.mitreAutocompleteList = [
+      'T1059 - Command and Scripting Interpreter',
+      'T1098 - Account Manipulation',
+      'T1112 - Modify Registry',
+    ];
+    this.filteredTechniquesList = [...this.mitreAutocompleteList];
+
+    this.tacticsByTechnique.clear();
+    this.tacticsByTechnique.set('T1059', ['Execution']);
+    this.tacticsByTechnique.set('T1098', ['Persistence', 'Defense Evasion']);
+    this.tacticsByTechnique.set('T1112', ['Defense Evasion']);
+  }
+
+  // Utilizador alterou as táticas manualmente
+  onTacticChange(): void {
+    const selTactics: string[] =
+      this.createUseCaseForm.get('tactics')?.value || [];
+    this.manualTactics = new Set(selTactics);
+    this.applyTacticFilter();
+  }
+
+  // Utilizador alterou as técnicas manualmente -> derivar/atualizar as táticas
+  onTechniqueChange(): void {
+    const selTechs: string[] =
+      this.createUseCaseForm.get('mitreTechniques')?.value || [];
+    const derived = new Set<string>(
+      selTechs.flatMap(
+        (t) => this.tacticsByTechnique.get(this.techId(t)) || [],
+      ),
+    );
+
+    // União: táticas escolhidas manualmente + todas as táticas das técnicas selecionadas
+    const union = Array.from(
+      new Set([...this.manualTactics, ...derived]),
+    ).sort();
+    const tacticsCtrl = this.createUseCaseForm.get('tactics');
+    const current: string[] = tacticsCtrl?.value || [];
+
+    if (!this.sameSet(union, current)) {
+      tacticsCtrl?.setValue(union);
+    }
+    this.applyTacticFilter();
+  }
+
+  // Recalcula a lista de técnicas visíveis e remove técnicas selecionadas que deixaram de ser válidas
+  private applyTacticFilter(): void {
+    const selTactics: string[] =
+      this.createUseCaseForm.get('tactics')?.value || [];
+
+    if (selTactics.length === 0) {
+      this.filteredTechniquesList = [...this.mitreAutocompleteList];
+      return;
     }
 
-    createUseCaseForm = new FormGroup({
-        title: new FormControl('', Validators.required),
-        description: new FormControl('', Validators.required),
-        mitigation: new FormControl('', Validators.required),
-        playbook: new FormControl(''),  
-        mitreTechniques: new FormControl([], Validators.required),
-        cncsClass: new FormControl('', Validators.required),
-        cncsType: new FormControl('', Validators.required),
-        attackVectors: new FormControl([], Validators.required)
+    this.filteredTechniquesList = this.mitreAutocompleteList.filter((label) => {
+      const techTactics = this.tacticsByTechnique.get(this.techId(label)) || [];
+      return techTactics.some((t) => selTactics.includes(t));
     });
 
-    taxonomiaCNCS : any = [
-        {"Código Malicioso": ["Sistema Infetado", "Distribuição de Malware", "Servidor C2", "Configuração de Malware"]},
-        {"Disponibilidade": ["Negação de Serviço", "Abuso de Recursos", "Outage / Indisponibilidade"]},
-        {"Recolha de Informação": ["Scanners de Vulnerabilidades", "Social Engineering", "Scanning / Probing"]},
-        {"Intrusão": ["Exploração de Vulnerabilidades", "Comprometimento de Contas", "Obtenção de Credenciais"]},
-        {"Tentativa de Intrusão": ["Tentativa de Exploração de Vulnerabilidades", "Força Bruta / Password Spraying"]},
-        {"Segurança da Informação": ["Roubo de Informação", "Exfiltração de Dados", "Alteração de Informação"]},
-        {"Fraude": ["Burlas", "Roubo de Identidade / Falsificação", "Uso Indevido de Recursos"]},
-        {"Conteúdo Abusivo": ["SPAM", "Phishing", "Alojamento Indevido de Conteúdos"]},
-        {"Vulnerabilidade": ["Sistema Vulnerável", "Aplicação Vulnerável"]},
-        {"Outro": ["Outro"]}
-    ];
+    // Remover da seleção as técnicas que já não pertencem a nenhuma tática ativa
+    const techCtrl = this.createUseCaseForm.get('mitreTechniques');
+    const selTechs: string[] = techCtrl?.value || [];
+    const validTechs = selTechs.filter((t) => {
+      const techTactics = this.tacticsByTechnique.get(this.techId(t)) || [];
+      return techTactics.some((x) => selTactics.includes(x));
+    });
+    if (validTechs.length !== selTechs.length) {
+      techCtrl?.setValue(validTechs);
+    }
+  }
 
-    updateCNCSValues() {
-        this.selectedCategory = this.createUseCaseForm.get('cncsClass')?.value || '';
-        this.selectedCategoryValues = this.taxonomiaCNCS.find((entry: { [x: string]: any; }) => entry[this.selectedCategory])?.[this.selectedCategory] || [];
+  private sameSet(a: string[], b: string[]): boolean {
+    if (a.length !== b.length) return false;
+    const sb = new Set(b);
+    return a.every((x) => sb.has(x));
+  }
+
+  private techId(t: any): string {
+    const val =
+      typeof t === 'string' ? t : t?.display || t?.value || t?.id || '';
+    return String(val).split(' - ')[0].trim();
+  }
+
+  private prettyTactic(name: string): string {
+    return String(name || '')
+      .replace(/[-_]/g, ' ')
+      .trim()
+      .replace(/\s+/g, ' ')
+      .split(' ')
+      .map((w) =>
+        w.toLowerCase() === 'and'
+          ? 'and'
+          : w.charAt(0).toUpperCase() + w.slice(1).toLowerCase(),
+      )
+      .join(' ');
+  }
+
+  clearCNCSClass(event: Event): void {
+    event.stopPropagation();
+    this.createUseCaseForm.get('cncsClass')?.setValue('');
+    this.createUseCaseForm.get('cncsClassCustom')?.setValue('');
+    this.selectedCategoryValues = [];
+    this.createUseCaseForm.get('cncsType')?.setValue('');
+    this.createUseCaseForm.get('cncsTypeCustom')?.setValue('');
+  }
+
+  clearCNCSType(event: Event): void {
+    event.stopPropagation();
+    this.createUseCaseForm.get('cncsType')?.setValue('');
+    this.createUseCaseForm.get('cncsTypeCustom')?.setValue('');
+  }
+
+  updateCNCSValues(): void {
+    this.selectedCategory =
+      this.createUseCaseForm.get('cncsClass')?.value || '';
+    this.selectedCategoryValues =
+      this.taxonomiaCNCS.find(
+        (entry: { [x: string]: any }) => entry[this.selectedCategory],
+      )?.[this.selectedCategory] || [];
+    this.createUseCaseForm.get('cncsType')?.setValue('');
+  }
+
+  onFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+      this.selectedFile = input.files[0];
+    }
+  }
+
+  createUseCase(): void {
+    if (this.createUseCaseForm.invalid) {
+      this.createUseCaseForm.markAllAsTouched();
+      return;
     }
 
-    selectedFile: File | null = null;
-    onFileSelected(event: Event): void {
-        console.log('File selected');
-        const input = event.target as HTMLInputElement;
-        if (input.files && input.files.length > 0) {
-            this.selectedFile = input.files[0];
-            console.log('File selected:', this.selectedFile);
-        }
+    const v = this.createUseCaseForm.value;
+    const formData = new FormData();
+
+    formData.append('title', v.title || '');
+    formData.append('description', v.description || '');
+    formData.append('mitigation', v.mitigation || '');
+
+    const finalCncsClass =
+      v.cncsClass === 'Outro' ? v.cncsClassCustom : v.cncsClass;
+    const finalCncsType =
+      v.cncsType === 'Outro' ? v.cncsTypeCustom : v.cncsType;
+
+    formData.append('cncsClass', finalCncsClass || '');
+    formData.append('cncsType', finalCncsType || '');
+
+    formData.append('mitreTechniques', JSON.stringify(v.mitreTechniques || []));
+    formData.append('tactics', JSON.stringify(v.tactics || []));
+
+    if (this.selectedFile) {
+      formData.append('playbook', this.selectedFile);
     }
 
-    createUseCase() {
-       var useCase : any = this.createUseCaseForm.value;
-
-       useCase.rules = [];
-       useCase.phaseTasks = [
-        { phase: "Preparation", tasks: [] },
-        { phase: "Detection and Analysis", tasks: [] },
-        { phase: "Containment, Eradication and Recovery", tasks: [] },
-        { phase: "Post-Event Activity", tasks: [] }
-    ];
-
-       if(useCase.mitreTechniques != null){
-          // Extrai apenas o ID se a tag gravada vier no formato "ID - Nome"
-          useCase.mitreTechniques = useCase.mitreTechniques?.map((technique: any) => {
-              const val = technique.value || technique;
-              return typeof val === 'string' ? val.split(' - ')[0] : val;
-          });
-    }
-
-    if(useCase.attackVectors != null){
-        useCase.attackVectors = useCase.attackVectors?.map((vector:any) => vector.value);
-    }
-
-    if(this.selectedFile != null){
-        useCase.playbook = this.selectedFile;
-    }
-
-    const useCaseData = new FormData();
-    useCaseData.append('title', useCase.title);
-    useCaseData.append('description', useCase.description);
-    useCaseData.append('mitigation', useCase.mitigation);
-    useCaseData.append('playbook', useCase.playbook);
-    useCaseData.append('mitreTechniques', JSON.stringify(useCase.mitreTechniques));
-    useCaseData.append('cncsClass', useCase.cncsClass);
-    useCaseData.append('cncsType', useCase.cncsType);
-    useCaseData.append('attackVectors', JSON.stringify(useCase.attackVectors));
-    useCaseData.append('rules', JSON.stringify(useCase.rules));
-    useCaseData.append('phaseTasks', JSON.stringify(useCase.phaseTasks));
-
-        this.usecasesService.createUseCase(useCaseData).subscribe({
-            next: () => {
-                this.router.navigate(['/manage-use-cases']);
-            },
-            error: (error) => {
-                console.error('Erro ao criar o Use Case', error);
-            }
-        });
-    }
+    this.usecasesService.createUseCase(formData).subscribe({
+      next: () => this.router.navigate(['/manage-usecases']),
+      error: (err) => {
+        console.error('Erro ao criar use case:', err);
+        this.errorMessage =
+          'Ocorreu um erro ao criar o Use Case. Tente novamente.';
+      },
+    });
+  }
 }
