@@ -45,7 +45,7 @@ export const routes: Routes = [
   {
     path: 'manage-clients',
     component: ManageClientsComponent,
-    canActivate: [isAdminGuard],
+    canActivate: [authGuard], // Permite qualquer utilizador autenticado ver a listagem
   },
   {
     path: 'create-usecase',
@@ -103,7 +103,7 @@ export const routes: Routes = [
   {
     path: 'edit-client/:id',
     component: EditClientComponent,
-    canActivate: [isAdminGuard, numericIdGuard],
+    canActivate: [authGuard, numericIdGuard], // Removido o isAdminGuard da rota para permitir aceder (o componente bloqueia a gravação se for operador)
   },
   {
     path: 'edit-rule-model/:id',
