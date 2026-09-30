@@ -170,7 +170,7 @@ export class EditUserComponent implements OnInit {
           otpMethod: this.user.otpMethod || 'totp',
         });
 
-        if (isUserAdmin || this.user.companies.length === 0) {
+        if (isUserAdmin) {
           this.trueIsAdminSelected();
         } else {
           this.falseIsAdminSelected();
