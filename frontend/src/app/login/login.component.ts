@@ -104,7 +104,7 @@ export class LoginComponent {
           }
         },
         (error) => {
-          this.errorMessage = 'Código de Verificação Inválido'; // Add this line
+          this.errorMessage = 'Código de Verificação Inválido';
         },
       );
     }

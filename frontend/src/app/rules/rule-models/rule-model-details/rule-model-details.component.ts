@@ -10,8 +10,6 @@ import {
 import { Clipboard } from '@angular/cdk/clipboard';
 
 import {
-  CodeEditorComponent,
-  CodeEditorModule,
   CodeModel,
   CodeModelChangedEvent,
 } from '@ngstack/code-editor';
@@ -33,7 +31,6 @@ import { AppCodeEditorComponent } from '../../../shared/components/app-code-edit
   imports: [
     HeaderComponent,
     TitlebannerComponent,
-    CodeEditorModule,
     CommonModule,
     RouterModule,
     FormsModule,
@@ -210,8 +207,6 @@ export class RuleModelDetailsComponent implements OnInit {
     }
   }
 
-  onEditorLoaded(editor: CodeEditorComponent): void {}
-
   onCodeModelChanged(event: CodeModelChangedEvent): void {
     setTimeout(() => {
       event.sender.formatDocument();
@@ -284,7 +279,6 @@ export class RuleModelDetailsComponent implements OnInit {
   convertRule(): void {
     if (!this.targetSyntax || !this.sourceRuleContent) return;
 
-    // Se a sintaxe de destino for igual à atual, não precisa de conversão
     if (this.targetSyntax === this.ruleModel.syntax) {
       this.convertedRuleContent = this.sourceRuleContent;
       return;
@@ -328,38 +322,20 @@ export class RuleModelDetailsComponent implements OnInit {
   }
 
   applyConvertedRule(): void {
-    if (!this.convertedRuleContent || this.isConverting) return;
+    if (!this.convertedRuleContent) return;
 
-    const payload = {
-      ruleModel: this.ruleModel.id,
-      ruleCode: this.convertedRuleContent,
-      syntax: this.targetSyntax,
-      logsources: this.ruleModel.logsources || [],
-      client: null, // Cria a instância sem cliente associado
+    this.ruleModel.syntax = this.targetSyntax;
+    const lang = this.getMonacoLanguage(this.targetSyntax);
+    this.options.language = lang;
+
+    this.selectedModel = {
+      value: this.convertedRuleContent,
+      language: lang,
+      uri: `model-${this.ruleModel.id}-${Date.now()}`,
     };
 
-    this.rulesService.createRule(payload).subscribe({
-      next: (createdRule: any) => {
-        // 1. Fecha o modal de conversão
-        this.closeConvertModal();
-
-        // 2. Adiciona a nova regra à grelha de instâncias no ecrã
-        if (createdRule) {
-          this.ruleInstances.push(createdRule);
-        }
-
-        // 3. Ativa o toast de sucesso
-        this.message = `Nova regra (${this.targetSyntax}) criada com sucesso!`;
-        setTimeout(() => {
-          this.message = '';
-        }, 4000);
-      },
-      error: (err: any) => {
-        this.conversionError =
-          'Erro ao registar a nova regra na base de dados.';
-        console.error('Erro ao criar regra convertida:', err);
-      },
-    });
+    this.ruleModel.ruleCode = this.convertedRuleContent;
+    this.closeConvertModal();
   }
 
   // --- Fim da Modal de Conversão ---

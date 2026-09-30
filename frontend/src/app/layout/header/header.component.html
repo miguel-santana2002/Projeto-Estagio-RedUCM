@@ -29,8 +29,8 @@
             </a>
           </li>
 
-          <!-- Clientes (Exclusivo Admin / Superuser) -->
-          <li *ngIf="isAdmin">
+          <!-- Clientes (Visível para Admins e Operadores) -->
+          <li>
             <a [routerLink]="['/manage-clients']" routerLinkActive="text-redshift-red font-semibold"
               class="block py-2 text-gray-700 dark:text-gray-400 lg:dark:hover:text-white hover:text-redshift-hover transition-colors">
               Clientes
@@ -147,7 +147,7 @@
         <ng-container *ngIf="isLoggedIn">
           <span class="text-gray-600 dark:text-gray-300 text-xs xl:text-sm whitespace-nowrap">
             Bem-vindo,&#160;<span class="font-medium text-gray-800 dark:text-white">{{ user?.email || user?.username
-              }}</span>
+            }}</span>
           </span>
 
           <button (click)="logout()" type="button" title="Terminar Sessão"
