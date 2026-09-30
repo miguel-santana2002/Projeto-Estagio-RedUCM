@@ -112,17 +112,17 @@
   </div>
 
   <!-- Editor e Coluna de Ações -->
-  <div class="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start w-full mt-8">
+  <div class="flex flex-col lg:flex-row gap-6 items-start w-full mt-8">
 
-    <!-- Coluna do Editor Monaco -->
-    <div class="xl:col-span-10 w-full min-w-0">
+    <!-- Coluna do Editor Monaco (70%) -->
+    <div class="w-full lg:w-[75%] min-w-0">
       <app-code-editor [code]="selectedModel.value" [language]="ruleModel.syntax" height="550px"
         (codeChange)="onCodeChanged($event)">
       </app-code-editor>
     </div>
 
-    <!-- Coluna de Ações -->
-    <div class="xl:col-span-2 w-full flex flex-col space-y-4">
+    <!-- Coluna de Ações (30%) -->
+    <div class="w-full lg:w-[25%] flex flex-col space-y-4">
       <div
         class="bg-gray-100 dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 flex flex-col space-y-3 transition">
         <h3 class="text-base font-semibold text-gray-700 dark:text-gray-200 mb-1">
@@ -130,27 +130,27 @@
         </h3>
 
         <button (click)="copyToClipboard()" type="button"
-          class="flex items-center w-full px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 hover:text-redshift-red dark:hover:text-white shadow-sm transition">
-          <i class="fas fa-copy mr-2 text-gray-500 dark:text-gray-400"></i>
-          Copiar para Clipboard
+          class="flex items-center w-full px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 hover:text-redshift-red dark:hover:text-white shadow-sm transition gap-3">
+          <i class="fas fa-copy w-5 text-center text-gray-500 dark:text-gray-400"></i>
+          <span>Copiar para Clipboard</span>
         </button>
 
         <button (click)="openConvertModal()" type="button"
-          class="flex items-center w-full px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 hover:text-redshift-red dark:hover:text-white shadow-sm transition">
-          <i class="fas fa-exchange-alt mr-2 text-gray-500 dark:text-gray-400"></i>
-          Converter Regra
+          class="flex items-center w-full px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 hover:text-redshift-red dark:hover:text-white shadow-sm transition gap-3">
+          <i class="fas fa-exchange-alt w-5 text-center text-gray-500 dark:text-gray-400"></i>
+          <span>Converter Regra</span>
         </button>
 
         <button (click)="openAssignModal()" data-modal-target="crud-modal" data-modal-toggle="crud-modal" type="button"
-          class="flex items-center w-full px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 hover:text-redshift-red dark:hover:text-white shadow-sm transition">
-          <i class="fas fa-user-plus mr-2 text-gray-500 dark:text-gray-400"></i>
-          Atribuir a clientes
+          class="flex items-center w-full px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 hover:text-redshift-red dark:hover:text-white shadow-sm transition gap-3">
+          <i class="fas fa-user-plus w-5 text-center text-gray-500 dark:text-gray-400"></i>
+          <span>Atribuir a clientes</span>
         </button>
 
         <button (click)="updateRuleModelCode()" type="button"
-          class="flex items-center w-full px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 hover:text-redshift-red dark:hover:text-white shadow-sm transition">
-          <i class="fas fa-save mr-2 text-gray-500 dark:text-gray-400"></i>
-          Guardar Regra
+          class="flex items-center w-full px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 hover:text-redshift-red dark:hover:text-white shadow-sm transition gap-3">
+          <i class="fas fa-save w-5 text-center text-gray-500 dark:text-gray-400"></i>
+          <span>Guardar Alterações</span>
         </button>
       </div>
     </div>
