@@ -194,7 +194,7 @@
         <!-- Header -->
         <div class="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-700">
           <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
-            Copiar regra para cliente
+            Atribuir Regra a Cliente
           </h3>
           <button type="button"
             class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-700 dark:hover:text-white transition"
@@ -206,12 +206,11 @@
 
         <!-- Formulário -->
         <form class="p-4 md:p-5" [formGroup]="createRuleForm">
-          <div class="grid gap-4 mb-4 grid-cols-2 grid-rows-2">
+          <div class="grid gap-4 mb-4 grid-cols-2">
 
             <!-- Seleção de Cliente -->
             <div class="col-span-1 row-span-1">
-              <label for="client" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Seleção de
-                cliente</label>
+              <label for="client" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Cliente</label>
 
               <select *ngIf="user.companies?.length === 0" id="client" formControlName="client" required
                 class="block w-full rounded-md border-0 px-2 py-2.5 text-gray-900 bg-white dark:bg-gray-700 dark:text-white shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-600 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 dark:focus:ring-indigo-500 sm:text-sm transition">
@@ -228,40 +227,22 @@
               </select>
             </div>
 
-            <!-- LogSources -->
-            <div class="col-span-1 row-span-2">
-              <label for="logsources"
-                class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Logsources</label>
-              <select id="logsources" formControlName="logsources" required multiple
-                class="block w-full rounded-md border-0 h-32 px-2 py-2.5 text-gray-900 bg-white dark:bg-gray-700 dark:text-white shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-600 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 dark:focus:ring-indigo-500 sm:text-sm transition">
-                <option *ngFor="let logsource of ruleModel.logsources" [ngValue]="logsource">
-                  {{ logsource }}
-                </option>
-              </select>
-            </div>
-
             <!-- Sintaxe Pré-selecionada -->
             <div class="col-span-1 row-span-1">
-              <label for="syntax" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Sintaxe da
-                Regra</label>
+              <label for="syntax" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Sintaxe de destino</label>
               <select id="syntax" formControlName="syntax" (change)="onSyntaxChange()" required
                 class="block w-full rounded-md border-0 px-2 py-2.5 text-gray-900 bg-white dark:bg-gray-700 dark:text-white shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-600 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 dark:focus:ring-indigo-500 sm:text-sm transition">
-                <ng-container *ngIf="ruleModel.type === 'SOAR'">
-                  <option *ngFor="let sintax of soarSintaxes" [ngValue]="sintax">{{ sintax }}</option>
-                </ng-container>
-                <ng-container *ngIf="ruleModel.type === 'SIEM'">
-                  <option *ngFor="let sintax of siemSintaxes" [ngValue]="sintax">{{ sintax }}</option>
-                </ng-container>
-                <ng-container *ngIf="ruleModel.type === 'EDR'">
-                  <option *ngFor="let sintax of edrSintaxes" [ngValue]="sintax">{{ sintax }}</option>
-                </ng-container>
+                <option *ngFor="let s of availableSyntaxes" [ngValue]="s.id">{{ s.name }}</option>
               </select>
+              <p *ngIf="isSyntaxConverting" class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                <i class="fas fa-spinner fa-spin mr-1"></i> A converter...
+              </p>
+              <p *ngIf="syntaxError" class="mt-1 text-xs text-red-600 dark:text-red-400">{{ syntaxError }}</p>
             </div>
 
             <!-- Editor / Textarea -->
             <div class="col-span-2">
-              <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Personalização da
-                Regra</label>
+              <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Código da Regra (editável antes de guardar)</label>
               <textarea rows="16" formControlName="modalCode"
                 class="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white font-mono rounded-lg p-2.5 text-xs focus:ring-2 focus:ring-indigo-600 dark:focus:ring-indigo-500 transition">
               </textarea>
@@ -270,13 +251,13 @@
 
           <!-- Footer Modal -->
           <div class="flex items-center justify-end p-4 border-t border-gray-200 dark:border-gray-700 space-x-3">
-            <button (click)="createRule()" [disabled]="createRuleForm.invalid" type="button"
+            <button (click)="createRule()" [disabled]="createRuleForm.invalid || isSyntaxConverting" type="button"
               class="py-2 px-4 text-sm font-medium text-white bg-redshift-red hover:bg-redshift-hover disabled:opacity-50 disabled:cursor-not-allowed rounded-lg shadow-sm transition">
-              Guardar
+              Atribuir
             </button>
             <button type="button" data-modal-hide="crud-modal"
               class="py-2 px-4 text-sm font-medium text-gray-500 dark:text-gray-300 bg-white dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600 hover:text-gray-900 dark:hover:text-white transition">
-              Fechar
+              Cancelar
             </button>
           </div>
         </form>

@@ -60,18 +60,46 @@
     </div>
 
     <!-- 3. LogSources Associadas -->
-    <div class="space-y-2 col-span-1 md:col-span-2">
+    <div class="space-y-2 col-span-1 md:col-span-2 relative">
         <div class="flex items-center justify-between">
-            <label for="logsources" class="block text-sm font-semibold text-gray-900 dark:text-white">LogSources
-                Associadas</label>
+            <label class="block text-sm font-semibold text-gray-900 dark:text-white">LogSources Associadas</label>
             <span class="text-xs text-gray-400 font-normal">Opcional</span>
         </div>
-        <tag-input [onlyFromAutocomplete]="true" theme='minimal' [secondaryPlaceholder]="'+ Nova Log Source'"
-            [placeholder]="''" formControlName="logsources"
-            class="block w-full rounded-lg border border-gray-300 dark:border-gray-600 px-2 py-1 bg-white dark:bg-gray-700 text-sm">
-            <tag-input-dropdown [showDropdownIfEmpty]="true" [autocompleteItems]="registeredLogsources">
-            </tag-input-dropdown>
-        </tag-input>
+
+        <!-- Fundo invisível para fechar o dropdown ao clicar fora -->
+        <div *ngIf="isLogsourceOpen" class="fixed inset-0 z-10" (click)="isLogsourceOpen = false"></div>
+
+        <!-- Falso Select (Igual aos outros) -->
+        <div (click)="isLogsourceOpen = !isLogsourceOpen"
+             class="relative z-20 block w-full py-2.5 px-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 dark:text-white rounded-lg shadow-sm focus:ring-2 focus:ring-redshift-red text-sm transition cursor-pointer flex justify-between items-center">
+            
+            <span class="truncate" [ngClass]="{'text-gray-400': !createRuleModelForm.value.logsources?.length}">
+                {{ getSelectedLogsourcesText() }}
+            </span>
+            
+            <!-- Ícone da seta (igual ao select nativo) -->
+            <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+            </svg>
+        </div>
+
+        <!-- Menu Dropdown com Checkboxes -->
+        <div *ngIf="isLogsourceOpen"
+             class="absolute z-30 mt-1 w-full bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+            <div *ngFor="let option of registeredLogsources"
+                 (click)="toggleLogsourceSelection(option, $event)"
+                 class="px-3 py-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 flex items-center gap-3 text-sm text-gray-900 dark:text-white transition">
+                
+                <input type="checkbox" 
+                       [checked]="createRuleModelForm.value.logsources?.includes(option)"
+                       class="w-4 h-4 rounded border-gray-300 text-redshift-red focus:ring-redshift-red bg-white dark:bg-gray-600 dark:border-gray-500 pointer-events-none">
+                <span>{{ option }}</span>
+            </div>
+            
+            <div *ngIf="registeredLogsources.length === 0" class="px-3 py-2 text-sm text-gray-500 text-center">
+                Nenhuma Log Source disponível.
+            </div>
+        </div>
     </div>
 
     <!-- 4. Editor de Código -->

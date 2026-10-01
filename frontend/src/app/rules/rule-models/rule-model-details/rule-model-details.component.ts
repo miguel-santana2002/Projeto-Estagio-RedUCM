@@ -86,6 +86,9 @@ export class RuleModelDetailsComponent implements OnInit {
   };
 
   message: string = '';
+  isSyntaxConverting: boolean = false;
+  syntaxError: string = '';
+  private syntaxRequestId = 0;
 
   soarSintaxes = ['YARA Rule'];
 
@@ -258,6 +261,9 @@ export class RuleModelDetailsComponent implements OnInit {
   }
 
   openAssignModal(): void {
+    this.syntaxRequestId++;
+    this.isSyntaxConverting = false;
+    this.syntaxError = '';
     const currentCode = this.selectedModel.value;
     this.ruleModel.ruleCode = currentCode;
 
@@ -359,33 +365,45 @@ private runEngine(engine: 'ai' | 'ai_pure' | 'pysigma') {
   // --- Fim da Modal de Conversão ---
 
   onSyntaxChange(): void {
-    const selectedSyntax = this.createRuleForm.get('syntax')?.value;
-    const baseCode = this.ruleModel.ruleCode;
-    const baseSyntax = this.ruleModel.syntax;
+  const selectedSyntax = this.createRuleForm.get('syntax')?.value;
+  const baseCode = this.ruleModel.ruleCode;
+  const baseSyntax = this.ruleModel.syntax;
 
-    if (!selectedSyntax || selectedSyntax === baseSyntax) {
-      this.createRuleForm.patchValue({ modalCode: baseCode });
-      return;
-    }
+  this.syntaxError = '';
+  const requestId = ++this.syntaxRequestId; // ignora respostas antigas
 
-    const payload = {
-      source_query: baseCode,
-      source_syntax: baseSyntax,
-      target_syntax: selectedSyntax,
-    };
-
-    this.sigmaConversionsService.convertRuleWithAI(payload).subscribe({
-      next: (res: any) => {
-        this.createRuleForm.patchValue({ modalCode: res.target_query });
-      },
-      error: (err: any) => {
-        const errorMsg = err.error?.error || 'Erro na conversão.';
-        this.createRuleForm.patchValue({
-          modalCode: `Falha ao converter regra: ${errorMsg}`,
-        });
-      },
-    });
+  if (!selectedSyntax || selectedSyntax === baseSyntax) {
+    this.isSyntaxConverting = false;
+    this.createRuleForm.patchValue({ modalCode: baseCode });
+    return;
   }
+
+  const engine = baseSyntax === 'Sigma Rule' ? 'pysigma' : 'ai_pure';
+
+  const payload = {
+    source_query: baseCode,
+    source_syntax: baseSyntax,
+    target_syntax: selectedSyntax,
+    engine: engine,
+  };
+
+  this.isSyntaxConverting = true;
+
+  this.sigmaConversionsService.convertRuleWithAI(payload).subscribe({
+    next: (res: any) => {
+      if (requestId !== this.syntaxRequestId) return;
+      const result = engine === 'pysigma' ? res.pysigma_result : res.ai_pure_result;
+      this.createRuleForm.patchValue({ modalCode: result || baseCode });
+      this.isSyntaxConverting = false;
+    },
+    error: (err: any) => {
+      if (requestId !== this.syntaxRequestId) return;
+      this.syntaxError = err.error?.error || 'Erro na conversão.';
+      this.createRuleForm.patchValue({ modalCode: baseCode });
+      this.isSyntaxConverting = false;
+    },
+  });
+}
 
   async createRule(): Promise<void> {
     const formVals = this.createRuleForm.value;

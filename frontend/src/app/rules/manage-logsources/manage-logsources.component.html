@@ -35,8 +35,8 @@
             <tr
               class="bg-gray-100 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 uppercase text-xs font-semibold tracking-wider">
               <th class="py-3 px-5 text-left">Log Source</th>
-              <th class="py-3 px-5 text-left">Tipo</th>
-              <th class="py-3 px-5 text-left">Recolha</th>
+              <th class="py-3 px-5 text-left">Type</th>
+              <th class="py-3 px-5 text-left">Collector</th>
               <th class="py-3 px-5 text-left w-1/3">Descrição</th>
               <th class="py-3 px-5 text-center">Ações</th>
             </tr>
@@ -67,15 +67,6 @@
               <td class="py-3 px-5 text-left">
                 <p class="text-gray-700 dark:text-gray-300 truncate max-w-xs" [title]="log.description">{{
                   log.description }}</p>
-                <div *ngIf="log.products?.length" class="flex flex-wrap gap-1 mt-1.5">
-                  <span class="bg-[#0d2f52] text-white text-[10px] rounded px-1.5 py-0.5"
-                    *ngFor="let p of visibleProducts(log.products)">{{ p }}</span>
-                  <span *ngIf="extraProductsCount(log.products) > 0"
-                    class="bg-gray-300 dark:bg-gray-600 text-gray-800 dark:text-gray-200 text-[10px] rounded px-1.5 py-0.5 font-bold cursor-help"
-                    [title]="log.products">
-                    +{{ extraProductsCount(log.products) }}
-                  </span>
-                </div>
               </td>
 
               <td class="py-3 px-5 text-center whitespace-nowrap">
@@ -158,39 +149,29 @@
         <!-- Campos: Tipo e Recolha -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
           <div>
-            <label class="block text-gray-700 dark:text-gray-300 text-sm font-medium mb-1.5" for="logType">Tipo</label>
+            <label class="block text-gray-700 dark:text-gray-300 text-sm font-medium mb-1.5" for="logType">Type</label>
             <select id="logType" [(ngModel)]="newLog.type" name="logType"
               class="border border-gray-300 dark:border-gray-600 rounded-lg w-full py-2 px-3 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-redshift-red text-sm transition">
               <option value="">—</option>
               <option *ngFor="let opt of typeOptions" [value]="opt.value">{{ opt.label }}</option>
             </select>
             <input *ngIf="newLog.type === 'other'" type="text" [(ngModel)]="customType" name="customType"
-              placeholder="Especificar tipo..." required
+              placeholder="Especificar Type..." required
               class="mt-2 border border-gray-300 dark:border-gray-600 rounded-lg w-full py-2 px-3 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-redshift-red text-sm transition" />
           </div>
 
           <div>
             <label class="block text-gray-700 dark:text-gray-300 text-sm font-medium mb-1.5"
-              for="logCollection">Recolha</label>
+              for="logCollection">Collector</label>
             <select id="logCollection" [(ngModel)]="newLog.collectionMethod" name="logCollection"
               class="border border-gray-300 dark:border-gray-600 rounded-lg w-full py-2 px-3 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-redshift-red text-sm transition">
               <option value="">—</option>
               <option *ngFor="let opt of collectionOptions" [value]="opt.value">{{ opt.label }}</option>
             </select>
             <input *ngIf="newLog.collectionMethod === 'other'" type="text" [(ngModel)]="customCollection"
-              name="customCollection" placeholder="Especificar recolha..." required
+              name="customCollection" placeholder="Especificar Collector..." required
               class="mt-2 border border-gray-300 dark:border-gray-600 rounded-lg w-full py-2 px-3 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-redshift-red text-sm transition" />
           </div>
-        </div>
-
-        <!-- Campo: Produtos -->
-        <div class="mb-4">
-          <label class="block text-gray-700 dark:text-gray-300 text-sm font-medium mb-1.5"
-            for="logProducts">Produtos</label>
-          <input id="logProducts" type="text" [(ngModel)]="productsInput" name="logProducts"
-            placeholder="Sysmon, CrowdStrike Falcon"
-            class="border border-gray-300 dark:border-gray-600 rounded-lg w-full py-2 px-3 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-redshift-red text-sm transition" />
-          <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Separa por vírgula.</p>
         </div>
 
         <!-- Campo: Descrição -->
@@ -242,24 +223,15 @@
       <!-- Body Modal Detalhes -->
       <div class="p-5 space-y-5">
         <div>
-          <h4 class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">Tipo</h4>
+          <h4 class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">Type</h4>
           <p class="text-gray-900 dark:text-gray-200 font-medium">{{ selectedLog.type ? typeLabel(selectedLog.type) :
             '—' }}</p>
         </div>
 
         <div>
-          <h4 class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">Recolha</h4>
+          <h4 class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">Collector</h4>
           <p class="text-gray-900 dark:text-gray-200 font-medium">{{ selectedLog.collectionMethod ?
             collectionLabel(selectedLog.collectionMethod) : '—' }}</p>
-        </div>
-
-        <div>
-          <h4 class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Produtos</h4>
-          <div class="flex flex-wrap gap-2" *ngIf="selectedLog.products?.length">
-            <span class="bg-[#0d2f52] text-white text-xs rounded px-2.5 py-1 font-medium"
-              *ngFor="let p of selectedLog.products">{{ p }}</span>
-          </div>
-          <p *ngIf="!selectedLog.products?.length" class="text-gray-500 dark:text-gray-400">—</p>
         </div>
 
         <div>
