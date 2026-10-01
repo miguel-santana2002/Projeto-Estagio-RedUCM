@@ -25,7 +25,11 @@ export class AuthService {
         this.accessToken = response.access;
 
         if (response.otpSent) {
-          return { otpSent: true, otpMethod: response.otpMethod };
+          return {
+            otpSent: true,
+            otpMethod: response.otpMethod,
+            showTotp: Boolean(response.showTotp),
+          };
         }
         return { otpSent: false };
       }),
@@ -49,22 +53,27 @@ export class AuthService {
     );
   }
 
-  generateTOTP(): Observable<string | null> {
+  generateTOTP(email: string): Observable<string | null> {
     const headers = new HttpHeaders({
       Authorization: `Bearer ${this.accessToken}`,
     });
-    return this.http.get(AUTH_URL + 'generate-totp', { headers }).pipe(
-      map((response: any) => {
-        console.log('TOTP Response:', response); // Adicione esta linha
-        return response.totp_uri;
-      }),
-      catchError((e) => {
-        console.error(e.message);
-        return of(null);
-      }),
-    );
-  }
 
+    // Sem barra final para coincidir com a rota do Django
+    return this.http
+      .get(AUTH_URL + 'generate-totp', {
+        headers,
+        params: { email },
+      })
+      .pipe(
+        map((response: any) => {
+          return response?.totp_uri || response;
+        }),
+        catchError((e) => {
+          console.error('Erro backend generate-totp:', e.error);
+          return of(null);
+        }),
+      );
+  }
   deleteUser(id: any) {
     const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
     return this.http.post<any>(`${AUTH_URL}deleteUser/${id}`, { headers });

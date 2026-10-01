@@ -144,9 +144,15 @@
                 </th>
                 <th (click)="sortTable('username')"
                   class="w-56 px-5 py-3.5 bg-gray-100 dark:bg-gray-700 text-left text-xs font-bold text-gray-700 dark:text-gray-200 uppercase tracking-wider cursor-pointer select-none">
-                  Nome
+                  Username
                   <i
                     [class]="sortType === 'username' ? (sortReverse ? 'fas fa-caret-up ml-1' : 'fas fa-caret-down ml-1') : ''"></i>
+                </th>
+                <th (click)="sortTable('role')"
+                  class="w-36 px-5 py-3.5 bg-gray-100 dark:bg-gray-700 text-left text-xs font-bold text-gray-700 dark:text-gray-200 uppercase tracking-wider cursor-pointer select-none">
+                  Role
+                  <i
+                    [class]="sortType === 'role' ? (sortReverse ? 'fas fa-caret-up ml-1' : 'fas fa-caret-down ml-1') : ''"></i>
                 </th>
                 <th (click)="sortTable('email')"
                   class="w-64 px-5 py-3.5 bg-gray-100 dark:bg-gray-700 text-left text-xs font-bold text-gray-700 dark:text-gray-200 uppercase tracking-wider cursor-pointer select-none">
@@ -160,18 +166,14 @@
                   <i
                     [class]="sortType === 'company' ? (sortReverse ? 'fas fa-caret-up ml-1' : 'fas fa-caret-down ml-1') : ''"></i>
                 </th>
+
                 <th (click)="sortTable('date_joined')"
                   class="w-36 px-5 py-3.5 bg-gray-100 dark:bg-gray-700 text-left text-xs font-bold text-gray-700 dark:text-gray-200 uppercase tracking-wider cursor-pointer select-none">
                   Data de Registo
                   <i
                     [class]="sortType === 'date_joined' ? (sortReverse ? 'fas fa-caret-up ml-1' : 'fas fa-caret-down ml-1') : ''"></i>
                 </th>
-                <th (click)="sortTable('role')"
-                  class="w-36 px-5 py-3.5 bg-gray-100 dark:bg-gray-700 text-left text-xs font-bold text-gray-700 dark:text-gray-200 uppercase tracking-wider cursor-pointer select-none">
-                  Role
-                  <i
-                    [class]="sortType === 'role' ? (sortReverse ? 'fas fa-caret-up ml-1' : 'fas fa-caret-down ml-1') : ''"></i>
-                </th>
+
                 <th
                   class="w-24 px-5 py-3.5 bg-gray-100 dark:bg-gray-700 text-center text-xs font-bold text-gray-700 dark:text-gray-200 uppercase tracking-wider">
                   Ação
@@ -195,6 +197,18 @@
                 <td (click)="openModalDetails(u)" class="px-5 py-3 text-left truncate" [title]="u.username">
                   <span class="text-base font-semibold text-gray-900 dark:text-white truncate block">{{ u.username
                     }}</span>
+                </td>
+
+                <!-- Role -->
+                <td (click)="openModalDetails(u)" class="px-5 py-3 text-left whitespace-nowrap">
+                  <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold"
+                    [ngClass]="(u.is_superuser || u.is_admin) 
+                                      ? 'bg-purple-50 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300 border border-purple-200 dark:border-purple-800' 
+                                      : 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 border border-blue-200 dark:border-blue-800'">
+                    <i [class]="(u.is_superuser || u.is_admin) ? 'fas fa-shield-halved' : 'fas fa-user-gear'"
+                      class="text-[10px]"></i>
+                    <span>{{ (u.is_superuser || u.is_admin) ? 'Administrador' : 'Operador' }}</span>
+                  </span>
                 </td>
 
                 <!-- Email -->
@@ -227,18 +241,6 @@
                 <td (click)="openModalDetails(u)"
                   class="px-5 py-3 text-left text-sm font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap">
                   {{ u.date_joined | date: 'dd/MM/yyyy' }}
-                </td>
-
-                <!-- Role -->
-                <td (click)="openModalDetails(u)" class="px-5 py-3 text-left whitespace-nowrap">
-                  <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold"
-                    [ngClass]="(u.is_superuser || u.is_admin) 
-                      ? 'bg-purple-50 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300 border border-purple-200 dark:border-purple-800' 
-                      : 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 border border-blue-200 dark:border-blue-800'">
-                    <i [class]="(u.is_superuser || u.is_admin) ? 'fas fa-shield-halved' : 'fas fa-user-gear'"
-                      class="text-[10px]"></i>
-                    <span>{{ (u.is_superuser || u.is_admin) ? 'Administrador' : 'Operador' }}</span>
-                  </span>
                 </td>
 
                 <!-- Ação -->
@@ -365,7 +367,7 @@
           <h4 class="text-sm font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Detalhes do Registo
           </h4>
 
-          <button [routerLink]="'/update-user/' + selectedUser?.pk" (click)="closeModalDetails()"
+          <button [routerLink]="'/edit-user/' + selectedUser?.pk" (click)="closeModalDetails()"
             class="bg-redshift-red hover:bg-redshift-hover text-sm font-medium text-white px-3.5 py-1.5 rounded-lg transition flex items-center gap-1.5 shadow-sm">
             <span>Editar</span>
             <i class="fas fa-pen text-xs"></i>
@@ -378,8 +380,7 @@
             <span class="text-gray-900 dark:text-white font-medium">{{ selectedUser?.pk }}</span>
           </div>
           <div>
-            <span class="text-xs text-gray-400 dark:text-gray-500 block uppercase font-semibold">Nome de
-              Utilizador</span>
+            <span class="text-xs text-gray-400 dark:text-gray-500 block uppercase font-semibold">Username</span>
             <span class="text-gray-900 dark:text-white font-medium">{{ selectedUser?.username }}</span>
           </div>
           <div>

@@ -42,7 +42,8 @@
               type="button">
               <i class="fas fa-filter text-xs"></i>
               <span>Filtros</span>
-              <span *ngIf="selectedLogsources.length > 0 || selectedSiems.length > 0" class="w-2 h-2 rounded-full bg-white animate-pulse"></span>
+              <span *ngIf="selectedLogsources.length > 0 || selectedSiems.length > 0"
+                class="w-2 h-2 rounded-full bg-white animate-pulse"></span>
             </button>
           </div>
         </div>
@@ -89,7 +90,8 @@
                     'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-700 hover:border-redshift-red dark:hover:border-redshift-red': !isLogsourceSelected(log)
                   }"
                   class="px-3 py-1.5 rounded-lg border text-xs font-medium transition flex items-center gap-2 select-none">
-                  <i [class]="isLogsourceSelected(log) ? 'fas fa-check text-[10px]' : 'fas fa-plus text-[10px] opacity-40'"></i>
+                  <i
+                    [class]="isLogsourceSelected(log) ? 'fas fa-check text-[10px]' : 'fas fa-plus text-[10px] opacity-40'"></i>
                   <span>{{ log }}</span>
                 </button>
                 <span *ngIf="uniqueLogsources.length === 0" class="text-xs text-gray-400 italic">
@@ -116,7 +118,8 @@
                     'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-700 hover:border-redshift-red dark:hover:border-redshift-red': !isSiemSelected(siem)
                   }"
                   class="px-3 py-1.5 rounded-lg border text-xs font-medium transition flex items-center gap-2 select-none">
-                  <i [class]="isSiemSelected(siem) ? 'fas fa-check text-[10px]' : 'fas fa-plus text-[10px] opacity-40'"></i>
+                  <i
+                    [class]="isSiemSelected(siem) ? 'fas fa-check text-[10px]' : 'fas fa-plus text-[10px] opacity-40'"></i>
                   <span>{{ siem }}</span>
                 </button>
                 <span *ngIf="uniqueSiems.length === 0" class="text-xs text-gray-400 italic">
@@ -135,27 +138,32 @@
                 <th (click)="sortTable('pk')"
                   class="w-24 px-5 py-3.5 bg-gray-100 dark:bg-gray-700 text-left text-xs font-bold text-gray-700 dark:text-gray-200 uppercase tracking-wider cursor-pointer select-none">
                   ID
-                  <i [class]="sortType === 'pk' ? (sortReverse ? 'fas fa-caret-up ml-1' : 'fas fa-caret-down ml-1') : ''"></i>
+                  <i
+                    [class]="sortType === 'pk' ? (sortReverse ? 'fas fa-caret-up ml-1' : 'fas fa-caret-down ml-1') : ''"></i>
                 </th>
                 <th (click)="sortTable('name')"
                   class="w-64 px-5 py-3.5 bg-gray-100 dark:bg-gray-700 text-left text-xs font-bold text-gray-700 dark:text-gray-200 uppercase tracking-wider cursor-pointer select-none">
                   Nome
-                  <i [class]="sortType === 'name' ? (sortReverse ? 'fas fa-caret-up ml-1' : 'fas fa-caret-down ml-1') : ''"></i>
+                  <i
+                    [class]="sortType === 'name' ? (sortReverse ? 'fas fa-caret-up ml-1' : 'fas fa-caret-down ml-1') : ''"></i>
                 </th>
                 <th (click)="sortTable('siem')"
                   class="w-40 px-5 py-3.5 bg-gray-100 dark:bg-gray-700 text-left text-xs font-bold text-gray-700 dark:text-gray-200 uppercase tracking-wider cursor-pointer select-none">
                   SIEM
-                  <i [class]="sortType === 'siem' ? (sortReverse ? 'fas fa-caret-up ml-1' : 'fas fa-caret-down ml-1') : ''"></i>
+                  <i
+                    [class]="sortType === 'siem' ? (sortReverse ? 'fas fa-caret-up ml-1' : 'fas fa-caret-down ml-1') : ''"></i>
                 </th>
                 <th (click)="sortTable('logsources')"
                   class="px-5 py-3.5 bg-gray-100 dark:bg-gray-700 text-left text-xs font-bold text-gray-700 dark:text-gray-200 uppercase tracking-wider cursor-pointer select-none">
                   Logsources
-                  <i [class]="sortType === 'logsources' ? (sortReverse ? 'fas fa-caret-up ml-1' : 'fas fa-caret-down ml-1') : ''"></i>
+                  <i
+                    [class]="sortType === 'logsources' ? (sortReverse ? 'fas fa-caret-up ml-1' : 'fas fa-caret-down ml-1') : ''"></i>
                 </th>
                 <th (click)="sortTable('date')"
                   class="w-40 px-5 py-3.5 bg-gray-100 dark:bg-gray-700 text-left text-xs font-bold text-gray-700 dark:text-gray-200 uppercase tracking-wider cursor-pointer select-none">
                   Data de Registo
-                  <i [class]="sortType === 'date' ? (sortReverse ? 'fas fa-caret-up ml-1' : 'fas fa-caret-down ml-1') : ''"></i>
+                  <i
+                    [class]="sortType === 'date' ? (sortReverse ? 'fas fa-caret-up ml-1' : 'fas fa-caret-down ml-1') : ''"></i>
                 </th>
                 <th
                   class="w-24 px-5 py-3.5 bg-gray-100 dark:bg-gray-700 text-center text-xs font-bold text-gray-700 dark:text-gray-200 uppercase tracking-wider">
@@ -180,7 +188,8 @@
 
                 <!-- Coluna SIEM na Tabela -->
                 <td (click)="openDetailsModal(c)" class="px-5 py-3 text-left cursor-pointer truncate" [title]="c.siem">
-                  <span class="text-sm font-medium text-gray-800 dark:text-gray-200 truncate block">{{ c.siem || 'N/A' }}</span>
+                  <span class="text-sm font-medium text-gray-800 dark:text-gray-200 truncate block">{{ c.siem || 'N/A'
+                    }}</span>
                 </td>
 
                 <td (click)="openDetailsModal(c)" class="px-5 py-3 text-left cursor-pointer">
@@ -329,18 +338,20 @@
                   {{ errorMessage }}
                 </div>
 
+                <!-- Barra de Ações alinhada à direita e rente aos limites do modal -->
                 <div
-                  class="flex items-center justify-end p-2 md:p-5 border-t border-gray-200 dark:border-gray-700 rounded-b gap-2">
+                  class="-mx-4 -mb-4 md:-mx-5 md:-mb-5 px-4 md:px-5 pt-4 pb-4 border-t border-gray-200 dark:border-gray-700 flex items-center justify-end gap-3">
                   <button type="submit" [disabled]="createClientForm.invalid"
                     class="text-white inline-flex items-center gap-2 bg-redshift-red hover:bg-redshift-hover font-medium rounded-lg text-sm px-5 py-2.5 disabled:opacity-50 disabled:cursor-not-allowed transition">
                     <i class="fas fa-plus"></i> Criar Cliente
                   </button>
                   <button type="button" (click)="closeCreateModal()"
-                    class="text-gray-500 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-lg border border-gray-200 dark:border-gray-600 text-sm px-4 py-2 transition">
+                    class="text-gray-500 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-lg border border-gray-200 dark:border-gray-600 text-sm px-4 py-2.5 transition">
                     Fechar
                   </button>
                 </div>
               </form>
+
             </div>
           </div>
         </div>
@@ -401,7 +412,8 @@
                 </div>
 
                 <div>
-                  <label class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider font-semibold">SIEM</label>
+                  <label
+                    class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider font-semibold">SIEM</label>
                   <p class="text-sm font-medium text-gray-800 dark:text-gray-200">{{ selectedClient.siem || 'N/A' }}</p>
                 </div>
 
