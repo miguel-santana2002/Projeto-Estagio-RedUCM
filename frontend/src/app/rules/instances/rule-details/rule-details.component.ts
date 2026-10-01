@@ -105,4 +105,9 @@ export class RuleDetailsComponent implements OnInit {
       },
     });
   }
+
+  getTechniqueId(tech: string): string {
+    if (!tech) return '';
+    return tech.split(' - ')[0].trim();
+  }
 }

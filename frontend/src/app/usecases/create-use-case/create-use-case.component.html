@@ -2,7 +2,7 @@
 
 <app-titlebanner title="Criar Use Case" image="./assets/bannercover.jpg"></app-titlebanner>
 
-<div class="max-w-6xl mx-auto px-6 py-12">
+<div class="page-container px-4 py-16">
   <form class="space-y-8" [formGroup]="createUseCaseForm" (ngSubmit)="createUseCase()">
 
     <!-- Mensagem de Erro do Backend -->
@@ -27,8 +27,7 @@
           <label for="title" class="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">
             Título <span class="text-red-500">*</span>
           </label>
-          <input id="title" required name="title" placeholder="Ex: Deteção de WMI Malicioso" type="text"
-            formControlName="title"
+          <input id="title" name="title" placeholder="Ex: Deteção de WMI Malicioso" type="text" formControlName="title"
             class="block w-full rounded-md border-0 bg-white dark:bg-gray-700 px-3 py-2.5 text-gray-900 dark:text-white shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-600 placeholder:text-gray-400 dark:placeholder-gray-400 focus:ring-2 focus:ring-inset focus:ring-redshift-red sm:text-sm sm:leading-6 transition">
           <div *ngIf="createUseCaseForm.get('title')?.touched && createUseCaseForm.get('title')?.invalid"
             class="text-red-600 dark:text-red-400 text-xs mt-1">
@@ -39,7 +38,7 @@
         <!-- Classe CNCS -->
         <div class="space-y-2">
           <label class="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">
-            Classe CNCS
+            Classe CNCS <span class="text-red-500">*</span>
           </label>
           <mat-form-field appearance="outline" class="w-full">
             <mat-select formControlName="cncsClass" (selectionChange)="updateCNCSValues()"
@@ -48,17 +47,16 @@
               <mat-option *ngFor="let chave of chavesTaxonomia" [value]="chave">{{ chave }}</mat-option>
             </mat-select>
           </mat-form-field>
-
-          <!-- Input customizado caso seja selecionado "Outro" -->
-          <input *ngIf="createUseCaseForm.get('cncsClass')?.value === 'Outro'" type="text"
-            formControlName="cncsClassCustom" placeholder="Especifique a classe..."
-            class="block w-full rounded-md border-0 bg-white dark:bg-gray-700 px-3 py-2 text-gray-900 dark:text-white shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-600 placeholder:text-gray-400 dark:placeholder-gray-400 focus:ring-2 focus:ring-inset focus:ring-redshift-red sm:text-sm transition mt-2" />
+          <div *ngIf="createUseCaseForm.get('cncsClass')?.touched && createUseCaseForm.get('cncsClass')?.invalid"
+            class="text-red-600 dark:text-red-400 text-xs mt-1">
+            Classe CNCS é obrigatória.
+          </div>
         </div>
 
         <!-- Tipo CNCS -->
         <div class="space-y-2">
           <label class="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">
-            Tipo CNCS
+            Tipo CNCS <span class="text-red-500">*</span>
           </label>
           <mat-form-field appearance="outline" class="w-full">
             <mat-select formControlName="cncsType" placeholder="Selecione o tipo..." panelClass="custom-dark-panel">
@@ -66,11 +64,10 @@
               <mat-option *ngFor="let val of selectedCategoryValues" [value]="val">{{ val }}</mat-option>
             </mat-select>
           </mat-form-field>
-
-          <!-- Input customizado caso seja selecionado "Outro" -->
-          <input *ngIf="createUseCaseForm.get('cncsType')?.value === 'Outro'" type="text"
-            formControlName="cncsTypeCustom" placeholder="Especifique o tipo..."
-            class="block w-full rounded-md border-0 bg-white dark:bg-gray-700 px-3 py-2 text-gray-900 dark:text-white shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-600 placeholder:text-gray-400 dark:placeholder-gray-400 focus:ring-2 focus:ring-inset focus:ring-redshift-red sm:text-sm transition mt-2" />
+          <div *ngIf="createUseCaseForm.get('cncsType')?.touched && createUseCaseForm.get('cncsType')?.invalid"
+            class="text-red-600 dark:text-red-400 text-xs mt-1">
+            Tipo CNCS é obrigatório.
+          </div>
         </div>
       </div>
     </div>
@@ -88,7 +85,7 @@
         <!-- Táticas MITRE ATT&CK -->
         <div class="space-y-2">
           <label class="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">
-            Táticas (MITRE ATT&CK)
+            Táticas (MITRE ATT&CK) <span class="text-red-500">*</span>
           </label>
           <mat-form-field appearance="outline" class="w-full">
             <mat-select formControlName="tactics" multiple placeholder="Selecione as táticas..."
@@ -96,12 +93,16 @@
               <mat-option *ngFor="let tactic of allTacticsList" [value]="tactic">{{ tactic }}</mat-option>
             </mat-select>
           </mat-form-field>
+          <div *ngIf="createUseCaseForm.get('tactics')?.touched && createUseCaseForm.get('tactics')?.invalid"
+            class="text-red-600 dark:text-red-400 text-xs mt-1">
+            Selecione pelo menos uma tática.
+          </div>
         </div>
 
         <!-- Técnicas MITRE -->
         <div class="space-y-2">
           <label class="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">
-            Técnicas MITRE
+            Técnicas MITRE <span class="text-red-500">*</span>
           </label>
           <mat-form-field appearance="outline" class="w-full">
             <mat-select formControlName="mitreTechniques" multiple placeholder="Selecione as técnicas..."
@@ -109,50 +110,39 @@
               <mat-option *ngFor="let tech of filteredTechniquesList" [value]="tech">{{ tech }}</mat-option>
             </mat-select>
           </mat-form-field>
+          <div
+            *ngIf="createUseCaseForm.get('mitreTechniques')?.touched && createUseCaseForm.get('mitreTechniques')?.invalid"
+            class="text-red-600 dark:text-red-400 text-xs mt-1">
+            Selecione pelo menos uma técnica.
+          </div>
         </div>
 
         <!-- Descrição -->
         <div class="space-y-2 col-span-2">
           <label for="description" class="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">
-            Descrição
+            Descrição <span class="text-red-500">*</span>
           </label>
           <textarea id="description" name="description" formControlName="description" rows="3"
             placeholder="Descrição do Use Case. Neste parágrafo poderão ser descritos propósito, objetivos, entre outros."
             class="block w-full rounded-md border-0 bg-white dark:bg-gray-700 px-3 py-2.5 h-32 text-gray-900 dark:text-white shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-600 placeholder:text-gray-400 dark:placeholder-gray-400 focus:ring-2 focus:ring-inset focus:ring-redshift-red sm:text-sm sm:leading-6 transition"></textarea>
+          <div *ngIf="createUseCaseForm.get('description')?.touched && createUseCaseForm.get('description')?.invalid"
+            class="text-red-600 dark:text-red-400 text-xs mt-1">
+            A descrição é obrigatória.
+          </div>
         </div>
 
         <!-- Mitigação -->
         <div class="space-y-2 col-span-2">
           <label for="mitigation" class="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">
-            Mitigação
+            Mitigação <span class="text-red-500">*</span>
           </label>
           <textarea id="mitigation" name="mitigation" formControlName="mitigation" rows="3"
             placeholder="Neste parágrafo, poderão ser descritas as estratégias de mitigação..."
             class="block w-full rounded-md border-0 bg-white dark:bg-gray-700 px-3 py-2.5 h-32 text-gray-900 dark:text-white shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-600 placeholder:text-gray-400 dark:placeholder-gray-400 focus:ring-2 focus:ring-inset focus:ring-redshift-red sm:text-sm sm:leading-6 transition"></textarea>
-        </div>
-      </div>
-    </div>
-
-    <!-- BLOCO 3: Operacionalização & Recursos -->
-    <div
-      class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 space-y-6 transition-colors duration-200">
-      <h3
-        class="text-base font-semibold text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700 pb-3 flex items-center gap-2">
-        <span class="w-2.5 h-2.5 rounded-full bg-redshift-red"></span>
-        3. Operacionalização & Recursos
-      </h3>
-
-      <div class="space-y-4">
-        <!-- Playbook (Upload de Ficheiro) -->
-        <div class="space-y-2">
-          <label for="playbook" class="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">
-            Playbook (Ficheiro)
-          </label>
-          <input id="playbook" type="file" (change)="onFileSelected($event)"
-            class="block w-full text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2.5 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-gray-100 dark:file:bg-gray-700 file:text-gray-700 dark:file:text-gray-200 hover:file:bg-gray-200 dark:hover:file:bg-gray-600 transition">
-          <p class="text-xs text-gray-400 dark:text-gray-500">
-            Carrega o playbook em anexo associado a este Use Case (opcional).
-          </p>
+          <div *ngIf="createUseCaseForm.get('mitigation')?.touched && createUseCaseForm.get('mitigation')?.invalid"
+            class="text-red-600 dark:text-red-400 text-xs mt-1">
+            A mitigação é obrigatória.
+          </div>
         </div>
 
         <!-- Botões de Ação -->
@@ -168,8 +158,8 @@
             Cancelar
           </a>
         </div>
+
       </div>
     </div>
-
   </form>
 </div>
