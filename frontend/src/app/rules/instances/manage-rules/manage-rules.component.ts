@@ -360,4 +360,44 @@ export class ManageRulesComponent implements OnInit, AfterViewInit {
       error: (err) => console.error('Erro ao eliminar regra:', err),
     });
   }
+
+  exportSigmaRule(event: Event, rule: any): void {
+    event.stopPropagation();
+
+    const yamlContent = rule.ruleCode;
+    if (!yamlContent) {
+      console.warn(
+        `A regra ID ${rule.id} não possui conteúdo no campo ruleCode.`,
+      );
+      return;
+    }
+
+    // Sanitiza o título removendo caracteres não permitidos e substitui espaços por underscores
+    const rawTitle = rule.ruleModel?.title || 'rule';
+    const sanitizedTitle = rawTitle
+      .trim()
+      .replace(/\s*-\s*/g, '-') // transforma " - " ou " - " diretamente em "-"
+      .replace(/\s+/g, '_') // substitui outros espaços por "_"
+      .replace(/[^a-zA-Z0-9_-]/g, '') // remove caracteres não alfanuméricos exceto _ e -
+      .replace(/_+/g, '_');
+
+    // Formato da data: YYYY-MM-DD
+    const dateStr = new Date().toISOString().split('T')[0];
+
+    const filename = `RedRule${rule.id}_${sanitizedTitle}_${dateStr}.yml`;
+
+    // Criação e trigger do download
+    const blob = new Blob([yamlContent], { type: 'text/yaml;charset=utf-8' });
+    const downloadUrl = window.URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+
+    anchor.href = downloadUrl;
+    anchor.download = filename;
+    document.body.appendChild(anchor);
+    anchor.click();
+
+    // Limpeza de recursos
+    document.body.removeChild(anchor);
+    window.URL.revokeObjectURL(downloadUrl);
+  }
 }

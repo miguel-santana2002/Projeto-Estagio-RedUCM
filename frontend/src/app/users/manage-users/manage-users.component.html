@@ -144,7 +144,7 @@
                 </th>
                 <th (click)="sortTable('username')"
                   class="w-56 px-5 py-3.5 bg-gray-100 dark:bg-gray-700 text-left text-xs font-bold text-gray-700 dark:text-gray-200 uppercase tracking-wider cursor-pointer select-none">
-                  Nome
+                  Username
                   <i
                     [class]="sortType === 'username' ? (sortReverse ? 'fas fa-caret-up ml-1' : 'fas fa-caret-down ml-1') : ''"></i>
                 </th>
@@ -380,8 +380,7 @@
             <span class="text-gray-900 dark:text-white font-medium">{{ selectedUser?.pk }}</span>
           </div>
           <div>
-            <span class="text-xs text-gray-400 dark:text-gray-500 block uppercase font-semibold">Nome de
-              Utilizador</span>
+            <span class="text-xs text-gray-400 dark:text-gray-500 block uppercase font-semibold">Username</span>
             <span class="text-gray-900 dark:text-white font-medium">{{ selectedUser?.username }}</span>
           </div>
           <div>

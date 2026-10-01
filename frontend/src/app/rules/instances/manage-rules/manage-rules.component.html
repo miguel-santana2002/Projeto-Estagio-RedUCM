@@ -339,7 +339,14 @@
 
                 <!-- Ações -->
                 <td class="px-5 py-3 text-center whitespace-nowrap" (click)="$event.stopPropagation()">
-                  <div class="flex items-center justify-center space-x-2">
+                  <div class="flex items-center justify-end space-x-2">
+                    <!-- Botão Exportar Sigma -->
+                    <button *ngIf="(u.syntax || u.ruleModel?.syntax) === 'Sigma Rule'"
+                      (click)="exportSigmaRule($event, u)" title="Exportar Regra Sigma (.yml)"
+                      class="bg-blue-600 hover:bg-blue-700 text-white w-8 h-8 rounded-md shadow transition inline-flex items-center justify-center">
+                      <i class="fas fa-download text-xs"></i>
+                    </button>
+
                     <button [routerLink]="'/rule-Details/' + u.id" title="Ver Detalhes"
                       class="bg-gray-400 hover:bg-gray-500 text-white w-8 h-8 rounded-md shadow transition inline-flex items-center justify-center">
                       <i class="fas fa-right-to-bracket text-xs"></i>
@@ -352,6 +359,7 @@
                     </button>
                   </div>
                 </td>
+
               </tr>
 
               <!-- Empty State -->
