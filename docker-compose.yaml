@@ -43,6 +43,7 @@ services:
     environment:
       POSTGRES_HOST: postgres
       OLLAMA_HOST: http://ollama:11434
+      GUNICORN_CMD_ARGS: "--timeout 300" # Impede o backend de dar timeout na IA
     volumes:
       - ./backend:/app:z
       - ./mediafiles:/mediafiles:z

@@ -112,12 +112,15 @@ export class RuleModelDetailsComponent implements OnInit {
   // Estado da Modal de Conversão
   showConvertModal: boolean = false;
   sourceRuleContent: string = '';
-  convertedRuleContent: string = '';
+  pysigmaConvertedContent: string = '';
+  aiConvertedContent: string = '';
+  aiPureConvertedContent: string = '';
   intermediateSigmaContent: string = '';
   conversionEngine: 'pysigma' | 'hybrid' | 'llm' | null = null;
   targetSyntax: string = '';
   isConverting: boolean = false;
   conversionError: string = '';
+  selectedOutputView: 'ai' | 'ai_pure' | 'pysigma' = 'ai'; // 'ai' por defeito
 
   createRuleForm = new FormGroup({
     modalCode: new FormControl(''),
@@ -132,7 +135,7 @@ export class RuleModelDetailsComponent implements OnInit {
     private route: ActivatedRoute,
     private rulesService: RulesService,
     private useCaseService: UsecasesService,
-    private clipboard: Clipboard,
+    public clipboard: Clipboard,
     private router: Router,
   ) {}
 
@@ -269,97 +272,88 @@ export class RuleModelDetailsComponent implements OnInit {
 
   openConvertModal(): void {
     this.sourceRuleContent =
-      this.selectedModel.value || this.ruleModel.ruleCode || '';
-    this.convertedRuleContent = '';
+    this.selectedModel.value || this.ruleModel.ruleCode || '';
     this.conversionEngine = null;
     this.targetSyntax = '';
     this.isConverting = false;
     this.showConvertModal = true;
   }
 
-  closeConvertModal(): void {
+  closeConvertModal() {
     this.showConvertModal = false;
-  }
-
-  convertRule(): void {
-    if (!this.targetSyntax || !this.sourceRuleContent) return;
-
-    // Se a sintaxe de destino for igual à atual, não precisa de conversão
-    if (this.targetSyntax === this.ruleModel.syntax) {
-      this.convertedRuleContent = this.sourceRuleContent;
-      return;
-    }
-
-    this.isConverting = true;
-    this.convertedRuleContent = '';
-    this.intermediateSigmaContent = '';
-    this.conversionEngine = null;
     this.conversionError = '';
-
-    const payload = {
-      source_query: this.sourceRuleContent,
-      source_syntax: this.ruleModel.syntax,
-      target_syntax: this.targetSyntax,
-    };
-
-    this.sigmaConversionsService.convertRuleWithAI(payload).subscribe({
-      next: (res: any) => {
-        this.convertedRuleContent = res.target_query;
-        this.intermediateSigmaContent = res.sigma_rule;
-        this.conversionEngine = res.engine || null;
-        this.isConverting = false;
-      },
-      error: (err: any) => {
-        this.conversionError =
-          err.error?.error ||
-          err.message ||
-          'Erro durante a conversão da regra.';
-        this.isConverting = false;
-      },
-    });
   }
 
-  copyConvertedToClipboard(): void {
-    if (this.convertedRuleContent) {
-      this.clipboard.copy(this.convertedRuleContent);
-      this.message = 'Código convertido copiado com sucesso!';
-      setTimeout(() => (this.message = ''), 3000);
+private doneEngines: { [key: string]: boolean } = {};
+private hasRun = false;
+
+convertRule() {
+  this.hasRun = true;
+  this.doneEngines = {};
+  this.pysigmaConvertedContent = '';
+  this.aiConvertedContent = '';
+  this.aiPureConvertedContent = '';
+  this.intermediateSigmaContent = '';
+  this.runEngine(this.selectedOutputView);
+}
+
+resetConversions() {
+  this.hasRun = false;
+  this.doneEngines = {};
+}
+
+onOutputViewChange() {
+  if (this.hasRun && this.targetSyntax && !this.doneEngines[this.selectedOutputView]) {
+    this.runEngine(this.selectedOutputView);
+  }
+}
+
+private runEngine(engine: 'ai' | 'ai_pure' | 'pysigma') {
+  this.isConverting = true;
+  this.conversionError = '';
+
+  const payload = {
+    source_query: this.sourceRuleContent,
+    source_syntax: this.ruleModel.syntax,
+    target_syntax: this.targetSyntax,
+    logsource: this.ruleModel.logsources || this.createRuleForm.value.logsources,
+    engine: engine,
+  };
+
+  this.sigmaConversionsService.convertRuleWithAI(payload).subscribe({
+    next: (res: any) => {
+      if (engine === 'pysigma') this.pysigmaConvertedContent = res.pysigma_result || 'N/A';
+      else if (engine === 'ai') this.aiConvertedContent = res.ai_result || '';
+      else this.aiPureConvertedContent = res.ai_pure_result || '';
+
+      if (res.sigma_rule) this.intermediateSigmaContent = res.sigma_rule;
+      this.doneEngines[engine] = true;
+      this.isConverting = false;
+    },
+    error: (err: any) => {
+      this.conversionError = err.error?.error || err.message || 'Erro durante a conversão da regra.';
+      this.isConverting = false;
+    },
+  });
+}
+
+  applyConvertedRule() {
+    let finalContent = '';
+    
+    // Escolhe o conteúdo final com base no que está selecionado na dropdown
+    if (this.selectedOutputView === 'ai') {
+      finalContent = this.aiConvertedContent;
+    } else if (this.selectedOutputView === 'ai_pure') {
+      finalContent = this.aiPureConvertedContent;
+    } else {
+      finalContent = this.pysigmaConvertedContent;
     }
-  }
 
-  applyConvertedRule(): void {
-    if (!this.convertedRuleContent || this.isConverting) return;
-
-    const payload = {
-      ruleModel: this.ruleModel.id,
-      ruleCode: this.convertedRuleContent,
-      syntax: this.targetSyntax,
-      logsources: this.ruleModel.logsources || [],
-      client: null, // Cria a instância sem cliente associado
-    };
-
-    this.rulesService.createRule(payload).subscribe({
-      next: (createdRule: any) => {
-        // 1. Fecha o modal de conversão
-        this.closeConvertModal();
-
-        // 2. Adiciona a nova regra à grelha de instâncias no ecrã
-        if (createdRule) {
-          this.ruleInstances.push(createdRule);
-        }
-
-        // 3. Ativa o toast de sucesso
-        this.message = `Nova regra (${this.targetSyntax}) criada com sucesso!`;
-        setTimeout(() => {
-          this.message = '';
-        }, 4000);
-      },
-      error: (err: any) => {
-        this.conversionError =
-          'Erro ao registar a nova regra na base de dados.';
-        console.error('Erro ao criar regra convertida:', err);
-      },
+    this.createRuleForm.patchValue({
+      modalCode: finalContent,
+      syntax: this.targetSyntax
     });
+    this.closeConvertModal();
   }
 
   // --- Fim da Modal de Conversão ---
