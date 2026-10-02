@@ -98,16 +98,12 @@ class AQLBackend(TextQueryBackend):
     def convert_condition_field_eq_val_str(
         self, cond: ConditionFieldEqualsValueExpression, state: ConversionState
     ) -> Union[str, DeferredQueryExpression]:
-        """
-        String sem wildcard -> '=' (match exato).
-        String com wildcard (endswith/startswith/contains/*) -> ILIKE.
-        Sem isto, TODAS as strings sairiam com '=', o que está errado para
-        qualquer modifier Sigma que produza wildcards.
-        """
-        value = self.convert_value_str(cond.value, state)
         if cond.value.contains_special():
+            value = self.convert_value_str(cond.value, state)
             return f"{cond.field} ILIKE {value}"
-        return f"{cond.field} = {value}"
+        # igualdade exata: sem escape de wildcards, só aspas simples duplicadas
+        raw = "".join(p for p in cond.value.s if isinstance(p, str)).replace("'", "''")
+        return f"{cond.field} = '{raw}'"
 
     # ------------------------------------------------------------------------
     # Finalização: envolve a condição gerada no template SELECT ... WHERE ...
