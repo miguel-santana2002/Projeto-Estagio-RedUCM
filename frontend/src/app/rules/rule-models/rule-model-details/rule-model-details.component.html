@@ -2,155 +2,141 @@
 
 <app-titlebanner title="RedModel{{ ruleModel.id }}" image="./assets/bannercover.jpg"></app-titlebanner>
 
-<!-- Toast de Sucesso -->
-<div *ngIf="message" id="toast-success"
-  class="fixed top-4 right-4 flex items-center w-full max-w-xs p-4 text-gray-500 bg-white rounded-lg shadow dark:text-gray-400 dark:bg-gray-800 z-50 transition border border-transparent dark:border-gray-700"
-  role="alert">
-  <div
-    class="inline-flex items-center justify-center flex-shrink-0 w-8 h-8 text-green-500 bg-green-100 rounded-lg dark:bg-green-950/50 dark:text-green-400">
-    <i class="fas fa-check"></i>
-    <span class="sr-only">Sucesso</span>
-  </div>
-  <div class="ms-3 text-sm font-normal text-gray-800 dark:text-gray-200">{{ message }}</div>
-  <button type="button" (click)="message = ''"
-    class="ms-auto -mx-1.5 -my-1.5 bg-white text-gray-400 hover:text-gray-900 rounded-lg focus:ring-2 focus:ring-gray-300 p-1.5 hover:bg-gray-100 inline-flex items-center justify-center h-8 w-8 dark:text-gray-400 dark:hover:text-white dark:bg-gray-800 dark:hover:bg-gray-700 transition"
-    aria-label="Close">
-    <i class="fas fa-times"></i>
-    <span class="sr-only">Fechar</span>
-  </button>
-</div>
+<div class="page-container px-4 py-8 dark:text-white transition">
 
-<div class="px-20 pt-6 dark:text-white">
-  <h1 class="font-inter font-semibold text-2xl text-gray-700 dark:text-white mb-4">
-    {{ ruleModel.title }}
-  </h1>
+  <!-- Cabeçalho: Título + Botão Editar -->
+  <div class="flex items-center justify-between mb-4">
+    <h1 class="font-inter font-semibold text-2xl text-gray-700 dark:text-white">
+      {{ ruleModel.title }}
+    </h1>
 
-  <!-- Barra de Metadados e Ação -->
-  <div class="flex items-center justify-between gap-6 py-4 my-2">
-
-    <!-- Bloco de Metadados -->
-    <div class="flex items-center gap-7 flex-wrap">
-
-      <!-- Use Case -->
-      <div class="flex items-center gap-3">
-        <i class="fas fa-tag text-gray-500 dark:text-gray-400 text-2xl"></i>
-        <div class="flex flex-col justify-center">
-          <span class="text-base font-bold text-gray-900 dark:text-white leading-tight">
-            <span class="text-redshift-red font-bold">Red</span>UC{{ ruleModel.useCaseId }}
-          </span>
-          <span class="text-xs text-gray-500 dark:text-gray-400 font-normal">Use Case Associado</span>
-        </div>
-      </div>
-
-      <!-- Técnicas MITRE (se existirem) -->
-      <div class="flex items-center gap-3" *ngIf="ruleModel.mitreTechniques?.length">
-        <span class="bg-[#0b1b2b] text-white text-[11px] font-bold px-2 py-1 rounded">
-          MITRE
-        </span>
-        <div class="flex flex-col justify-center">
-          <div class="flex items-center gap-1">
-            <span *ngFor="let mitre of ruleModel.mitreTechniques"
-              class="bg-[#0d2f52] text-white text-xs px-2 py-0.5 rounded font-medium">
-              {{ mitre }}
-            </span>
-          </div>
-          <span class="text-xs text-gray-500 dark:text-gray-400 font-normal">Técnicas Mitre Associadas</span>
-        </div>
-      </div>
-
-      <!-- Tipo -->
-      <div class="flex items-center gap-3">
-        <i class="fas fa-cubes text-gray-500 dark:text-gray-400 text-2xl"></i>
-        <div class="flex flex-col justify-center">
-          <span class="text-base font-bold text-gray-900 dark:text-white leading-tight">{{ ruleModel.type }}</span>
-          <span class="text-xs text-gray-500 dark:text-gray-400 font-normal">Tipo</span>
-        </div>
-      </div>
-
-      <!-- Sintaxe -->
-      <div class="flex items-center gap-3">
-        <i class="fas fa-code text-redshift-red text-2xl"></i>
-        <div class="flex flex-col justify-center">
-          <span class="text-base font-bold text-gray-900 dark:text-white leading-tight">{{ ruleModel.syntax || 'N/D'
-            }}</span>
-          <span class="text-xs text-gray-500 dark:text-gray-400 font-normal">Sintaxe</span>
-        </div>
-      </div>
-
-      <!-- Logsources -->
-      <div class="flex items-center gap-3">
-        <i class="fas fa-network-wired text-gray-500 dark:text-gray-400 text-2xl"></i>
-        <div class="flex flex-col justify-center">
-          <div class="flex items-center gap-2 max-w-xl">
-            <span *ngFor="let log of ruleModel.logsources?.slice(0, 2)" [title]="log"
-              class="bg-[#0d2f52] text-white text-xs px-2.5 py-1 rounded font-medium truncate max-w-[220px]">
-              {{ log }}
-            </span>
-
-            <span *ngIf="ruleModel.logsources?.length > 2" [title]="ruleModel.logsources.slice(2).join(', ')"
-              class="bg-[#0d2f52] hover:bg-[#15467a] text-white text-xs px-2 py-0.5 rounded-full font-bold cursor-help">
-              +{{ ruleModel.logsources.length - 2 }}
-            </span>
-
-            <span *ngIf="!ruleModel.logsources?.length" class="text-sm text-gray-400 dark:text-gray-500">N/D</span>
-          </div>
-          <span class="text-xs text-gray-500 dark:text-gray-400 font-normal">LogSources</span>
-        </div>
-      </div>
-
-    </div>
-
-    <!-- Botão Editar Modelo de Regra -->
     <div class="flex-shrink-0">
       <button [routerLink]="['/edit-rule-model', ruleModel.id]"
         class="inline-flex items-center gap-2 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 font-semibold text-sm py-2 px-4 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm transition">
-        <i class="fas fa-pen-to-square text-redshift-red text-base"></i>
+        <i class="fas fa-pen-to-square text-redshift-red text-sm"></i>
         <span>Editar Modelo de Regra</span>
       </button>
+    </div>
+  </div>
+
+  <!-- Barra de Metadados Principais -->
+  <div
+    class="flex items-center flex-wrap gap-8 py-3 px-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm mb-6">
+
+    <!-- Use Case -->
+    <div class="flex items-center gap-3">
+      <i class="fas fa-tag text-gray-500 dark:text-gray-400 text-xl"></i>
+      <div class="flex flex-col">
+        <span class="text-sm font-bold text-gray-900 dark:text-white leading-tight">
+          <span class="text-redshift-red font-bold">Red</span>UC{{ ruleModel.useCaseId || 'N/D' }}
+        </span>
+        <span class="text-xs text-gray-500 dark:text-gray-400">Use Case Associado</span>
+      </div>
+    </div>
+
+    <!-- Técnicas MITRE (Apenas ID visível + Nome no Hover) -->
+    <div class="flex items-center gap-3" *ngIf="ruleModel.mitreTechniques?.length">
+      <span class="bg-[#0b1b2b] text-white text-[11px] font-bold px-2 py-1 rounded">
+        MITRE
+      </span>
+      <div class="flex flex-col">
+        <div class="flex items-center flex-wrap gap-1 max-w-xs">
+          <div *ngFor="let mitre of ruleModel.mitreTechniques"
+            [routerLink]="'/techniqueDetails/' + (mitre.includes(' - ') ? mitre.split(' - ')[0] : mitre)"
+            [title]="mitre"
+            class="bg-[#0d2f52] hover:bg-[#15467a] transition cursor-pointer text-white text-xs px-2 py-0.5 rounded font-medium select-none">
+            {{ mitre.includes(' - ') ? mitre.split(' - ')[0] : mitre }}
+          </div>
+        </div>
+        <span class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Técnicas MITRE</span>
+      </div>
+    </div>
+
+    <!-- Tipo -->
+    <div class="flex items-center gap-3">
+      <i class="fas fa-cubes text-gray-500 dark:text-gray-400 text-xl"></i>
+      <div class="flex flex-col">
+        <span class="text-sm font-bold text-gray-900 dark:text-white leading-tight">
+          {{ ruleModel.type || 'SIEM' }}
+        </span>
+        <span class="text-xs text-gray-500 dark:text-gray-400">Tipo</span>
+      </div>
+    </div>
+
+    <!-- Sintaxe -->
+    <div class="flex items-center gap-3">
+      <i class="fas fa-code text-redshift-red text-xl"></i>
+      <div class="flex flex-col">
+        <span class="text-sm font-bold text-gray-900 dark:text-white leading-tight">
+          {{ ruleModel.syntax || 'N/D' }}
+        </span>
+        <span class="text-xs text-gray-500 dark:text-gray-400">Sintaxe</span>
+      </div>
+    </div>
+
+    <!-- Logsources (Após a Sintaxe) -->
+    <div class="flex items-center gap-3">
+      <i class="fas fa-network-wired text-gray-500 dark:text-gray-400 text-xl"></i>
+      <div class="flex flex-col">
+        <div class="flex items-center gap-2 max-w-md">
+          <span *ngFor="let log of ruleModel.logsources?.slice(0, 2)" [title]="log"
+            class="bg-[#0d2f52] text-white text-xs px-2.5 py-1 rounded font-medium truncate max-w-[200px]">
+            {{ log }}
+          </span>
+
+          <span *ngIf="ruleModel.logsources?.length > 2" [title]="ruleModel.logsources.slice(2).join(', ')"
+            class="bg-[#0d2f52] hover:bg-[#15467a] text-white text-xs px-2 py-0.5 rounded-full font-bold cursor-help">
+            +{{ ruleModel.logsources.length - 2 }}
+          </span>
+
+          <span *ngIf="!ruleModel.logsources?.length" class="text-xs text-gray-400 dark:text-gray-500 italic">N/D</span>
+        </div>
+        <span class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">LogSources</span>
+      </div>
     </div>
 
   </div>
 
-  <!-- Editor e Coluna de Ações -->
-  <div class="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start w-full mt-8">
+  <!-- Área Principal (Editor + Coluna Lateral de Ações) -->
+  <div class="flex flex-col lg:flex-row gap-8 items-start w-full">
 
-    <!-- Coluna do Editor Monaco -->
-    <div class="xl:col-span-10 w-full min-w-0">
-      <app-code-editor [code]="selectedModel.value" [language]="ruleModel.syntax" height="550px"
+    <!-- Coluna do Editor (75%) -->
+    <div class="w-full lg:w-[75%] min-w-0">
+      <app-code-editor [code]="selectedModel.value" [language]="ruleModel.syntax || 'yaml'" height="550px"
         (codeChange)="onCodeChanged($event)">
       </app-code-editor>
     </div>
 
-    <!-- Coluna de Ações -->
-    <div class="xl:col-span-2 w-full flex flex-col space-y-4">
+    <!-- Coluna Lateral de Ações (25%) -->
+    <div class="w-full lg:w-[25%] flex flex-col gap-4">
       <div
         class="bg-gray-100 dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 flex flex-col space-y-3 transition">
-        <h3 class="text-base font-semibold text-gray-700 dark:text-gray-200 mb-1">
+        <h3 class="text-sm uppercase font-semibold text-gray-500 dark:text-gray-400 mb-1">
           Ações
         </h3>
 
         <button (click)="copyToClipboard()" type="button"
-          class="flex items-center w-full px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 hover:text-redshift-red dark:hover:text-white shadow-sm transition">
-          <i class="fas fa-copy mr-2 text-gray-500 dark:text-gray-400"></i>
-          Copiar para Clipboard
+          class="flex items-center w-full px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 hover:text-redshift-red dark:hover:text-white shadow-sm transition gap-3">
+          <i class="fas fa-copy w-5 text-center text-gray-500 dark:text-gray-400"></i>
+          <span>Copiar para Clipboard</span>
         </button>
 
         <button (click)="openConvertModal()" type="button"
-          class="flex items-center w-full px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 hover:text-redshift-red dark:hover:text-white shadow-sm transition">
-          <i class="fas fa-exchange-alt mr-2 text-gray-500 dark:text-gray-400"></i>
-          Converter Regra
+          class="flex items-center w-full px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 hover:text-redshift-red dark:hover:text-white shadow-sm transition gap-3">
+          <i class="fas fa-exchange-alt w-5 text-center text-gray-500 dark:text-gray-400"></i>
+          <span>Converter Regra</span>
         </button>
 
         <button (click)="openAssignModal()" data-modal-target="crud-modal" data-modal-toggle="crud-modal" type="button"
-          class="flex items-center w-full px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 hover:text-redshift-red dark:hover:text-white shadow-sm transition">
-          <i class="fas fa-user-plus mr-2 text-gray-500 dark:text-gray-400"></i>
-          Atribuir a clientes
+          class="flex items-center w-full px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 hover:text-redshift-red dark:hover:text-white shadow-sm transition gap-3">
+          <i class="fas fa-user-plus w-5 text-center text-gray-500 dark:text-gray-400"></i>
+          <span>Atribuir a Clientes</span>
         </button>
 
         <button (click)="updateRuleModelCode()" type="button"
-          class="flex items-center w-full px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 hover:text-redshift-red dark:hover:text-white shadow-sm transition">
-          <i class="fas fa-save mr-2 text-gray-500 dark:text-gray-400"></i>
-          Guardar Regra
+          class="flex items-center w-full px-4 py-2.5 text-sm font-medium text-white bg-redshift-red rounded-lg hover:bg-redshift-hover shadow-sm transition gap-3 justify-center">
+          <i class="fas fa-save w-5 text-center"></i>
+          <span>Guardar Alterações</span>
         </button>
       </div>
     </div>
@@ -158,122 +144,149 @@
   </div>
 
   <!-- Instâncias da Regra -->
-  <h1 class="font-inter font-semibold text-2xl text-gray-700 dark:text-white mb-4 mt-12">
-    Regras baseadas neste Modelo
-  </h1>
+  <div class="mt-12 mb-8">
+    <div class="flex items-center justify-between mb-4">
+      <div>
+        <h2 class="font-inter font-semibold text-2xl text-gray-700 dark:text-white">
+          Regras baseadas neste Modelo
+        </h2>
+        <p class="text-sm text-gray-500 dark:text-gray-400">
+          Instâncias ativas criadas e atribuídas a clientes a partir deste modelo
+        </p>
+      </div>
+      <span
+        class="text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700">
+        {{ ruleInstances?.length || 0 }} regra(s)
+      </span>
+    </div>
 
-  <div class="flex flex-wrap -mx-2 mb-12">
-    <div class="w-full sm:w-1/2 md:w-1/3 lg:w-1/6 p-2" *ngFor="let rule of ruleInstances">
-      <div
-        class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-4 rounded-lg shadow-sm cursor-pointer hover:shadow-md hover:border-gray-300 dark:hover:border-gray-600 transition duration-200"
-        [routerLink]="'/rule-Details/' + rule.id">
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+      <div *ngFor="let rule of ruleInstances" [routerLink]="'/rule-Details/' + rule.id"
+        class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-4 rounded-xl shadow-sm cursor-pointer hover:shadow-md hover:border-gray-300 dark:hover:border-gray-600 transition duration-200 flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between gap-2 mb-2">
+            <span class="text-xs font-mono font-bold text-redshift-red dark:text-red-400">#{{ rule.id }}</span>
+            <span
+              class="text-[11px] font-semibold px-2 py-0.5 rounded bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-600">
+              {{ rule.syntax || 'N/D' }}
+            </span>
+          </div>
+          <h3 class="font-inter font-semibold text-sm text-gray-800 dark:text-white truncate"
+            [title]="rule.client?.name || 'Geral (Sem Cliente)'">
+            {{ rule.client?.name || 'Geral (Sem Cliente)' }}
+          </h3>
+        </div>
 
-        <!-- Mostra a sintaxe ou 'Sem Cliente' quando client for null -->
-        <h1 class="font-inter font-semibold text-base text-gray-800 dark:text-white truncate"
-          [title]="rule.client?.name || rule.syntax">
-          {{ rule.client?.name || (rule.syntax + ' (Geral)') }}
-        </h1>
-
-        <p class="text-gray-500 dark:text-gray-400 text-xs mt-1 truncate">
-          {{ (rule.logsources && rule.logsources.length) ? rule.logsources.join(', ') : 'Sem logsources' }}
+        <p class="text-gray-500 dark:text-gray-400 text-xs mt-3 truncate"
+          [title]="(rule.logsources && rule.logsources.length) ? rule.logsources.join(', ') : 'Sem LogSources'">
+          <i class="fas fa-network-wired mr-1 text-[10px]"></i>
+          {{ (rule.logsources && rule.logsources.length) ? rule.logsources.join(', ') : 'Sem LogSources' }}
         </p>
       </div>
     </div>
 
-    <div *ngIf="!ruleInstances?.length" class="p-2 text-gray-500 dark:text-gray-400 text-sm">
-      Nenhuma instância criada para este modelo.
+    <div *ngIf="!ruleInstances?.length"
+      class="py-8 text-center text-sm text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
+      <i class="fas fa-inbox text-2xl mb-2 block opacity-40"></i>
+      Nenhuma instância criada para este modelo de regra.
     </div>
   </div>
 
-  <!-- Modal Atribuir Regra (crud-modal) -->
-  <div id="crud-modal" tabindex="-1" aria-hidden="true"
-    class="bg-black/60 backdrop-blur-sm hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full">
-    <div class="relative p-4 w-10/12 min-w-96 max-h-full">
-      <div class="relative bg-white rounded-lg shadow dark:bg-gray-800 border border-transparent dark:border-gray-700">
+</div>
 
-        <!-- Header -->
-        <div class="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-700">
-          <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
-            Atribuir Regra a Cliente
-          </h3>
-          <button type="button"
-            class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-700 dark:hover:text-white transition"
-            data-modal-toggle="crud-modal">
-            <i class="fas fa-times text-base"></i>
-            <span class="sr-only">Close modal</span>
-          </button>
+<!-- Modal Atribuir Regra (crud-modal) -->
+<div id="crud-modal" tabindex="-1" aria-hidden="true"
+  class="bg-black/60 backdrop-blur-sm hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full">
+  <div class="relative p-4 w-10/12 min-w-96 max-h-full">
+    <div class="relative bg-white rounded-lg shadow dark:bg-gray-800 border border-transparent dark:border-gray-700">
+
+      <!-- Header -->
+      <div class="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-700">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+          Atribuir Regra a Cliente
+        </h3>
+        <button type="button"
+          class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-700 dark:hover:text-white transition"
+          data-modal-toggle="crud-modal">
+          <i class="fas fa-times text-base"></i>
+          <span class="sr-only">Close modal</span>
+        </button>
+      </div>
+
+      <!-- Formulário -->
+      <form class="p-4 md:p-5" [formGroup]="createRuleForm">
+        <div class="grid gap-4 mb-4 grid-cols-2">
+
+          <!-- Seleção de Cliente -->
+          <div class="col-span-1 row-span-1">
+            <label for="client" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Cliente</label>
+
+            <select *ngIf="user.companies?.length === 0" id="client" formControlName="client" required
+              class="block w-full rounded-md border-0 px-2 py-2.5 text-gray-900 bg-white dark:bg-gray-700 dark:text-white shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-600 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 dark:focus:ring-indigo-500 sm:text-sm transition">
+              <option *ngFor="let client of clients" [ngValue]="client.pk">
+                {{ client.name }}
+              </option>
+            </select>
+
+            <select *ngIf="user.companies?.length > 0" id="client" formControlName="client" required
+              class="block w-full rounded-md border-0 px-2 py-2.5 text-gray-900 bg-white dark:bg-gray-700 dark:text-white shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-600 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 dark:focus:ring-indigo-500 sm:text-sm transition">
+              <option *ngFor="let client of user.companies ?? []" [ngValue]="client">
+                {{ client }}
+              </option>
+            </select>
+          </div>
+
+          <!-- Sintaxe Pré-selecionada -->
+          <div class="col-span-1 row-span-1">
+            <label for="syntax" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Sintaxe de
+              destino</label>
+            <select id="syntax" formControlName="syntax" (change)="onSyntaxChange()" required
+              class="block w-full rounded-md border-0 px-2 py-2.5 text-gray-900 bg-white dark:bg-gray-700 dark:text-white shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-600 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 dark:focus:ring-indigo-500 sm:text-sm transition">
+              <option *ngFor="let s of availableSyntaxes" [ngValue]="s.id">{{ s.name }}</option>
+            </select>
+            <p *ngIf="isSyntaxConverting" class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              <i class="fas fa-spinner fa-spin mr-1"></i> A converter...
+            </p>
+            <p *ngIf="syntaxError" class="mt-1 text-xs text-red-600 dark:text-red-400">{{ syntaxError }}</p>
+          </div>
+
+          <!-- Editor / Textarea -->
+          <div class="col-span-2">
+            <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Código da Regra (editável antes
+              de guardar)</label>
+            <textarea rows="16" formControlName="modalCode"
+              class="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white font-mono rounded-lg p-2.5 text-xs focus:ring-2 focus:ring-indigo-600 dark:focus:ring-indigo-500 transition">
+              </textarea>
+          </div>
         </div>
 
-        <!-- Formulário -->
-        <form class="p-4 md:p-5" [formGroup]="createRuleForm">
-          <div class="grid gap-4 mb-4 grid-cols-2">
-
-            <!-- Seleção de Cliente -->
-            <div class="col-span-1 row-span-1">
-              <label for="client" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Cliente</label>
-
-              <select *ngIf="user.companies?.length === 0" id="client" formControlName="client" required
-                class="block w-full rounded-md border-0 px-2 py-2.5 text-gray-900 bg-white dark:bg-gray-700 dark:text-white shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-600 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 dark:focus:ring-indigo-500 sm:text-sm transition">
-                <option *ngFor="let client of clients" [ngValue]="client.pk">
-                  {{ client.name }}
-                </option>
-              </select>
-
-              <select *ngIf="user.companies?.length > 0" id="client" formControlName="client" required
-                class="block w-full rounded-md border-0 px-2 py-2.5 text-gray-900 bg-white dark:bg-gray-700 dark:text-white shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-600 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 dark:focus:ring-indigo-500 sm:text-sm transition">
-                <option *ngFor="let client of user.companies ?? []" [ngValue]="client">
-                  {{ client }}
-                </option>
-              </select>
-            </div>
-
-            <!-- Sintaxe Pré-selecionada -->
-            <div class="col-span-1 row-span-1">
-              <label for="syntax" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Sintaxe de destino</label>
-              <select id="syntax" formControlName="syntax" (change)="onSyntaxChange()" required
-                class="block w-full rounded-md border-0 px-2 py-2.5 text-gray-900 bg-white dark:bg-gray-700 dark:text-white shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-600 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 dark:focus:ring-indigo-500 sm:text-sm transition">
-                <option *ngFor="let s of availableSyntaxes" [ngValue]="s.id">{{ s.name }}</option>
-              </select>
-              <p *ngIf="isSyntaxConverting" class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                <i class="fas fa-spinner fa-spin mr-1"></i> A converter...
-              </p>
-              <p *ngIf="syntaxError" class="mt-1 text-xs text-red-600 dark:text-red-400">{{ syntaxError }}</p>
-            </div>
-
-            <!-- Editor / Textarea -->
-            <div class="col-span-2">
-              <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Código da Regra (editável antes de guardar)</label>
-              <textarea rows="16" formControlName="modalCode"
-                class="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white font-mono rounded-lg p-2.5 text-xs focus:ring-2 focus:ring-indigo-600 dark:focus:ring-indigo-500 transition">
-              </textarea>
-            </div>
-          </div>
-
-          <!-- Footer Modal -->
-          <div class="flex items-center justify-end p-4 border-t border-gray-200 dark:border-gray-700 space-x-3">
-            <button (click)="createRule()" [disabled]="createRuleForm.invalid || isSyntaxConverting" type="button"
-              class="py-2 px-4 text-sm font-medium text-white bg-redshift-red hover:bg-redshift-hover disabled:opacity-50 disabled:cursor-not-allowed rounded-lg shadow-sm transition">
-              Atribuir
-            </button>
-            <button type="button" data-modal-hide="crud-modal"
-              class="py-2 px-4 text-sm font-medium text-gray-500 dark:text-gray-300 bg-white dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600 hover:text-gray-900 dark:hover:text-white transition">
-              Cancelar
-            </button>
-          </div>
-        </form>
-      </div>
+        <!-- Footer Modal -->
+        <div class="flex items-center justify-end p-4 border-t border-gray-200 dark:border-gray-700 space-x-3">
+          <button (click)="createRule()" [disabled]="createRuleForm.invalid || isSyntaxConverting" type="button"
+            class="py-2 px-4 text-sm font-medium text-white bg-redshift-red hover:bg-redshift-hover disabled:opacity-50 disabled:cursor-not-allowed rounded-lg shadow-sm transition">
+            Atribuir
+          </button>
+          <button type="button" data-modal-hide="crud-modal"
+            class="py-2 px-4 text-sm font-medium text-gray-500 dark:text-gray-300 bg-white dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600 hover:text-gray-900 dark:hover:text-white transition">
+            Cancelar
+          </button>
+        </div>
+      </form>
     </div>
   </div>
+</div>
 
-  <!-- Modal Converter Regra (Layout Suave, Tons Coerentes e Sem Scroll Excessivo) -->
+<!-- Modal Converter Regra (Layout Suave, Tons Coerentes e Sem Scroll Excessivo) -->
 <div *ngIf="showConvertModal"
   class="fixed top-0 left-0 w-full h-full flex items-center justify-center bg-black/70 backdrop-blur-md z-50 p-4">
 
   <!-- Fundo principal da Modal agora com a cor coerente do site (slate-900 / #111827) -->
-  <div class="relative bg-white dark:bg-[#111827] rounded-xl shadow-2xl w-full max-w-[95vw] xl:max-w-[85vw] overflow-hidden border border-gray-700 transition flex flex-col max-h-[94vh]">
+  <div
+    class="relative bg-white dark:bg-[#111827] rounded-xl shadow-2xl w-full max-w-[95vw] xl:max-w-[85vw] overflow-hidden border border-gray-700 transition flex flex-col max-h-[94vh]">
 
     <!-- Header com fundo mais suave -->
-    <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-[#1F2937]/50">
+    <div
+      class="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-[#1F2937]/50">
       <h3 class="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2.5">
         <i class="fas fa-brain text-redshift-red"></i>
         Conversão de Regras (pySigma vs. AI)
@@ -298,15 +311,18 @@
         <!-- Coluna da Esquerda: Sintaxe Original e Controlos (5 colunas) -->
         <div class="lg:col-span-5 flex flex-col h-full space-y-4">
           <div class="flex flex-col flex-1 min-h-[250px]">
-            <label class="block mb-2 text-xs font-semibold uppercase tracking-wider text-gray-700 dark:text-gray-300 flex items-center gap-1.5">
-              <i class="fas fa-code text-redshift-red"></i> Sintaxe Original <span class="normal-case font-normal text-gray-500">({{ ruleModel.syntax }})</span>
+            <label
+              class="block mb-2 text-xs font-semibold uppercase tracking-wider text-gray-700 dark:text-gray-300 flex items-center gap-1.5">
+              <i class="fas fa-code text-redshift-red"></i> Sintaxe Original <span
+                class="normal-case font-normal text-gray-500">({{ ruleModel.syntax }})</span>
             </label>
             <!-- Removido o rows="24", adicionado flex-1 para preencher o espaço vertical -->
             <textarea [(ngModel)]="sourceRuleContent" readonly
               class="w-full p-4 text-xs font-mono bg-gray-50 dark:bg-[#1F2937] border border-gray-300 dark:border-gray-700 rounded-lg text-gray-800 dark:text-gray-300 resize-none shadow-inner flex-1"></textarea>
           </div>
 
-          <div class="bg-gray-50 dark:bg-[#1F2937]/50 p-4 rounded-xl border border-gray-200 dark:border-gray-700 space-y-3 shrink-0">
+          <div
+            class="bg-gray-50 dark:bg-[#1F2937]/50 p-4 rounded-xl border border-gray-200 dark:border-gray-700 space-y-3 shrink-0">
             <div>
               <label class="block mb-1 text-xs font-medium text-gray-600 dark:text-gray-400">
                 Converter para o formato:
@@ -344,8 +360,8 @@
               </select>
             </div>
 
-            <button *ngIf="!isConverting" 
-              (click)="clipboard.copy(selectedOutputView === 'ai' ? aiConvertedContent : (selectedOutputView === 'ai_pure' ? aiPureConvertedContent : pysigmaConvertedContent))" 
+            <button *ngIf="!isConverting"
+              (click)="clipboard.copy(selectedOutputView === 'ai' ? aiConvertedContent : (selectedOutputView === 'ai_pure' ? aiPureConvertedContent : pysigmaConvertedContent))"
               type="button" class="text-xs text-gray-400 hover:text-redshift-red transition">
               <i class="fas fa-copy mr-1"></i> Copiar resultado atual
             </button>
@@ -353,14 +369,12 @@
 
           <div class="relative flex-1 flex flex-col min-h-[250px]">
             <!-- Removido o rows="24", adicionado flex-1 -->
-            <textarea 
+            <textarea
               [ngModel]="selectedOutputView === 'ai' ? aiConvertedContent : (selectedOutputView === 'ai_pure' ? aiPureConvertedContent : pysigmaConvertedContent)"
               (ngModelChange)="
                 selectedOutputView === 'ai' ? aiConvertedContent = $event : 
                 (selectedOutputView === 'ai_pure' ? aiPureConvertedContent = $event : pysigmaConvertedContent = $event)
-              "
-              [readonly]="isConverting"
-              placeholder="O resultado da conversão aparecerá aqui..."
+              " [readonly]="isConverting" placeholder="O resultado da conversão aparecerá aqui..."
               class="w-full p-4 text-xs font-mono bg-gray-50 dark:bg-[#1F2937] border border-gray-300 dark:border-gray-700 rounded-lg resize-none shadow-inner flex-1"
               [ngClass]="{
                 'text-indigo-400': selectedOutputView === 'ai',
@@ -380,8 +394,11 @@
     </div>
 
     <!-- Footer Modal -->
-    <div class="flex items-center justify-end px-6 py-4 border-t border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-[#1F2937]/50 space-x-3">
-      <button (click)="applyConvertedRule()" [disabled]="(!aiConvertedContent && !pysigmaConvertedContent && !aiPureConvertedContent) || isConverting" type="button"
+    <div
+      class="flex items-center justify-end px-6 py-4 border-t border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-[#1F2937]/50 space-x-3">
+      <button (click)="applyConvertedRule()"
+        [disabled]="(!aiConvertedContent && !pysigmaConvertedContent && !aiPureConvertedContent) || isConverting"
+        type="button"
         class="py-2.5 px-5 text-xs font-medium text-white bg-redshift-red hover:bg-redshift-hover disabled:opacity-50 disabled:cursor-not-allowed rounded-lg shadow transition">
         Criar Regra Convertida
       </button>
@@ -392,4 +409,37 @@
     </div>
 
   </div>
+</div>
+
+<!-- Toast de Sucesso no Canto Superior Direito -->
+<div *ngIf="showSuccessToast"
+  class="fixed top-5 right-5 z-[9999] max-w-sm w-full bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 p-4 transition-all duration-300 transform translate-y-0 opacity-100 flex items-start gap-3">
+
+  <div class="flex-shrink-0 text-emerald-500 mt-0.5">
+    <i class="fas fa-check-circle text-lg"></i>
+  </div>
+
+  <div class="flex-1 min-w-0">
+    <h4 class="text-sm font-semibold text-gray-900 dark:text-white">Regra Criada!</h4>
+    <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+      A regra convertida foi guardada com sucesso.
+    </p>
+
+    <div class="mt-2.5 flex items-center gap-3">
+      <a routerLink="/manage-rules"
+        class="inline-flex items-center text-xs font-semibold text-redshift-red hover:text-redshift-hover transition">
+        Ir para as Regras
+        <i class="fas fa-arrow-right ml-1.5 text-[10px]"></i>
+      </a>
+      <button (click)="closeToast()" type="button"
+        class="text-xs text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition">
+        Dispensar
+      </button>
+    </div>
+  </div>
+
+  <button (click)="closeToast()" type="button"
+    class="flex-shrink-0 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition">
+    <i class="fas fa-times text-xs"></i>
+  </button>
 </div>

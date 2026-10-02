@@ -9,12 +9,7 @@ import {
 } from '@angular/forms';
 import { Clipboard } from '@angular/cdk/clipboard';
 
-import {
-  CodeEditorComponent,
-  CodeEditorModule,
-  CodeModel,
-  CodeModelChangedEvent,
-} from '@ngstack/code-editor';
+import { CodeModel, CodeModelChangedEvent } from '@ngstack/code-editor';
 
 import { RulesService } from '../../../services/rules.service';
 import { HeaderComponent } from '../../../layout/header/header.component';
@@ -33,7 +28,6 @@ import { AppCodeEditorComponent } from '../../../shared/components/app-code-edit
   imports: [
     HeaderComponent,
     TitlebannerComponent,
-    CodeEditorModule,
     CommonModule,
     RouterModule,
     FormsModule,
@@ -123,7 +117,11 @@ export class RuleModelDetailsComponent implements OnInit {
   targetSyntax: string = '';
   isConverting: boolean = false;
   conversionError: string = '';
-  selectedOutputView: 'ai' | 'ai_pure' | 'pysigma' = 'ai'; // 'ai' por defeito
+  selectedOutputView: 'ai' | 'ai_pure' | 'pysigma' = 'ai';
+
+  // Estado do Pop-up (Toast)
+  showSuccessToast: boolean = false;
+  private toastTimeout: any;
 
   createRuleForm = new FormGroup({
     modalCode: new FormControl(''),
@@ -216,8 +214,6 @@ export class RuleModelDetailsComponent implements OnInit {
     }
   }
 
-  onEditorLoaded(editor: CodeEditorComponent): void {}
-
   onCodeModelChanged(event: CodeModelChangedEvent): void {
     setTimeout(() => {
       event.sender.formatDocument();
@@ -278,132 +274,159 @@ export class RuleModelDetailsComponent implements OnInit {
 
   openConvertModal(): void {
     this.sourceRuleContent =
-    this.selectedModel.value || this.ruleModel.ruleCode || '';
+      this.selectedModel.value || this.ruleModel.ruleCode || '';
     this.conversionEngine = null;
     this.targetSyntax = '';
     this.isConverting = false;
     this.showConvertModal = true;
   }
 
-  closeConvertModal() {
+  closeConvertModal(): void {
     this.showConvertModal = false;
     this.conversionError = '';
   }
 
-private doneEngines: { [key: string]: boolean } = {};
-private hasRun = false;
+  private doneEngines: { [key: string]: boolean } = {};
+  private hasRun = false;
 
-convertRule() {
-  this.hasRun = true;
-  this.doneEngines = {};
-  this.pysigmaConvertedContent = '';
-  this.aiConvertedContent = '';
-  this.aiPureConvertedContent = '';
-  this.intermediateSigmaContent = '';
-  this.runEngine(this.selectedOutputView);
-}
-
-resetConversions() {
-  this.hasRun = false;
-  this.doneEngines = {};
-}
-
-onOutputViewChange() {
-  if (this.hasRun && this.targetSyntax && !this.doneEngines[this.selectedOutputView]) {
+  convertRule(): void {
+    this.hasRun = true;
+    this.doneEngines = {};
+    this.pysigmaConvertedContent = '';
+    this.aiConvertedContent = '';
+    this.aiPureConvertedContent = '';
+    this.intermediateSigmaContent = '';
     this.runEngine(this.selectedOutputView);
   }
-}
 
-private runEngine(engine: 'ai' | 'ai_pure' | 'pysigma') {
-  this.isConverting = true;
-  this.conversionError = '';
+  resetConversions(): void {
+    this.hasRun = false;
+    this.doneEngines = {};
+  }
 
-  const payload = {
-    source_query: this.sourceRuleContent,
-    source_syntax: this.ruleModel.syntax,
-    target_syntax: this.targetSyntax,
-    logsource: this.ruleModel.logsources || this.createRuleForm.value.logsources,
-    engine: engine,
-  };
-
-  this.sigmaConversionsService.convertRuleWithAI(payload).subscribe({
-    next: (res: any) => {
-      if (engine === 'pysigma') this.pysigmaConvertedContent = res.pysigma_result || 'N/A';
-      else if (engine === 'ai') this.aiConvertedContent = res.ai_result || '';
-      else this.aiPureConvertedContent = res.ai_pure_result || '';
-
-      if (res.sigma_rule) this.intermediateSigmaContent = res.sigma_rule;
-      this.doneEngines[engine] = true;
-      this.isConverting = false;
-    },
-    error: (err: any) => {
-      this.conversionError = err.error?.error || err.message || 'Erro durante a conversão da regra.';
-      this.isConverting = false;
-    },
-  });
-}
-
-  applyConvertedRule() {
-    let finalContent = '';
-    
-    // Escolhe o conteúdo final com base no que está selecionado na dropdown
-    if (this.selectedOutputView === 'ai') {
-      finalContent = this.aiConvertedContent;
-    } else if (this.selectedOutputView === 'ai_pure') {
-      finalContent = this.aiPureConvertedContent;
-    } else {
-      finalContent = this.pysigmaConvertedContent;
+  onOutputViewChange(): void {
+    if (
+      this.hasRun &&
+      this.targetSyntax &&
+      !this.doneEngines[this.selectedOutputView]
+    ) {
+      this.runEngine(this.selectedOutputView);
     }
+  }
+
+  private runEngine(engine: 'ai' | 'ai_pure' | 'pysigma'): void {
+    this.isConverting = true;
+    this.conversionError = '';
+
+    const payload = {
+      source_query: this.sourceRuleContent,
+      source_syntax: this.ruleModel.syntax,
+      target_syntax: this.targetSyntax,
+      logsource:
+        this.ruleModel.logsources || this.createRuleForm.value.logsources,
+      engine: engine,
+    };
+
+    this.sigmaConversionsService.convertRuleWithAI(payload).subscribe({
+      next: (res: any) => {
+        if (engine === 'pysigma')
+          this.pysigmaConvertedContent = res.pysigma_result || 'N/A';
+        else if (engine === 'ai') this.aiConvertedContent = res.ai_result || '';
+        else this.aiPureConvertedContent = res.ai_pure_result || '';
+
+        if (res.sigma_rule) this.intermediateSigmaContent = res.sigma_rule;
+        this.doneEngines[engine] = true;
+        this.isConverting = false;
+      },
+      error: (err: any) => {
+        this.conversionError =
+          err.error?.error ||
+          err.message ||
+          'Erro durante a conversão da regra.';
+        this.isConverting = false;
+      },
+    });
+  }
+
+  applyConvertedRule(): void {
+    const finalContent =
+      this.selectedOutputView === 'ai'
+        ? this.aiConvertedContent
+        : this.selectedOutputView === 'ai_pure'
+          ? this.aiPureConvertedContent
+          : this.pysigmaConvertedContent;
+
+    if (!finalContent) return;
 
     this.createRuleForm.patchValue({
       modalCode: finalContent,
-      syntax: this.targetSyntax
+      syntax: this.targetSyntax,
+      logsources: this.ruleModel.logsources,
+      client: null,
     });
+
     this.closeConvertModal();
+    this.createRule();
+  }
+
+  // --- Lógica do Pop-up (Toast) ---
+
+  showToast(): void {
+    this.showSuccessToast = true;
+    clearTimeout(this.toastTimeout);
+    this.toastTimeout = setTimeout(() => {
+      this.showSuccessToast = false;
+    }, 10000);
+  }
+
+  closeToast(): void {
+    this.showSuccessToast = false;
+    clearTimeout(this.toastTimeout);
   }
 
   // --- Fim da Modal de Conversão ---
 
   onSyntaxChange(): void {
-  const selectedSyntax = this.createRuleForm.get('syntax')?.value;
-  const baseCode = this.ruleModel.ruleCode;
-  const baseSyntax = this.ruleModel.syntax;
+    const selectedSyntax = this.createRuleForm.get('syntax')?.value;
+    const baseCode = this.ruleModel.ruleCode;
+    const baseSyntax = this.ruleModel.syntax;
 
-  this.syntaxError = '';
-  const requestId = ++this.syntaxRequestId; // ignora respostas antigas
+    this.syntaxError = '';
+    const requestId = ++this.syntaxRequestId;
 
-  if (!selectedSyntax || selectedSyntax === baseSyntax) {
-    this.isSyntaxConverting = false;
-    this.createRuleForm.patchValue({ modalCode: baseCode });
-    return;
-  }
-
-  const engine = baseSyntax === 'Sigma Rule' ? 'pysigma' : 'ai_pure';
-
-  const payload = {
-    source_query: baseCode,
-    source_syntax: baseSyntax,
-    target_syntax: selectedSyntax,
-    engine: engine,
-  };
-
-  this.isSyntaxConverting = true;
-
-  this.sigmaConversionsService.convertRuleWithAI(payload).subscribe({
-    next: (res: any) => {
-      if (requestId !== this.syntaxRequestId) return;
-      const result = engine === 'pysigma' ? res.pysigma_result : res.ai_pure_result;
-      this.createRuleForm.patchValue({ modalCode: result || baseCode });
+    if (!selectedSyntax || selectedSyntax === baseSyntax) {
       this.isSyntaxConverting = false;
-    },
-    error: (err: any) => {
-      if (requestId !== this.syntaxRequestId) return;
-      this.syntaxError = err.error?.error || 'Erro na conversão.';
       this.createRuleForm.patchValue({ modalCode: baseCode });
-      this.isSyntaxConverting = false;
-    },
-  });
-}
+      return;
+    }
+
+    const engine = baseSyntax === 'Sigma Rule' ? 'pysigma' : 'ai_pure';
+
+    const payload = {
+      source_query: baseCode,
+      source_syntax: baseSyntax,
+      target_syntax: selectedSyntax,
+      engine: engine,
+    };
+
+    this.isSyntaxConverting = true;
+
+    this.sigmaConversionsService.convertRuleWithAI(payload).subscribe({
+      next: (res: any) => {
+        if (requestId !== this.syntaxRequestId) return;
+        const result =
+          engine === 'pysigma' ? res.pysigma_result : res.ai_pure_result;
+        this.createRuleForm.patchValue({ modalCode: result || baseCode });
+        this.isSyntaxConverting = false;
+      },
+      error: (err: any) => {
+        if (requestId !== this.syntaxRequestId) return;
+        this.syntaxError = err.error?.error || 'Erro na conversão.';
+        this.createRuleForm.patchValue({ modalCode: baseCode });
+        this.isSyntaxConverting = false;
+      },
+    });
+  }
 
   async createRule(): Promise<void> {
     const formVals = this.createRuleForm.value;
@@ -420,7 +443,7 @@ private runEngine(engine: 'ai' | 'ai_pure' | 'pysigma') {
       ruleModel: this.ruleModel.id,
       ruleCode: formVals.modalCode,
       logsources: formVals.logsources,
-      client: clientId,
+      client: clientId || null,
       syntax: formVals.syntax,
     };
 
@@ -431,7 +454,10 @@ private runEngine(engine: 'ai' | 'ai_pure' | 'pysigma') {
           .forEach((el) => el.remove());
 
         document.body.classList.remove('overflow-hidden');
-        this.router.navigate(['/manage-rules']);
+
+        // Atualiza as instâncias no fundo do ecrã e abre o pop-up sem redirecionar
+        this.loadUseCaseAndDependencies();
+        this.showToast();
       },
       error: (e) => console.error('Erro ao atribuir regra ao cliente:', e),
     });

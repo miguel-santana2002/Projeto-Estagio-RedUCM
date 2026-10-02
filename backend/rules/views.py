@@ -159,7 +159,7 @@ def createRule(request):
         ruleCode=data.get('ruleCode', ''),
         syntax=data.get('syntax', rule_model.syntax),
         client=client,
-        status=data.get('status', '')
+        status=data.get('status') or 'Regra não validada'
     )
     new_rule.save()
 

@@ -34,14 +34,15 @@ export class ManageRuleModelsComponent implements OnInit, AfterViewInit {
   @ViewChild('modal') modal!: ElementRef<HTMLElement>;
   modalFlowbite!: Modal;
 
-  isAdmin: boolean = false; // Controlo de permissões (Admin / Superuser)
-
   sortType: string = 'id';
   sortReverse: boolean = false;
   nameSearch: string = '';
   selectDelete: number = 999999;
 
   ruleModels: any[] = [];
+
+  // Controlo de permissões (Admin / Superuser)
+  isAdmin: boolean = false;
 
   // Paginação
   page: number = 1;
@@ -80,11 +81,11 @@ export class ManageRuleModelsComponent implements OnInit, AfterViewInit {
   loadUserInfo(): void {
     this.authService.loggedInInfo().subscribe({
       next: (data: any) => {
-        // Validação hierárquica por permissões de topo
+        // Superuser ou Admin têm privilégios totais; staff/operador fica como false
         this.isAdmin = Boolean(data?.is_superuser || data?.is_admin);
       },
       error: (err) => {
-        console.error('Erro ao carregar perfil do utilizador:', err);
+        console.error('Erro ao carregar dados do utilizador:', err);
         this.isAdmin = false;
       },
     });
@@ -282,8 +283,8 @@ export class ManageRuleModelsComponent implements OnInit, AfterViewInit {
 
   // Gestão de Modal Eliminar
   updateSelectDelete(event: Event, id: number): void {
-    event.stopPropagation();
     if (!this.isAdmin) return;
+    event.stopPropagation();
     this.selectDelete = id;
   }
 
@@ -298,17 +299,14 @@ export class ManageRuleModelsComponent implements OnInit, AfterViewInit {
 
   deleteRuleModel(): void {
     if (!this.isAdmin) return;
-
     this.rulesService.deleteRuleModelById(this.selectDelete).subscribe({
       next: () => {
         this.loadRuleModels();
         if (this.page > this.totalPages) {
           this.page = this.totalPages;
         }
-        this.closeModal();
       },
       error: (err) => console.error('Erro ao eliminar modelo de regra:', err),
     });
   }
 }
-

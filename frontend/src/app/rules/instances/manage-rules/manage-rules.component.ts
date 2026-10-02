@@ -33,7 +33,7 @@ export class ManageRulesComponent implements OnInit, AfterViewInit {
   @ViewChild('modal') modal!: ElementRef<HTMLElement>;
   modalFlowbite!: Modal;
 
-  isAdmin: boolean = false; // Controlo de permissões (Admin / Superuser)
+  isAdmin: boolean = false;
 
   sortType = 'id';
   sortReverse = false;
@@ -47,24 +47,20 @@ export class ManageRulesComponent implements OnInit, AfterViewInit {
   pageSize: number = 10;
   pageSizeOptions: number[] = [5, 10, 25, 50];
 
-  // Controlo do Painel de Filtros
   showFilters: boolean = false;
 
-  // Opções de Estado Disponíveis
   statusOptions = [
     { value: '', label: '(Vazio)' },
     { value: 'Regra validada', label: 'Regra validada' },
-    { value: 'Regra nao validada', label: 'Regra não validada' }
+    { value: 'Regra não validada', label: 'Regra não validada' },
   ];
 
-  // Filtros Selecionados
   selectedTypes: string[] = [];
   selectedSintaxes: string[] = [];
   selectedUseCases: (string | number)[] = [];
   selectedClients: string[] = [];
   selectedStatus: string[] = [];
 
-  // Opções Únicas para as Pills
   uniqueTypes: string[] = [];
   uniqueSintaxes: string[] = [];
   uniqueUseCases: (string | number)[] = [];
@@ -101,10 +97,12 @@ export class ManageRulesComponent implements OnInit, AfterViewInit {
   loadRules(): void {
     this.rulesService.getRules().subscribe({
       next: (data: any) => {
-        this.rules = Array.isArray(data) ? data.map(rule => ({
-          ...rule,
-          status: rule.status || ''
-        })) : [];
+        this.rules = Array.isArray(data)
+          ? data.map((rule) => ({
+              ...rule,
+              status: (rule.status || '').trim(),
+            }))
+          : [];
         this.startFilters();
         this.rules.sort((a: any, b: any) => this.sortNumeric(a.id, b.id));
       },
@@ -148,40 +146,46 @@ export class ManageRulesComponent implements OnInit, AfterViewInit {
     ).sort((a: any, b: any) => Number(a) - Number(b));
   }
 
-  // Estilo limpo: Texto destacado e borda subtil sem escurecer a tabela
   getStatusClasses(status: string): string {
-    switch(status) {
+    switch (status) {
       case 'Regra validada':
-        return 'text-gray-300 font-bold border border-gray-600 bg-gray-700/30';
-      case 'Regra nao validada':
-        return 'text-gray-300 border border-redshift-red/40 bg-redshift-red/5';
+        return 'text-green-400 font-semibold border border-green-600/40 bg-green-950/20';
+      case 'Regra não validada':
+        return 'text-amber-400 font-medium border border-amber-600/40 bg-amber-950/20';
       default:
         return 'text-gray-400 border border-dashed border-gray-600 bg-transparent';
     }
   }
 
-  // Função única e limpa para atualizar o estado diretamente na tabela
+  // Atualização direta e envio de payload completo
   updateRuleStatus(rule: any): void {
     const payload = {
-      client: rule.client?.id || rule.client?.pk || null,
+      ruleModel: rule.ruleModel?.id ?? rule.ruleModel ?? null,
+      client:
+        rule.client?.id ??
+        rule.client?.pk ??
+        (typeof rule.client === 'number' ? rule.client : null),
       status: rule.status || '',
       syntax: rule.syntax || rule.ruleModel?.syntax || '',
       logsources: rule.logsources || [],
-      ruleCode: rule.ruleCode || ''
+      ruleCode: rule.ruleCode || '',
     };
-    
+
     this.rulesService.updateRule(rule.id, payload).subscribe({
-      next: () => {
-        console.log(`Estado da regra ${rule.id} atualizado para ${rule.status}`);
+      next: (res: any) => {
+        // Confirma a persistência do valor retornado
+        if (res && res.status !== undefined) {
+          rule.status = res.status;
+        }
       },
       error: (err: any) => {
-        console.error('Erro ao atualizar estado:', err);
-        this.loadRules(); 
-      }
+        console.error('Erro ao atualizar estado da regra:', err);
+        // Recarrega em caso de erro para não manter dados inconsistentes na UI
+        this.loadRules();
+      },
     });
   }
 
-  // Toggles de Seleção com Reset de Página
   toggleClient(client: string): void {
     this.page = 1;
     this.selectedClients = this.selectedClients.includes(client)
@@ -217,7 +221,6 @@ export class ManageRulesComponent implements OnInit, AfterViewInit {
       : [...this.selectedStatus, status];
   }
 
-  // Limpeza
   clearAllFilters(): void {
     this.page = 1;
     this.selectedClients = [];
@@ -232,7 +235,6 @@ export class ManageRulesComponent implements OnInit, AfterViewInit {
     this.page = 1;
   }
 
-  // Ordenação com suporte para campos aninhados e nulos
   sortTable(column: string): void {
     if (this.sortType === column) {
       this.sortReverse = !this.sortReverse;
@@ -295,7 +297,6 @@ export class ManageRulesComponent implements OnInit, AfterViewInit {
     return (a - b) * (this.sortReverse ? -1 : 1);
   }
 
-  // Filtragem Reativa Segura
   get filteredRules(): any[] {
     const term = this.nameSearch.trim().toLowerCase();
 
@@ -323,8 +324,8 @@ export class ManageRulesComponent implements OnInit, AfterViewInit {
       const matchesClient =
         this.selectedClients.length === 0 ||
         (rule.client?.name && this.selectedClients.includes(rule.client.name));
-        
-      const matchesStatus = 
+
+      const matchesStatus =
         this.selectedStatus.length === 0 ||
         (rule.status && this.selectedStatus.includes(rule.status));
 
@@ -339,7 +340,6 @@ export class ManageRulesComponent implements OnInit, AfterViewInit {
     });
   }
 
-  // Segmentação Paginada
   get pagedRules(): any[] {
     const start = (this.page - 1) * this.pageSize;
     return this.filteredRules.slice(start, start + this.pageSize);
@@ -360,7 +360,6 @@ export class ManageRulesComponent implements OnInit, AfterViewInit {
     this.page = 1;
   }
 
-  // Gestão de Modal Eliminar
   updateSelectDelete(event: Event, id: number): void {
     event.stopPropagation();
     if (!this.isAdmin) return;

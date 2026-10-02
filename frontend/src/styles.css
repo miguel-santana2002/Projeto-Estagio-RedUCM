@@ -4,6 +4,13 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer components {
+  /* Contentor centralizado para limitar largura em ecrãs ultrawide */
+  .page-container {
+    @apply max-w-[1440px] mx-auto w-full;
+  }
+}
+
 html,
 body {
   height: 100%;

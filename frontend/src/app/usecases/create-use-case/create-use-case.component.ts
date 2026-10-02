@@ -47,15 +47,15 @@ export class CreateUseCaseComponent implements OnInit {
   private manualTactics = new Set<string>();
 
   chavesTaxonomia: string[] = [
-    'Malicious Code', 
-    'Availability', 
-    'Information Gathering', 
+    'Malicious Code',
+    'Availability',
+    'Information Gathering',
     'Intrusion',
-    'Intrusion Attempt', 
-    'Information Security', 
+    'Intrusion Attempt',
+    'Information Security',
     'Fraud',
-    'Abusive Content', 
-    'Vulnerability', 
+    'Abusive Content',
+    'Vulnerability',
     'Other',
   ];
 
@@ -69,7 +69,7 @@ export class CreateUseCaseComponent implements OnInit {
       ],
     },
     {
-      'Availability': [
+      Availability: [
         'Denial of Service',
         'Resource Abuse',
         'Outage / Unavailability',
@@ -83,7 +83,7 @@ export class CreateUseCaseComponent implements OnInit {
       ],
     },
     {
-      'Intrusion': [
+      Intrusion: [
         'Vulnerability Exploitation',
         'Account Compromise',
         'Credential Access',
@@ -103,29 +103,16 @@ export class CreateUseCaseComponent implements OnInit {
       ],
     },
     {
-      'Fraud': [
-        'Scams',
-        'Identity Theft / Forgery',
-        'Misuse of Resources',
-      ],
+      Fraud: ['Scams', 'Identity Theft / Forgery', 'Misuse of Resources'],
     },
     {
-      'Abusive Content': [
-        'SPAM',
-        'Phishing',
-        'Improper Content Hosting',
-      ],
+      'Abusive Content': ['SPAM', 'Phishing', 'Improper Content Hosting'],
     },
     {
-      'Vulnerability': [
-        'Vulnerable System',
-        'Vulnerable Application',
-      ],
+      Vulnerability: ['Vulnerable System', 'Vulnerable Application'],
     },
     {
-      'Other': [
-        'Other',
-      ],
+      Other: ['Other'],
     },
   ];
 
@@ -137,15 +124,12 @@ export class CreateUseCaseComponent implements OnInit {
 
   createUseCaseForm = new FormGroup({
     title: new FormControl('', Validators.required),
-    description: new FormControl(''),
-    mitigation: new FormControl(''),
-    playbook: new FormControl(''),
+    description: new FormControl('', Validators.required),
+    mitigation: new FormControl('', Validators.required),
     mitreTechniques: new FormControl<string[]>([], Validators.required),
     tactics: new FormControl<string[]>([], Validators.required),
-    cncsClass: new FormControl(''),
-    cncsClassCustom: new FormControl(''),
-    cncsType: new FormControl(''),
-    cncsTypeCustom: new FormControl(''),
+    cncsClass: new FormControl('', Validators.required),
+    cncsType: new FormControl('', Validators.required),
   });
 
   constructor(
@@ -327,16 +311,13 @@ export class CreateUseCaseComponent implements OnInit {
   clearCNCSClass(event: Event): void {
     event.stopPropagation();
     this.createUseCaseForm.get('cncsClass')?.setValue('');
-    this.createUseCaseForm.get('cncsClassCustom')?.setValue('');
     this.selectedCategoryValues = [];
     this.createUseCaseForm.get('cncsType')?.setValue('');
-    this.createUseCaseForm.get('cncsTypeCustom')?.setValue('');
   }
 
   clearCNCSType(event: Event): void {
     event.stopPropagation();
     this.createUseCaseForm.get('cncsType')?.setValue('');
-    this.createUseCaseForm.get('cncsTypeCustom')?.setValue('');
   }
 
   updateCNCSValues(): void {
@@ -369,13 +350,9 @@ export class CreateUseCaseComponent implements OnInit {
     formData.append('description', v.description || '');
     formData.append('mitigation', v.mitigation || '');
 
-    const finalCncsClass =
-      v.cncsClass === 'Outro' ? v.cncsClassCustom : v.cncsClass;
-    const finalCncsType =
-      v.cncsType === 'Outro' ? v.cncsTypeCustom : v.cncsType;
-
-    formData.append('cncsClass', finalCncsClass || '');
-    formData.append('cncsType', finalCncsType || '');
+    // Os valores são agora extraídos diretamente da Form
+    formData.append('cncsClass', v.cncsClass || '');
+    formData.append('cncsType', v.cncsType || '');
 
     formData.append('mitreTechniques', JSON.stringify(v.mitreTechniques || []));
     formData.append('tactics', JSON.stringify(v.tactics || []));
