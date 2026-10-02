@@ -11,7 +11,6 @@ import {
 } from '@angular/forms';
 import { UsecasesService } from '../../../services/usecases.service';
 import { RulesService } from '../../../services/rules.service';
-import { TagInputModule } from 'ngx-chips';
 import { Router, RouterModule } from '@angular/router';
 import { AppCodeEditorComponent } from '../../../shared/components/app-code-editor/app-code-editor.component';
 
@@ -24,7 +23,6 @@ import { AppCodeEditorComponent } from '../../../shared/components/app-code-edit
     HeaderComponent,
     TitlebannerComponent,
     CommonModule,
-    TagInputModule,
     FormsModule,
     ReactiveFormsModule,
     RouterModule,
@@ -54,6 +52,7 @@ export class CreateRuleModelComponent implements OnInit {
 
   code: string = '';
   isAutoDetecting = false;
+  isLogsourceOpen: boolean = false;
 
   // Removida obrigatoriedade estrita de logsources
   createRuleModelForm = new FormGroup({
@@ -117,6 +116,27 @@ level: medium`,
         any of them
 }`,
   };
+
+  toggleLogsourceSelection(option: string, event: Event): void {
+    event.stopPropagation();
+    const current = this.createRuleModelForm.value.logsources || [];
+    let newVal = [...current];
+
+    const index = newVal.indexOf(option);
+    if (index > -1) {
+      newVal.splice(index, 1);
+    } else {
+      newVal.push(option);
+    }
+
+    this.createRuleModelForm.patchValue({ logsources: newVal });
+  }
+
+  getSelectedLogsourcesText(): string {
+    const selected = this.createRuleModelForm.value.logsources;
+    if (!selected || selected.length === 0) return 'Selecione as Log Sources';
+    return selected.join(', ');
+  }
 
   constructor(
     private useCasesService: UsecasesService,

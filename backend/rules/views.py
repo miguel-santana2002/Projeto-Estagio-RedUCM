@@ -20,7 +20,7 @@ from rules.serializers import (
 )
 
 # Importar o pipeline consolidado
-from rules.services.rule_converter import convert_rule_pipeline
+from rules.services.rule_converter import convert_single_engine
 
 @extend_schema(request=RuleModelSerializer,
                description='RuleModel creation based on the data inserted in the request body.',
@@ -159,7 +159,7 @@ def createRule(request):
         ruleCode=data.get('ruleCode', ''),
         syntax=data.get('syntax', rule_model.syntax),
         client=client,
-        status=data.get('status', '')
+        status=data.get('status') or 'Regra não validada'
     )
     new_rule.save()
 
@@ -347,7 +347,16 @@ def deleteLogSourceById(request, id):
 
 @extend_schema(
     request=ConvertRuleSerializer,
-    description='Converte queries SIEM entre formatos (SPL, KQL, AQL, EQL, Sigma) via Ollama e pySigma.',
+    description='Converte queries SIEM entre formatos (SPL, KQL, AQL, EQL, Sigma) via Ollama e pySigma sob demanda.',
+    responses={
+        200: OpenApiResponse(response=ConvertRuleResponseSerializer, description='Regra convertida com sucesso.'),
+        400: OpenApiResponse(description='Erro de validação ou estrutura Sigma inválida.'),
+        500: OpenApiResponse(description='Erro interno de compilação ou falha no Ollama.')
+    }
+)
+@extend_schema(
+    request=ConvertRuleSerializer,
+    description='Converte queries SIEM entre formatos (SPL, KQL, AQL, EQL, Sigma) via Ollama e pySigma sob demanda.',
     responses={
         200: OpenApiResponse(response=ConvertRuleResponseSerializer, description='Regra convertida com sucesso.'),
         400: OpenApiResponse(description='Erro de validação ou estrutura Sigma inválida.'),
@@ -363,32 +372,30 @@ def convertRule(request):
     source_query = serializer.validated_data['source_query']
     source_syntax = serializer.validated_data['source_syntax']
     target_syntax = serializer.validated_data['target_syntax']
+    
+    # Captura o motor selecionado no dropdown (opcional)
+    engine = request.data.get('engine')
 
-    # 1. Chave de Cache por Hash SHA-256
-    cache_payload = f"{source_syntax}::{target_syntax}::{source_query.strip()}"
+    cache_payload = f"{engine or 'all'}::{source_syntax}::{target_syntax}::{source_query.strip()}"
     cache_key = f"rule_convert_{hashlib.sha256(cache_payload.encode('utf-8')).hexdigest()}"
 
     cached_result = cache.get(cache_key)
     if cached_result:
         return Response(cached_result, status=status.HTTP_200_OK)
 
-    # 2. Execução do Pipeline (Ollama Decompile + pySigma + Enrich Aggregations)
     try:
-        result = convert_rule_pipeline(
-            source_query=source_query,
-            source_syntax=source_syntax,
-            target_syntax=target_syntax
-        )
-
-        # Guarda em cache durante 24 horas (86400 segundos)
+        from rules.services.rule_converter import convert_rule_pipeline, convert_single_engine
+        
+        if engine:
+            result = convert_single_engine(source_query, source_syntax, target_syntax, engine)
+        else:
+            result = convert_rule_pipeline(source_query, source_syntax, target_syntax)
+            
         cache.set(cache_key, result, timeout=86400)
-
         return Response(result, status=status.HTTP_200_OK)
 
     except ValueError as ve:
         return Response({'error': f"Erro de validação: {str(ve)}"}, status=status.HTTP_400_BAD_REQUEST)
-    except RuntimeError as re:
-        return Response({'error': f"Erro no serviço/compilação: {str(re)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     except Exception as e:
         return Response({'error': f"Erro inesperado: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
