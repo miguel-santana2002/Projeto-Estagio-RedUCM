@@ -8,7 +8,6 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
-import { TagInputModule } from 'ngx-chips';
 import { HttpClient } from '@angular/common/http';
 
 import { HeaderComponent } from '../../../layout/header/header.component';
@@ -26,7 +25,6 @@ import { RulesService } from '../../../services/rules.service';
     RouterModule,
     FormsModule,
     ReactiveFormsModule,
-    TagInputModule,
     HeaderComponent,
     TitlebannerComponent,
     AppCodeEditorComponent,
@@ -37,6 +35,7 @@ export class EditRuleComponent implements OnInit {
   rule: any = null;
   isLoading: boolean = true;
   code: string = '';
+  isLogsourceOpen: boolean = false;
 
   typeSyntaxes: { [key: string]: string[] } = {
     SIEM: [
@@ -54,13 +53,10 @@ export class EditRuleComponent implements OnInit {
   selectedType: string = 'SIEM';
   selectedSyntax: string = 'Sigma Rule';
 
-  statusOptions: string[] = [
-    '',
-    'Em Desenvolvimento',
-    'Em Teste',
-    'Ativo',
-    'Desativado',
-    'Depreciado',
+  statusOptions = [
+    { value: '', label: '(Vazio)' },
+    { value: 'Regra validada', label: 'Regra validada' },
+    { value: 'Regra nao validada', label: 'Regra não validada' }
   ];
 
   clients: any[] = [];
@@ -71,7 +67,7 @@ export class EditRuleComponent implements OnInit {
     status: new FormControl(''),
     selectedType: new FormControl('SIEM'),
     syntax: new FormControl('Sigma Rule', [Validators.required]),
-    logsources: new FormControl<any[]>([]),
+    logsources: new FormControl<string[]>([]),
   });
 
   constructor(
@@ -109,6 +105,27 @@ export class EditRuleComponent implements OnInit {
     this.code = newCode;
   }
 
+  toggleLogsourceSelection(option: string, event: Event): void {
+    event.stopPropagation();
+    const current = this.editRuleForm.value.logsources || [];
+    let newVal = [...current];
+
+    const index = newVal.indexOf(option);
+    if (index > -1) {
+      newVal.splice(index, 1);
+    } else {
+      newVal.push(option);
+    }
+
+    this.editRuleForm.patchValue({ logsources: newVal });
+  }
+
+  getSelectedLogsourcesText(): string {
+    const selected = this.editRuleForm.value.logsources;
+    if (!selected || selected.length === 0) return 'Selecione as Log Sources';
+    return selected.join(', ');
+  }
+
   loadAuxiliaryData(): void {
     // 1. LogSources registadas
     this.rulesService.getRegisteredLogSources().subscribe({
@@ -118,7 +135,7 @@ export class EditRuleComponent implements OnInit {
       error: (err) => console.error('Erro ao obter log sources:', err),
     });
 
-    // 2. Empresas / Clientes (endpoint direto)
+    // 2. Empresas / Clientes
     this.http.get<any[]>('/api/accounts/getCompanies').subscribe({
       next: (data: any[]) => {
         this.clients = data || [];
@@ -144,17 +161,15 @@ export class EditRuleComponent implements OnInit {
           }
         }
 
-        const tagLogsources = (rule.logsources || []).map((ls: string) => ({
-          display: ls,
-          value: ls,
-        }));
+        // Já não precisamos de formatar em objetos para os chips, strings simples bastam
+        const flatLogsources = rule.logsources || [];
 
         this.editRuleForm.patchValue({
           client: rule.client?.pk || rule.client?.id || rule.client || null,
           status: rule.status || '',
           selectedType: this.selectedType,
           syntax: this.selectedSyntax,
-          logsources: tagLogsources,
+          logsources: flatLogsources,
         });
 
         this.isLoading = false;
@@ -171,15 +186,11 @@ export class EditRuleComponent implements OnInit {
 
     const formValues = this.editRuleForm.value;
 
-    const logsourcesArray = (formValues.logsources || []).map((item: any) =>
-      typeof item === 'string' ? item : item.value || item.display,
-    );
-
     const payload = {
       client: formValues.client || null,
       status: formValues.status || '',
       syntax: formValues.syntax,
-      logsources: logsourcesArray,
+      logsources: formValues.logsources || [],
       ruleCode: this.code,
     };
 

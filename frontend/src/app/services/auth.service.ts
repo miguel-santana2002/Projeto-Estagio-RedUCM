@@ -20,8 +20,6 @@ export class AuthService {
     localStorage.removeItem(USER_TOKEN);
     return this.http.post(AUTH_URL + 'login', { email, password }).pipe(
       map((response: any) => {
-        console.log('aqui');
-        console.log(response);
         this.accessToken = response.access;
 
         if (response.otpSent) {
@@ -90,9 +88,7 @@ export class AuthService {
     });
 
     return this.http.get(AUTH_URL + 'loggedInInfo', { headers }).pipe(
-      tap((value) => {
-        console.log(value);
-      }),
+      tap((value) => {}),
       catchError((e) => {
         console.error(e.message);
         return of(false);

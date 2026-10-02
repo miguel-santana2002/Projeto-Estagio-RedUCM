@@ -14,15 +14,23 @@ class RuleModel(models.Model):
         return self.title or f"RuleModel #{self.id}"
 
 class Rule(models.Model):
-    ruleModel = models.ForeignKey(RuleModel, on_delete=models.CASCADE, null=True, related_name='rules')
+    STATUS_CHOICES = [
+        ('', '(Vazio)'),
+        ('Regra validada', 'Regra validada'),
+        ('Regra não validada', 'Regra não validada'),
+    ]
+
+    ruleModel = models.ForeignKey(RuleModel, on_delete=models.CASCADE, null=True, blank=True, related_name='rules')
     ruleCode = models.TextField(null=True, blank=True)
     syntax = models.CharField(max_length=100, null=True, blank=True)
-    ruleModel = models.ForeignKey(RuleModel, on_delete=models.CASCADE, null=True)
-    ruleCode = models.CharField(unique=False, null=True)
-    syntax = models.CharField(unique=False, null=True)
-
     logsources = ArrayField(models.CharField(max_length=255, blank=True), blank=True, default=list)
-    client = models.ForeignKey(Company, on_delete=models.CASCADE, null=True)
+    client = models.ForeignKey(Company, on_delete=models.CASCADE, null=True, blank=True)
+    status = models.CharField(
+        max_length=50, 
+        choices=STATUS_CHOICES, 
+        default='Regra não validada', 
+        blank=True
+    )
 
     def __str__(self):
         model_name = self.ruleModel.title if self.ruleModel and self.ruleModel.title else f"Modelo #{self.ruleModel_id}"
@@ -46,11 +54,11 @@ class RegisteredLogSource(models.Model):
         ('other', 'Other'),
     ]
 
-    name = models.CharField(unique=False, null=True)
-    description = models.CharField(unique=False, null=True)
+    name = models.CharField(max_length=255, null=True, blank=True)
+    description = models.TextField(null=True, blank=True)
     type = models.CharField(max_length=20, choices=TYPE_CHOICES, blank=True, null=True)
     collectionMethod = models.CharField(max_length=20, choices=COLLECTION_CHOICES, blank=True, null=True)
     products = ArrayField(models.CharField(max_length=255, blank=True), blank=True, default=list)
 
     def __str__(self):
-        return self.name
+        return self.name or f"LogSource #{self.id}"

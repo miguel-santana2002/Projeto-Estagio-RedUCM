@@ -203,7 +203,7 @@
       <!-- Header -->
       <div class="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-700">
         <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
-          Copiar regra para cliente
+          Atribuir Regra a Cliente
         </h3>
         <button type="button"
           class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-700 dark:hover:text-white transition"
@@ -215,12 +215,11 @@
 
       <!-- Formulário -->
       <form class="p-4 md:p-5" [formGroup]="createRuleForm">
-        <div class="grid gap-4 mb-4 grid-cols-2 grid-rows-2">
+        <div class="grid gap-4 mb-4 grid-cols-2">
 
           <!-- Seleção de Cliente -->
           <div class="col-span-1 row-span-1">
-            <label for="client" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Seleção de
-              cliente</label>
+            <label for="client" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Cliente</label>
 
             <select *ngIf="user.companies?.length === 0" id="client" formControlName="client" required
               class="block w-full rounded-md border-0 px-2 py-2.5 text-gray-900 bg-white dark:bg-gray-700 dark:text-white shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-600 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 dark:focus:ring-indigo-500 sm:text-sm transition">
@@ -237,40 +236,24 @@
             </select>
           </div>
 
-          <!-- LogSources -->
-          <div class="col-span-1 row-span-2">
-            <label for="logsources"
-              class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Logsources</label>
-            <select id="logsources" formControlName="logsources" required multiple
-              class="block w-full rounded-md border-0 h-32 px-2 py-2.5 text-gray-900 bg-white dark:bg-gray-700 dark:text-white shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-600 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 dark:focus:ring-indigo-500 sm:text-sm transition">
-              <option *ngFor="let logsource of ruleModel.logsources" [ngValue]="logsource">
-                {{ logsource }}
-              </option>
-            </select>
-          </div>
-
           <!-- Sintaxe Pré-selecionada -->
           <div class="col-span-1 row-span-1">
-            <label for="syntax" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Sintaxe da
-              Regra</label>
+            <label for="syntax" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Sintaxe de
+              destino</label>
             <select id="syntax" formControlName="syntax" (change)="onSyntaxChange()" required
               class="block w-full rounded-md border-0 px-2 py-2.5 text-gray-900 bg-white dark:bg-gray-700 dark:text-white shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-600 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 dark:focus:ring-indigo-500 sm:text-sm transition">
-              <ng-container *ngIf="ruleModel.type === 'SOAR'">
-                <option *ngFor="let sintax of soarSintaxes" [ngValue]="sintax">{{ sintax }}</option>
-              </ng-container>
-              <ng-container *ngIf="ruleModel.type === 'SIEM'">
-                <option *ngFor="let sintax of siemSintaxes" [ngValue]="sintax">{{ sintax }}</option>
-              </ng-container>
-              <ng-container *ngIf="ruleModel.type === 'EDR'">
-                <option *ngFor="let sintax of edrSintaxes" [ngValue]="sintax">{{ sintax }}</option>
-              </ng-container>
+              <option *ngFor="let s of availableSyntaxes" [ngValue]="s.id">{{ s.name }}</option>
             </select>
+            <p *ngIf="isSyntaxConverting" class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              <i class="fas fa-spinner fa-spin mr-1"></i> A converter...
+            </p>
+            <p *ngIf="syntaxError" class="mt-1 text-xs text-red-600 dark:text-red-400">{{ syntaxError }}</p>
           </div>
 
           <!-- Editor / Textarea -->
           <div class="col-span-2">
-            <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Personalização da
-              Regra</label>
+            <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Código da Regra (editável antes
+              de guardar)</label>
             <textarea rows="16" formControlName="modalCode"
               class="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white font-mono rounded-lg p-2.5 text-xs focus:ring-2 focus:ring-indigo-600 dark:focus:ring-indigo-500 transition">
               </textarea>
@@ -279,13 +262,13 @@
 
         <!-- Footer Modal -->
         <div class="flex items-center justify-end p-4 border-t border-gray-200 dark:border-gray-700 space-x-3">
-          <button (click)="createRule()" [disabled]="createRuleForm.invalid" type="button"
+          <button (click)="createRule()" [disabled]="createRuleForm.invalid || isSyntaxConverting" type="button"
             class="py-2 px-4 text-sm font-medium text-white bg-redshift-red hover:bg-redshift-hover disabled:opacity-50 disabled:cursor-not-allowed rounded-lg shadow-sm transition">
-            Guardar
+            Atribuir
           </button>
           <button type="button" data-modal-hide="crud-modal"
             class="py-2 px-4 text-sm font-medium text-gray-500 dark:text-gray-300 bg-white dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600 hover:text-gray-900 dark:hover:text-white transition">
-            Fechar
+            Cancelar
           </button>
         </div>
       </form>
@@ -293,168 +276,134 @@
   </div>
 </div>
 
-<!-- Modal Converter Regra (IA + pySigma) -->
+<!-- Modal Converter Regra (Layout Suave, Tons Coerentes e Sem Scroll Excessivo) -->
 <div *ngIf="showConvertModal"
-  class="fixed top-0 left-0 w-full h-full flex items-center justify-center bg-black/60 backdrop-blur-sm z-50 p-4">
+  class="fixed top-0 left-0 w-full h-full flex items-center justify-center bg-black/70 backdrop-blur-md z-50 p-4">
 
+  <!-- Fundo principal da Modal agora com a cor coerente do site (slate-900 / #111827) -->
   <div
-    class="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-6xl overflow-hidden border border-transparent dark:border-gray-700 transition">
+    class="relative bg-white dark:bg-[#111827] rounded-xl shadow-2xl w-full max-w-[95vw] xl:max-w-[85vw] overflow-hidden border border-gray-700 transition flex flex-col max-h-[94vh]">
 
-    <!-- Header -->
-    <div class="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
-      <h3 class="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+    <!-- Header com fundo mais suave -->
+    <div
+      class="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-[#1F2937]/50">
+      <h3 class="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2.5">
         <i class="fas fa-brain text-redshift-red"></i>
-        Converter Regra (IA + pySigma)
+        Conversão de Regras (pySigma vs. AI)
       </h3>
       <button (click)="closeConvertModal()" type="button"
         class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 inline-flex justify-center items-center dark:hover:bg-gray-700 dark:hover:text-white transition">
         <i class="fas fa-times text-base"></i>
-        <span class="sr-only">Fechar</span>
       </button>
     </div>
 
-    <!-- Banner de Erro (Mantém a página segura caso ocorra falha de backend ou formato) -->
+    <!-- Banner de Erro -->
     <div *ngIf="conversionError"
       class="mx-6 mt-4 p-3 text-sm text-red-700 bg-red-100 rounded-lg dark:bg-red-950/40 dark:text-red-400 border border-red-200 dark:border-red-900/50 flex items-center gap-2">
       <i class="fas fa-circle-exclamation text-base flex-shrink-0"></i>
       <span>{{ conversionError }}</span>
     </div>
 
-    <!-- Body com Grid -->
-    <div class="p-6">
-      <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-center">
+    <!-- Body Principal: 2 Colunas Flexíveis sem Scroll Global -->
+    <div class="p-6 flex-1 flex flex-col min-h-0">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch h-full">
 
-        <!-- Campo Texto: Antes -->
-        <div class="lg:col-span-5 flex flex-col h-full">
-          <label class="block mb-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
-            Sintaxe Original
-            <span *ngIf="ruleModel?.syntax" class="text-xs font-normal text-gray-500 dark:text-gray-400">({{
-              ruleModel.syntax }})</span>
-          </label>
-          <textarea [(ngModel)]="sourceRuleContent" rows="14" readonly
-            class="w-full p-3 text-xs font-mono bg-gray-50 dark:bg-gray-700/60 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-0 resize-none"></textarea>
-        </div>
-
-        <!-- Painel Central de Ações (Dropdown Atualizado sem Lucene, com EQL e CQL) -->
-        <div class="lg:col-span-2 flex flex-col items-center justify-center space-y-4 py-2">
-          <div class="w-full">
+        <!-- Coluna da Esquerda: Sintaxe Original e Controlos (5 colunas) -->
+        <div class="lg:col-span-5 flex flex-col h-full space-y-4">
+          <div class="flex flex-col flex-1 min-h-[250px]">
             <label
-              class="block mb-1 text-xs font-medium text-gray-600 dark:text-gray-400 text-center whitespace-nowrap">
-              Converter para
+              class="block mb-2 text-xs font-semibold uppercase tracking-wider text-gray-700 dark:text-gray-300 flex items-center gap-1.5">
+              <i class="fas fa-code text-redshift-red"></i> Sintaxe Original <span
+                class="normal-case font-normal text-gray-500">({{ ruleModel.syntax }})</span>
             </label>
-            <select [(ngModel)]="targetSyntax" [disabled]="isConverting"
-              class="bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded-lg focus:ring-redshift-red focus:border-redshift-red block w-full p-2.5 truncate dark:bg-gray-700 dark:border-gray-600 dark:text-white disabled:opacity-50 transition">
-              <option value="" disabled selected>Selecionar</option>
-              <option value="SPL (Splunk)">SPL (Splunk)</option>
-              <option value="KQL (Sentinel)">KQL (Sentinel)</option>
-              <option value="AQL (QRadar)">AQL (QRadar)</option>
-              <option value="EQL (Elastic)">EQL (Elastic)</option>
-              <option value="CQL (CrowdStrike)">CQL (CrowdStrike)</option>
-              <option value="Sigma Rule">Sigma Rule</option>
-            </select>
+            <!-- Removido o rows="24", adicionado flex-1 para preencher o espaço vertical -->
+            <textarea [(ngModel)]="sourceRuleContent" readonly
+              class="w-full p-4 text-xs font-mono bg-gray-50 dark:bg-[#1F2937] border border-gray-300 dark:border-gray-700 rounded-lg text-gray-800 dark:text-gray-300 resize-none shadow-inner flex-1"></textarea>
           </div>
 
-          <button (click)="convertRule()" [disabled]="!targetSyntax || isConverting" type="button"
-            class="w-full inline-flex items-center justify-center gap-2 py-2.5 px-4 text-white bg-redshift-red hover:bg-redshift-hover disabled:opacity-50 disabled:cursor-not-allowed font-medium rounded-lg text-sm shadow-sm transition">
-            <i *ngIf="isConverting" class="fas fa-spinner fa-spin"></i>
-            <i *ngIf="!isConverting" class="fas fa-arrow-right hidden lg:inline"></i>
-            <i *ngIf="!isConverting" class="fas fa-arrow-down lg:hidden"></i>
-            <span>{{ isConverting ? 'A converter...' : 'Converter' }}</span>
-          </button>
-        </div>
-
-        <div class="lg:col-span-5 flex flex-col h-full">
-          <div class="flex justify-between items-center mb-2">
-            <div class="flex items-center gap-2">
-              <label class="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                Resultado da Conversão
+          <div
+            class="bg-gray-50 dark:bg-[#1F2937]/50 p-4 rounded-xl border border-gray-200 dark:border-gray-700 space-y-3 shrink-0">
+            <div>
+              <label class="block mb-1 text-xs font-medium text-gray-600 dark:text-gray-400">
+                Converter para o formato:
               </label>
-
-              <!-- Badge Determinístico (pySigma) -->
-              <span *ngIf="conversionEngine === 'pysigma' && !isConverting"
-                class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-medium bg-emerald-100 text-emerald-800 dark:bg-emerald-500/10 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-500/20"
-                title="Compilação 100% determinística via AST do pySigma">
-                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400"></span>
-                pySigma
-              </span>
-
-              <!-- Badge Híbrido (pySigma + Ollama) -->
-              <span *ngIf="conversionEngine === 'hybrid' && !isConverting"
-                class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-medium bg-amber-100 text-amber-800 dark:bg-amber-500/10 dark:text-amber-400 border border-amber-300 dark:border-amber-500/20"
-                title="Filtro base via pySigma com correlações/agregações enriquecidas via IA">
-                <span class="w-1.5 h-1.5 rounded-full bg-amber-500 dark:bg-amber-400"></span>
-                Híbrido
-              </span>
-
-              <!-- Badge Modelo IA (LLM Puro) -->
-              <span *ngIf="conversionEngine === 'llm' && !isConverting"
-                class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-medium bg-indigo-100 text-indigo-800 dark:bg-indigo-500/10 dark:text-indigo-400 border border-indigo-300 dark:border-indigo-500/20"
-                title="Tradução generativa direta via Ollama">
-                <span class="w-1.5 h-1.5 rounded-full bg-indigo-500 dark:bg-indigo-400"></span>
-                Modelo IA
-              </span>
+              <select [(ngModel)]="targetSyntax" [disabled]="isConverting" (change)="resetConversions()"
+                class="bg-white border border-gray-300 text-gray-900 text-xs rounded-lg focus:ring-redshift-red focus:border-redshift-red block w-full p-2.5 dark:bg-[#111827] dark:border-gray-700 dark:text-white shadow-sm">
+                <option value="" disabled selected>Selecionar destino...</option>
+                <option value="SPL (Splunk)">SPL (Splunk)</option>
+                <option value="KQL (Sentinel)">KQL (Sentinel)</option>
+                <option value="AQL (QRadar)">AQL (QRadar)</option>
+                <option value="EQL (Elastic)">EQL (Elastic)</option>
+                <option value="CQL (CrowdStrike)">CQL (CrowdStrike)</option>
+                <option value="Sigma Rule">Sigma Rule</option>
+              </select>
             </div>
 
-            <button *ngIf="convertedRuleContent && !isConverting" (click)="copyConvertedToClipboard()" type="button"
-              class="text-xs text-gray-500 dark:text-gray-400 hover:text-redshift-red dark:hover:text-redshift-red inline-flex items-center transition">
-              <i class="fas fa-copy mr-1"></i> Copiar
+            <button (click)="convertRule()" [disabled]="!targetSyntax || isConverting" type="button"
+              class="w-full inline-flex items-center justify-center gap-2 py-2.5 px-4 text-white bg-redshift-red hover:bg-redshift-hover disabled:opacity-50 font-medium rounded-lg text-xs shadow transition">
+              <i *ngIf="isConverting" class="fas fa-spinner fa-spin"></i>
+              <span>{{ isConverting ? 'A processar motores...' : 'Executar Conversão' }}</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Coluna da Direita: Output Dinâmico (7 colunas) -->
+        <div class="lg:col-span-7 flex flex-col h-full">
+          <div class="flex justify-between items-center mb-2 shrink-0">
+            <div class="flex items-center gap-2">
+              <span class="text-xs font-medium text-gray-500 dark:text-gray-400">Mostrar:</span>
+              <select [(ngModel)]="selectedOutputView" (change)="onOutputViewChange()"
+                class="bg-white dark:bg-[#1F2937] border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white text-xs rounded-lg px-2.5 py-1.5 focus:ring-redshift-red focus:border-redshift-red shadow-sm">
+                <option value="ai">pySigma + AI</option>
+                <option value="ai_pure">AI Pura</option>
+                <option value="pysigma">pySigma</option>
+              </select>
+            </div>
+
+            <button *ngIf="!isConverting"
+              (click)="clipboard.copy(selectedOutputView === 'ai' ? aiConvertedContent : (selectedOutputView === 'ai_pure' ? aiPureConvertedContent : pysigmaConvertedContent))"
+              type="button" class="text-xs text-gray-400 hover:text-redshift-red transition">
+              <i class="fas fa-copy mr-1"></i> Copiar resultado atual
             </button>
           </div>
 
-          <div class="relative">
-            <textarea [(ngModel)]="convertedRuleContent" rows="14" [readonly]="isConverting"
-              [placeholder]="isConverting ? 'Aguarde, o motor está a processar a query...' : 'O resultado aparecerá aqui...'"
-              class="w-full p-3 text-xs font-mono bg-gray-50 dark:bg-gray-700/60 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-800 dark:text-gray-200 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:ring-redshift-red focus:border-redshift-red resize-none"></textarea>
+          <div class="relative flex-1 flex flex-col min-h-[250px]">
+            <!-- Removido o rows="24", adicionado flex-1 -->
+            <textarea
+              [ngModel]="selectedOutputView === 'ai' ? aiConvertedContent : (selectedOutputView === 'ai_pure' ? aiPureConvertedContent : pysigmaConvertedContent)"
+              (ngModelChange)="
+                selectedOutputView === 'ai' ? aiConvertedContent = $event : 
+                (selectedOutputView === 'ai_pure' ? aiPureConvertedContent = $event : pysigmaConvertedContent = $event)
+              " [readonly]="isConverting" placeholder="O resultado da conversão aparecerá aqui..."
+              class="w-full p-4 text-xs font-mono bg-gray-50 dark:bg-[#1F2937] border border-gray-300 dark:border-gray-700 rounded-lg resize-none shadow-inner flex-1"
+              [ngClass]="{
+                'text-indigo-400': selectedOutputView === 'ai',
+                'text-purple-400': selectedOutputView === 'ai_pure',
+                'text-emerald-400': selectedOutputView === 'pysigma'
+              }"></textarea>
 
-            <!-- Overlay Spinner -->
             <div *ngIf="isConverting"
-              class="absolute inset-0 bg-white/70 dark:bg-gray-800/80 backdrop-blur-[1px] rounded-lg flex flex-col items-center justify-center gap-2">
+              class="absolute inset-0 bg-white/80 dark:bg-[#111827]/80 backdrop-blur-[2px] rounded-lg flex flex-col items-center justify-center gap-2">
               <i class="fas fa-circle-notch fa-spin text-redshift-red text-2xl"></i>
-              <span class="text-xs font-medium text-gray-600 dark:text-gray-300">A processar conversão...</span>
+              <span class="text-xs font-medium text-gray-600 dark:text-gray-300">A compilar regras...</span>
             </div>
-          </div>
-
-          <!-- Frase pequena a indicar quem converteu (pySigma ou IA) -->
-          <div *ngIf="conversionSource && !isConverting" class="mt-2 text-xs flex items-center gap-1">
-            <i class="fas fa-microchip" [ngClass]="{
-                'text-green-400': conversionSource.startsWith('pySigma ('),
-                'text-amber-400': conversionSource.includes('+ IA'),
-                'text-red-400': conversionSource.startsWith('IA (')
-              }"></i>
-            <span class="font-semibold" [ngClass]="{
-                'text-green-400': conversionSource.startsWith('pySigma ('),
-                'text-amber-400': conversionSource.includes('+ IA'),
-                'text-red-400': conversionSource.startsWith('IA (')
-              }">
-              Motor: {{ conversionSource }}
-            </span>
           </div>
         </div>
 
       </div>
-
-      <!-- YAML Sigma Intermédio -->
-      <div *ngIf="intermediateSigmaContent && !intermediateSigmaContent.startsWith('N/A') && !isConverting"
-        class="mt-4 pt-3 border-t border-gray-200 dark:border-gray-700">
-        <details class="text-xs">
-          <summary class="cursor-pointer font-semibold text-gray-600 dark:text-gray-400 hover:text-redshift-red">
-            <i class="fas fa-code mr-1"></i> Ver Regra Canónica Sigma Intermédia
-          </summary>
-          <pre
-            class="mt-2 p-3 bg-gray-900 border border-gray-800 text-green-400 rounded-lg font-mono text-[11px] overflow-x-auto max-h-48">{{ intermediateSigmaContent }}</pre>
-        </details>
-      </div>
-
     </div>
 
-    <!-- Footer Modal Conversão -->
-    <div class="flex items-center justify-end p-4 border-t border-gray-200 dark:border-gray-700 space-x-3">
-      <button (click)="applyConvertedRule()" [disabled]="!convertedRuleContent || isConverting" type="button"
-        class="py-2 px-4 text-sm font-medium text-white bg-redshift-red hover:bg-redshift-hover disabled:opacity-50 disabled:cursor-not-allowed rounded-lg shadow-sm transition">
+    <!-- Footer Modal -->
+    <div
+      class="flex items-center justify-end px-6 py-4 border-t border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-[#1F2937]/50 space-x-3">
+      <button (click)="applyConvertedRule()"
+        [disabled]="(!aiConvertedContent && !pysigmaConvertedContent && !aiPureConvertedContent) || isConverting"
+        type="button"
+        class="py-2.5 px-5 text-xs font-medium text-white bg-redshift-red hover:bg-redshift-hover disabled:opacity-50 disabled:cursor-not-allowed rounded-lg shadow transition">
         Criar Regra Convertida
       </button>
       <button (click)="closeConvertModal()" type="button"
-        class="py-2 px-4 text-sm font-medium text-gray-500 dark:text-gray-300 bg-white dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600 hover:text-gray-900 dark:hover:text-white transition">
+        class="py-2.5 px-5 text-xs font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-[#111827] rounded-lg border border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 transition">
         Fechar
       </button>
     </div>
@@ -462,20 +411,35 @@
   </div>
 </div>
 
-<!-- Toast de Sucesso -->
-<div *ngIf="message" id="toast-success"
-  class="fixed top-4 right-4 flex items-center w-full max-w-xs p-4 text-gray-500 bg-white rounded-lg shadow dark:text-gray-400 dark:bg-gray-800 z-50 transition border border-transparent dark:border-gray-700"
-  role="alert">
-  <div
-    class="inline-flex items-center justify-center flex-shrink-0 w-8 h-8 text-green-500 bg-green-100 rounded-lg dark:bg-green-950/50 dark:text-green-400">
-    <i class="fas fa-check"></i>
-    <span class="sr-only">Sucesso</span>
+<!-- Toast de Sucesso no Canto Superior Direito -->
+<div *ngIf="showSuccessToast"
+  class="fixed top-5 right-5 z-[9999] max-w-sm w-full bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 p-4 transition-all duration-300 transform translate-y-0 opacity-100 flex items-start gap-3">
+
+  <div class="flex-shrink-0 text-emerald-500 mt-0.5">
+    <i class="fas fa-check-circle text-lg"></i>
   </div>
-  <div class="ms-3 text-sm font-normal text-gray-800 dark:text-gray-200">{{ message }}</div>
-  <button type="button" (click)="message = ''"
-    class="ms-auto -mx-1.5 -my-1.5 bg-white text-gray-400 hover:text-gray-900 rounded-lg focus:ring-2 focus:ring-gray-300 p-1.5 hover:bg-gray-100 inline-flex items-center justify-center h-8 w-8 dark:text-gray-400 dark:hover:text-white dark:bg-gray-800 dark:hover:bg-gray-700 transition"
-    aria-label="Close">
-    <i class="fas fa-times"></i>
-    <span class="sr-only">Fechar</span>
+
+  <div class="flex-1 min-w-0">
+    <h4 class="text-sm font-semibold text-gray-900 dark:text-white">Regra Criada!</h4>
+    <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+      A regra convertida foi guardada com sucesso.
+    </p>
+
+    <div class="mt-2.5 flex items-center gap-3">
+      <a routerLink="/manage-rules"
+        class="inline-flex items-center text-xs font-semibold text-redshift-red hover:text-redshift-hover transition">
+        Ir para as Regras
+        <i class="fas fa-arrow-right ml-1.5 text-[10px]"></i>
+      </a>
+      <button (click)="closeToast()" type="button"
+        class="text-xs text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition">
+        Dispensar
+      </button>
+    </div>
+  </div>
+
+  <button (click)="closeToast()" type="button"
+    class="flex-shrink-0 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition">
+    <i class="fas fa-times text-xs"></i>
   </button>
 </div>

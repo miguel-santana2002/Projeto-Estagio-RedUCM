@@ -1,6 +1,7 @@
 services:
   postgres:
     image: postgres:16.2
+    container_name: postgres
     env_file:
       - .env
     environment:
@@ -34,15 +35,18 @@ services:
             - driver: nvidia
               count: 1
               capabilities: [gpu]
-  django:
+
+  backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
+    container_name: backend
     env_file:
       - .env
     environment:
       POSTGRES_HOST: postgres
       OLLAMA_HOST: http://ollama:11434
+      GUNICORN_CMD_ARGS: "--timeout 300"
     volumes:
       - ./backend:/app:z
       - ./mediafiles:/mediafiles:z
@@ -56,14 +60,15 @@ services:
     networks:
       - webapp-network
 
-  angular:
+  frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+    container_name: frontend
     ports:
       - "8080:80"
     depends_on:
-      - django
+      - backend
     networks:
       - webapp-network
 

@@ -33,7 +33,7 @@ export class ManageRulesComponent implements OnInit, AfterViewInit {
   @ViewChild('modal') modal!: ElementRef<HTMLElement>;
   modalFlowbite!: Modal;
 
-  isAdmin: boolean = false; // Controlo de permissões (Admin / Superuser)
+  isAdmin: boolean = false;
 
   sortType = 'id';
   sortReverse = false;
@@ -47,22 +47,24 @@ export class ManageRulesComponent implements OnInit, AfterViewInit {
   pageSize: number = 10;
   pageSizeOptions: number[] = [5, 10, 25, 50];
 
-  // Controlo do Painel de Filtros
   showFilters: boolean = false;
 
-  // Filtros Selecionados
+  statusOptions = [
+    { value: '', label: '(Vazio)' },
+    { value: 'Regra validada', label: 'Regra validada' },
+    { value: 'Regra não validada', label: 'Regra não validada' },
+  ];
+
   selectedTypes: string[] = [];
   selectedSintaxes: string[] = [];
   selectedUseCases: (string | number)[] = [];
   selectedClients: string[] = [];
-  selectedLogsources: string[] = [];
+  selectedStatus: string[] = [];
 
-  // Opções Únicas para as Pills
   uniqueTypes: string[] = [];
   uniqueSintaxes: string[] = [];
   uniqueUseCases: (string | number)[] = [];
   uniqueClients: string[] = [];
-  uniqueLogsources: string[] = [];
 
   constructor(
     private authService: AuthService,
@@ -83,7 +85,6 @@ export class ManageRulesComponent implements OnInit, AfterViewInit {
   loadUserInfo(): void {
     this.authService.loggedInInfo().subscribe({
       next: (data: any) => {
-        // Superuser ou Admin têm privilégios totais; staff/operador fica como false
         this.isAdmin = Boolean(data?.is_superuser || data?.is_admin);
       },
       error: (err) => {
@@ -96,7 +97,12 @@ export class ManageRulesComponent implements OnInit, AfterViewInit {
   loadRules(): void {
     this.rulesService.getRules().subscribe({
       next: (data: any) => {
-        this.rules = Array.isArray(data) ? data : [];
+        this.rules = Array.isArray(data)
+          ? data.map((rule) => ({
+              ...rule,
+              status: (rule.status || '').trim(),
+            }))
+          : [];
         this.startFilters();
         this.rules.sort((a: any, b: any) => this.sortNumeric(a.id, b.id));
       },
@@ -138,19 +144,48 @@ export class ManageRulesComponent implements OnInit, AfterViewInit {
           ),
       ),
     ).sort((a: any, b: any) => Number(a) - Number(b));
-
-    this.uniqueLogsources = Array.from(
-      new Set(
-        this.rules
-          .flatMap(
-            (item: any) => item.logsources ?? item.ruleModel?.logsources ?? [],
-          )
-          .filter((log): log is string => Boolean(log)),
-      ),
-    ).sort();
   }
 
-  // Toggles de Seleção com Reset de Página
+  getStatusClasses(status: string): string {
+    switch (status) {
+      case 'Regra validada':
+        return 'text-green-400 font-semibold border border-green-600/40 bg-green-950/20';
+      case 'Regra não validada':
+        return 'text-amber-400 font-medium border border-amber-600/40 bg-amber-950/20';
+      default:
+        return 'text-gray-400 border border-dashed border-gray-600 bg-transparent';
+    }
+  }
+
+  // Atualização direta e envio de payload completo
+  updateRuleStatus(rule: any): void {
+    const payload = {
+      ruleModel: rule.ruleModel?.id ?? rule.ruleModel ?? null,
+      client:
+        rule.client?.id ??
+        rule.client?.pk ??
+        (typeof rule.client === 'number' ? rule.client : null),
+      status: rule.status || '',
+      syntax: rule.syntax || rule.ruleModel?.syntax || '',
+      logsources: rule.logsources || [],
+      ruleCode: rule.ruleCode || '',
+    };
+
+    this.rulesService.updateRule(rule.id, payload).subscribe({
+      next: (res: any) => {
+        // Confirma a persistência do valor retornado
+        if (res && res.status !== undefined) {
+          rule.status = res.status;
+        }
+      },
+      error: (err: any) => {
+        console.error('Erro ao atualizar estado da regra:', err);
+        // Recarrega em caso de erro para não manter dados inconsistentes na UI
+        this.loadRules();
+      },
+    });
+  }
+
   toggleClient(client: string): void {
     this.page = 1;
     this.selectedClients = this.selectedClients.includes(client)
@@ -179,21 +214,20 @@ export class ManageRulesComponent implements OnInit, AfterViewInit {
       : [...this.selectedUseCases, uc];
   }
 
-  toggleLogsource(log: string): void {
+  toggleStatus(status: string): void {
     this.page = 1;
-    this.selectedLogsources = this.selectedLogsources.includes(log)
-      ? this.selectedLogsources.filter((l) => l !== log)
-      : [...this.selectedLogsources, log];
+    this.selectedStatus = this.selectedStatus.includes(status)
+      ? this.selectedStatus.filter((s) => s !== status)
+      : [...this.selectedStatus, status];
   }
 
-  // Limpeza
   clearAllFilters(): void {
     this.page = 1;
     this.selectedClients = [];
     this.selectedTypes = [];
     this.selectedSintaxes = [];
     this.selectedUseCases = [];
-    this.selectedLogsources = [];
+    this.selectedStatus = [];
     this.nameSearch = '';
   }
 
@@ -201,7 +235,6 @@ export class ManageRulesComponent implements OnInit, AfterViewInit {
     this.page = 1;
   }
 
-  // Ordenação com suporte para campos aninhados e nulos
   sortTable(column: string): void {
     if (this.sortType === column) {
       this.sortReverse = !this.sortReverse;
@@ -236,9 +269,9 @@ export class ManageRulesComponent implements OnInit, AfterViewInit {
           valA = a.syntax || a.ruleModel?.syntax || '';
           valB = b.syntax || b.ruleModel?.syntax || '';
           break;
-        case 'logsources':
-          valA = (a.logsources ?? a.ruleModel?.logsources ?? []).length;
-          valB = (b.logsources ?? b.ruleModel?.logsources ?? []).length;
+        case 'status':
+          valA = a.status || '';
+          valB = b.status || '';
           break;
         default:
           valA = a[column];
@@ -264,7 +297,6 @@ export class ManageRulesComponent implements OnInit, AfterViewInit {
     return (a - b) * (this.sortReverse ? -1 : 1);
   }
 
-  // Filtragem Reativa Segura
   get filteredRules(): any[] {
     const term = this.nameSearch.trim().toLowerCase();
 
@@ -293,10 +325,9 @@ export class ManageRulesComponent implements OnInit, AfterViewInit {
         this.selectedClients.length === 0 ||
         (rule.client?.name && this.selectedClients.includes(rule.client.name));
 
-      const logs = rule.logsources ?? rule.ruleModel?.logsources ?? [];
-      const matchesLogs =
-        this.selectedLogsources.length === 0 ||
-        this.selectedLogsources.some((r: string) => logs.includes(r));
+      const matchesStatus =
+        this.selectedStatus.length === 0 ||
+        (rule.status && this.selectedStatus.includes(rule.status));
 
       return (
         matchesName &&
@@ -304,12 +335,11 @@ export class ManageRulesComponent implements OnInit, AfterViewInit {
         matchesSyntax &&
         matchesUseCase &&
         matchesClient &&
-        matchesLogs
+        matchesStatus
       );
     });
   }
 
-  // Segmentação Paginada
   get pagedRules(): any[] {
     const start = (this.page - 1) * this.pageSize;
     return this.filteredRules.slice(start, start + this.pageSize);
@@ -330,7 +360,6 @@ export class ManageRulesComponent implements OnInit, AfterViewInit {
     this.page = 1;
   }
 
-  // Gestão de Modal Eliminar
   updateSelectDelete(event: Event, id: number): void {
     event.stopPropagation();
     if (!this.isAdmin) return;
@@ -372,21 +401,17 @@ export class ManageRulesComponent implements OnInit, AfterViewInit {
       return;
     }
 
-    // Sanitiza o título removendo caracteres não permitidos e substitui espaços por underscores
     const rawTitle = rule.ruleModel?.title || 'rule';
     const sanitizedTitle = rawTitle
       .trim()
-      .replace(/\s*-\s*/g, '-') // transforma " - " ou " - " diretamente em "-"
-      .replace(/\s+/g, '_') // substitui outros espaços por "_"
-      .replace(/[^a-zA-Z0-9_-]/g, '') // remove caracteres não alfanuméricos exceto _ e -
+      .replace(/\s*-\s*/g, '-')
+      .replace(/\s+/g, '_')
+      .replace(/[^a-zA-Z0-9_-]/g, '')
       .replace(/_+/g, '_');
 
-    // Formato da data: YYYY-MM-DD
     const dateStr = new Date().toISOString().split('T')[0];
-
     const filename = `RedRule${rule.id}_${sanitizedTitle}_${dateStr}.yml`;
 
-    // Criação e trigger do download
     const blob = new Blob([yamlContent], { type: 'text/yaml;charset=utf-8' });
     const downloadUrl = window.URL.createObjectURL(blob);
     const anchor = document.createElement('a');
@@ -396,7 +421,6 @@ export class ManageRulesComponent implements OnInit, AfterViewInit {
     document.body.appendChild(anchor);
     anchor.click();
 
-    // Limpeza de recursos
     document.body.removeChild(anchor);
     window.URL.revokeObjectURL(downloadUrl);
   }
