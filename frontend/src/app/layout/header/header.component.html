@@ -12,12 +12,12 @@
       <div *ngIf="isLoggedIn" class="items-center justify-center hidden lg:flex flex-1" id="mobile-menu-2">
         <ul class="flex font-medium lg:space-x-4 xl:space-x-6">
 
-          <!-- Início -->
+          <!-- Home -->
           <li>
             <a [routerLink]="['/home']" routerLinkActive="text-redshift-red font-semibold"
               [routerLinkActiveOptions]="{ exact: true }"
               class="block py-2 text-gray-700 dark:text-gray-400 lg:dark:hover:text-white hover:text-redshift-hover transition-colors">
-              Início
+              Home
             </a>
           </li>
 
@@ -147,7 +147,7 @@
         <ng-container *ngIf="isLoggedIn">
           <span class="text-gray-600 dark:text-gray-300 text-xs xl:text-sm whitespace-nowrap">
             Bem-vindo,&#160;<span class="font-medium text-gray-800 dark:text-white">{{ user?.email || user?.username
-            }}</span>
+              }}</span>
           </span>
 
           <button (click)="logout()" type="button" title="Terminar Sessão"
