@@ -19,7 +19,7 @@ services:
 
   ollama:
     image: ollama/ollama:latest
-    container_name: local_ollama
+    container_name: ollama
     ports:
       - "11434:11434"
     volumes:
@@ -27,13 +27,13 @@ services:
     networks:
       - webapp-network
     restart: unless-stopped
-#    deploy:
-#      resources:
-#        reservations:
-#          devices:
-#            - driver: nvidia
-#              count: 1
-#              capabilities: [gpu]
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
   django:
     build:
       context: ./backend

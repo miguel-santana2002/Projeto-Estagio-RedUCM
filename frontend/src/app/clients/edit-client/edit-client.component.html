@@ -1,7 +1,8 @@
 <app-header></app-header>
-<app-titlebanner [title]="isAdmin ? 'Edição de Clientes' : 'Acesso Restrito'" image="./assets/bannercover.jpg"></app-titlebanner>
+<app-titlebanner [title]="isAdmin ? 'Edição de Clientes' : 'Acesso Restrito'"
+  image="./assets/bannercover.jpg"></app-titlebanner>
 
-<div class="container mx-auto px-4 sm:px-8 py-8">
+<div class="page-container px-4 py-16">
 
   <!-- SE FOR ADMIN: Mostra o formulário de edição normal -->
   <div *ngIf="isAdmin" class="max-w-xl mx-auto bg-white dark:bg-gray-700 p-6 rounded-lg shadow-md">
@@ -83,7 +84,8 @@
   </div>
 
   <!-- SE NÃO FOR ADMIN (É Operador): Mostra mensagem de acesso negado -->
-  <div *ngIf="!isAdmin" class="max-w-md mx-auto bg-white dark:bg-gray-800 p-8 rounded-lg shadow-md text-center border border-gray-200 dark:border-gray-700">
+  <div *ngIf="!isAdmin"
+    class="max-w-md mx-auto bg-white dark:bg-gray-800 p-8 rounded-lg shadow-md text-center border border-gray-200 dark:border-gray-700">
     <div class="text-red-500 mb-4">
       <i class="fas fa-ban text-5xl"></i>
     </div>

@@ -5,6 +5,162 @@
   image="./assets/bannercover.jpg">
 </app-titlebanner>
 
+<div class="page-container px-4 py-8 dark:text-white transition">
+
+  <!-- Cabeçalho: Título + Botão Editar -->
+  <div class="flex items-center justify-between mb-4">
+    <h1 class="font-inter font-semibold text-2xl text-gray-700 dark:text-white">
+      {{ rule?.ruleModel?.title || 'Modelo de Regra #' + rule?.ruleModel }}
+    </h1>
+
+    <a [routerLink]="['/edit-rule', rule?.id]"
+      class="inline-flex items-center gap-2 py-2 px-4 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-200 font-semibold rounded-lg drop-shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-redshift-red dark:hover:text-white transition duration-200 focus:ring-2 focus:ring-redshift-red focus:outline-none text-sm cursor-pointer">
+      <i class="fas fa-pen-to-square text-redshift-red text-sm"></i>
+      <span>Editar Regra</span>
+    </a>
+  </div>
+
+  <!-- Barra de Metadados Principais (Compacta e Estável) -->
+  <div
+    class="flex items-center flex-wrap gap-8 py-3 px-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm mb-6">
+
+    <!-- Use Case -->
+    <div class="flex items-center gap-3">
+      <i class="fas fa-tag text-gray-500 dark:text-gray-400 text-xl"></i>
+      <div class="flex flex-col">
+        <span class="text-sm font-bold text-gray-900 dark:text-white leading-tight">
+          <span class="text-redshift-red font-bold">Red</span>UC{{ rule?.ruleModel?.useCaseId || usecase?.id || 'N/D' }}
+        </span>
+        <span class="text-xs text-gray-500 dark:text-gray-400">Use Case Associado</span>
+      </div>
+    </div>
+
+    <!-- Técnicas MITRE -->
+    <div class="flex items-center gap-3" *ngIf="usecase?.mitreTechniques?.length">
+      <span class="bg-[#0b1b2b] text-white text-[11px] font-bold px-2 py-1 rounded">
+        MITRE
+      </span>
+      <div class="flex flex-col">
+        <div class="flex items-center flex-wrap gap-1 max-w-xs">
+          <div *ngFor="let technique of usecase.mitreTechniques"
+            [routerLink]="'/techniqueDetails/' + getTechniqueId(technique)" [title]="technique"
+            class="bg-[#0d2f52] hover:bg-[#15467a] transition cursor-pointer text-white text-xs px-2 py-0.5 rounded font-medium select-none">
+            {{ getTechniqueId(technique) }}
+          </div>
+        </div>
+        <span class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Técnicas MITRE</span>
+      </div>
+    </div>
+
+    <!-- Tipo -->
+    <div class="flex items-center gap-3">
+      <i class="fas fa-cubes text-gray-500 dark:text-gray-400 text-xl"></i>
+      <div class="flex flex-col">
+        <span class="text-sm font-bold text-gray-900 dark:text-white leading-tight">
+          {{ rule?.ruleModel?.type || 'SIEM' }}
+        </span>
+        <span class="text-xs text-gray-500 dark:text-gray-400">Tipo</span>
+      </div>
+    </div>
+
+    <!-- Sintaxe -->
+    <div class="flex items-center gap-3">
+      <i class="fas fa-code text-redshift-red text-xl"></i>
+      <div class="flex flex-col">
+        <span class="text-sm font-bold text-gray-900 dark:text-white leading-tight">
+          {{ rule?.syntax || 'N/D' }}
+        </span>
+        <span class="text-xs text-gray-500 dark:text-gray-400">Sintaxe</span>
+      </div>
+    </div>
+
+    <!-- Estado -->
+    <div class="flex items-center gap-3">
+      <i class="fas fa-circle-dot text-gray-500 dark:text-gray-400 text-xl"></i>
+      <div class="flex flex-col">
+        <span class="text-sm font-bold text-gray-900 dark:text-white leading-tight">
+          {{ rule?.status || rule?.state || '-' }}
+        </span>
+        <span class="text-xs text-gray-500 dark:text-gray-400">Estado</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Área Principal (Editor + Coluna Lateral) -->
+  <div class="flex flex-col lg:flex-row gap-8">
+
+    <!-- Editor de Código -->
+    <div class="w-full lg:w-[70%]">
+      <app-code-editor [code]="code" [language]="rule?.syntax || rule?.ruleModel?.syntax || 'yaml'" height="33rem"
+        (codeChange)="onCodeChanged($event)">
+      </app-code-editor>
+    </div>
+
+    <!-- Coluna Lateral -->
+    <div class="w-full lg:w-[30%] flex flex-col gap-4">
+
+      <!-- Painel de Informação Geral -->
+      <div
+        class="bg-gray-100 dark:bg-gray-800 rounded-xl drop-shadow-md border border-transparent dark:border-gray-700 p-5 transition">
+        <h1
+          class="font-inter font-semibold text-lg text-gray-700 dark:text-gray-200 border-b border-gray-200 dark:border-gray-700 pb-2 mb-4">
+          Informação Geral
+        </h1>
+
+        <div class="flex flex-col gap-4">
+          <div>
+            <h2 class="font-inter font-semibold text-base text-gray-700 dark:text-white leading-tight">
+              {{ rule?.client?.name || 'Sem Cliente' }}
+            </h2>
+            <p class="text-gray-500 dark:text-gray-400 text-xs">Cliente</p>
+          </div>
+          <div>
+            <h2 class="font-inter font-semibold text-base text-gray-700 dark:text-white leading-tight">
+              {{ rule?.ruleModel?.title || 'Modelo #' + rule?.ruleModel }}
+            </h2>
+            <p class="text-gray-500 dark:text-gray-400 text-xs">Nome da Regra</p>
+          </div>
+          <div>
+            <h2 class="font-inter font-semibold text-base text-gray-700 dark:text-white leading-tight">
+              {{ usecase?.title || 'N/D' }}
+            </h2>
+            <p class="text-gray-500 dark:text-gray-400 text-xs">Nome do Use Case</p>
+          </div>
+          <div>
+            <h2 class="font-inter font-semibold text-base text-gray-700 dark:text-white leading-tight">
+              {{ rule?.status || rule?.state || '-' }}
+            </h2>
+            <p class="text-gray-500 dark:text-gray-400 text-xs">Estado</p>
+          </div>
+
+          <!-- LogSources Integradas na Lateral com Quebra Limpa -->
+          <div class="pt-2 border-t border-gray-200 dark:border-gray-700">
+            <p class="text-gray-500 dark:text-gray-400 text-xs mb-2 uppercase font-semibold">LogSources Associadas</p>
+            <div class="flex flex-wrap gap-1.5">
+              <span *ngFor="let log of rule.logsources" [title]="log"
+                class="bg-[#0d2f52] text-white text-xs px-2.5 py-1 rounded font-medium break-all">
+                {{ log }}
+              </span>
+              <span *ngIf="!rule.logsources?.length" class="text-xs text-gray-400 dark:text-gray-500 italic">
+                Nenhuma LogSource configurada
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Botão Guardar Alterações -->
+      <button type="button" (click)="updateRuleCode()"
+        class="flex items-center w-full px-4 py-2.5 text-sm font-medium text-white bg-redshift-red rounded-lg hover:bg-redshift-hover shadow-sm transition gap-3 justify-center">
+        <i class="fas fa-save w-5 text-center"></i>
+        <span>Guardar Alterações</span>
+      </button>
+
+    </div>
+  </div>
+</div>
+
 <!-- Toast de Sucesso -->
 <div *ngIf="message" id="toast-success"
   class="fixed top-4 right-4 flex items-center w-full max-w-xs p-4 text-gray-500 bg-white rounded-lg shadow dark:text-gray-400 dark:bg-gray-800 z-50 transition border border-transparent dark:border-gray-700"
@@ -21,163 +177,4 @@
     <span class="sr-only">Close</span>
     <i class="fas fa-times text-sm"></i>
   </button>
-</div>
-
-<div class="px-20 pt-6 dark:text-white transition">
-  <h1 class="font-inter font-semibold text-2xl text-gray-700 dark:text-white mb-4">
-    {{ rule?.ruleModel?.title || 'Modelo de Regra #' + rule?.ruleModel }}
-  </h1>
-
-  <!-- Barra de Metadados -->
-  <div class="flex items-center flex-wrap gap-7 ml-4 my-2">
-
-    <!-- Use Case -->
-    <div class="flex items-center gap-3">
-      <i class="fas fa-tag text-gray-500 dark:text-gray-400 text-2xl"></i>
-      <div class="flex flex-col justify-center">
-        <span class="text-base font-bold text-gray-900 dark:text-white leading-tight">
-          <span class="text-redshift-red font-bold">Red</span>UC{{ rule?.ruleModel?.useCaseId || usecase?.id || 'N/D' }}
-        </span>
-        <span class="text-xs text-gray-500 dark:text-gray-400 font-normal">Use Case Associado</span>
-      </div>
-    </div>
-
-    <!-- Técnicas MITRE -->
-    <div class="flex items-center gap-3" *ngIf="usecase?.mitreTechniques?.length">
-      <span class="bg-[#0b1b2b] text-white text-[11px] font-bold px-2 py-1 rounded">
-        MITRE
-      </span>
-      <div class="flex flex-col justify-center">
-        <div class="flex items-center gap-1">
-          <div [routerLink]="'/techniqueDetails/' + technique" *ngFor="let technique of usecase.mitreTechniques"
-            class="bg-[#0d2f52] hover:bg-[#15467a] transition cursor-pointer text-white text-xs px-2 py-0.5 rounded font-medium">
-            {{ technique }}
-          </div>
-        </div>
-        <span class="text-xs text-gray-500 dark:text-gray-400 font-normal mt-0.5">Técnicas Mitre Associadas</span>
-      </div>
-    </div>
-
-    <!-- Tipo -->
-    <div class="flex items-center gap-3">
-      <i class="fas fa-cubes text-gray-500 dark:text-gray-400 text-2xl"></i>
-      <div class="flex flex-col justify-center">
-        <span class="text-base font-bold text-gray-900 dark:text-white leading-tight">
-          {{ rule?.ruleModel?.type || 'SIEM' }}
-        </span>
-        <span class="text-xs text-gray-500 dark:text-gray-400 font-normal">Tipo</span>
-      </div>
-    </div>
-
-    <!-- Sintaxe -->
-    <div class="flex items-center gap-3">
-      <i class="fas fa-code text-redshift-red text-2xl"></i>
-      <div class="flex flex-col justify-center">
-        <span class="text-base font-bold text-gray-900 dark:text-white leading-tight">
-          {{ rule?.syntax || 'N/D' }}
-        </span>
-        <span class="text-xs text-gray-500 dark:text-gray-400 font-normal">Sintaxe</span>
-      </div>
-    </div>
-
-    <!-- Estado -->
-    <div class="flex items-center gap-3">
-      <i class="fas fa-circle-dot text-gray-500 dark:text-gray-400 text-2xl"></i>
-      <div class="flex flex-col justify-center">
-        <span class="text-base font-bold text-gray-900 dark:text-white leading-tight">
-          {{ rule?.status || rule?.state || '-' }}
-        </span>
-        <span class="text-xs text-gray-500 dark:text-gray-400 font-normal">Estado</span>
-      </div>
-    </div>
-
-    <!-- Logsources -->
-    <div class="flex items-center gap-3">
-      <i class="fas fa-network-wired text-gray-500 dark:text-gray-400 text-2xl"></i>
-      <div class="flex flex-col justify-center">
-        <div class="flex items-center gap-2 max-w-xl">
-          <span *ngFor="let log of rule.logsources?.slice(0, 2)" [title]="log"
-            class="bg-[#0d2f52] text-white text-xs px-2.5 py-1 rounded font-medium truncate max-w-[220px]">
-            {{ log }}
-          </span>
-
-          <span *ngIf="rule.logsources?.length > 2" [title]="rule.logsources.slice(2).join(', ')"
-            class="bg-[#0d2f52] hover:bg-[#15467a] text-white text-xs px-2 py-0.5 rounded-full font-bold cursor-help">
-            +{{ rule.logsources.length - 2 }}
-          </span>
-
-          <span *ngIf="!rule.logsources?.length" class="text-sm text-gray-400 dark:text-gray-500">N/D</span>
-        </div>
-        <span class="text-xs text-gray-500 dark:text-gray-400 font-normal">LogSources</span>
-      </div>
-    </div>
-
-    <!-- Botão Editar Regra -->
-    <a [routerLink]="['/edit-rule', rule?.id]"
-      class="ml-auto inline-flex items-center gap-2 py-2 px-4 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-200 font-semibold rounded-lg drop-shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-redshift-red dark:hover:text-white transition duration-200 focus:ring-2 focus:ring-redshift-red focus:outline-none text-sm cursor-pointer self-center">
-      <i class="fas fa-pen-to-square text-redshift-red text-sm"></i>
-      <span>Editar Regra</span>
-    </a>
-
-  </div>
-
-  <!-- Área Principal (Editor + Coluna Lateral) -->
-  <div class="flex flex-col lg:flex-row gap-8 mt-8">
-
-    <!-- Editor de Código -->
-    <div class="w-full lg:w-[80%]">
-      <app-code-editor [code]="code" [language]="rule?.syntax || rule?.ruleModel?.syntax || 'yaml'" height="33rem"
-        (codeChange)="onCodeChanged($event)">
-      </app-code-editor>
-    </div>
-
-    <!-- Coluna Lateral -->
-    <div class="w-full lg:w-[20%] flex flex-col gap-4">
-
-      <!-- Painel de Informação Geral -->
-      <div
-        class="bg-gray-100 dark:bg-gray-800 rounded-xl drop-shadow-md border border-transparent dark:border-gray-700 p-5 transition">
-        <h1
-          class="font-inter font-semibold text-xl text-gray-700 dark:text-gray-200 border-b border-gray-200 dark:border-gray-700 pb-2 mb-4">
-          Informação Geral
-        </h1>
-
-        <div class="flex flex-col gap-4">
-          <div>
-            <h1 class="font-inter font-semibold text-lg text-gray-700 dark:text-white leading-tight">
-              {{ rule?.client?.name || 'Sem Cliente' }}
-            </h1>
-            <p class="text-gray-500 dark:text-gray-400 text-sm">Cliente</p>
-          </div>
-          <div>
-            <h1 class="font-inter font-semibold text-lg text-gray-700 dark:text-white leading-tight">
-              {{ rule?.ruleModel?.title || 'Modelo #' + rule?.ruleModel }}
-            </h1>
-            <p class="text-gray-500 dark:text-gray-400 text-sm">Nome da Regra</p>
-          </div>
-          <div>
-            <h1 class="font-inter font-semibold text-lg text-gray-700 dark:text-white leading-tight">
-              {{ usecase?.title || 'N/D' }}
-            </h1>
-            <p class="text-gray-500 dark:text-gray-400 text-sm">Nome do Use Case</p>
-          </div>
-          <div>
-            <h1 class="font-inter font-semibold text-lg text-gray-700 dark:text-white leading-tight">
-              {{ rule?.status || rule?.state || '-' }}
-            </h1>
-            <p class="text-gray-500 dark:text-gray-400 text-sm">Estado</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- Botão Guardar Alterações do Código -->
-      <button type="button" (click)="updateRuleCode()"
-        class="w-full inline-flex items-center justify-center gap-2 py-3 px-4 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-200 font-semibold rounded-xl drop-shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-redshift-red dark:hover:text-white transition duration-200 focus:ring-2 focus:ring-redshift-red focus:outline-none">
-        <i class="fas fa-save text-base"></i>
-        <span>Guardar alterações</span>
-      </button>
-
-    </div>
-  </div>
-
 </div>

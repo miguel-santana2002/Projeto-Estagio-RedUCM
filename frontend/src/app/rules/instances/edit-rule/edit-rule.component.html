@@ -3,110 +3,112 @@
     image="./assets/bannercover.jpg">
 </app-titlebanner>
 
-<!-- Estado de Carregamento -->
-<div *ngIf="isLoading" class="flex justify-center items-center py-20">
-    <div class="flex items-center gap-3 text-gray-500 dark:text-gray-400 text-sm font-medium">
-        <i class="fas fa-spinner fa-spin text-redshift-red"></i> A carregar dados da regra...
+<div class="page-container px-4 py-16">
+
+    <!-- Estado de Carregamento -->
+    <div *ngIf="isLoading" class="flex justify-center items-center py-20">
+        <div class="flex items-center gap-3 text-gray-500 dark:text-gray-400 text-sm font-medium">
+            <i class="fas fa-spinner fa-spin text-redshift-red"></i> A carregar dados da regra...
+        </div>
     </div>
+
+    <form *ngIf="!isLoading" class="grid grid-cols-1 md:grid-cols-2 gap-8 dark:text-white" (ngSubmit)="updateRule()"
+        [formGroup]="editRuleForm">
+
+        <!-- 1. Linha Superior: Cliente, Estado, Tipo e Sintaxe -->
+        <div class="col-span-1 md:col-span-2 grid grid-cols-1 md:grid-cols-12 gap-6">
+
+            <!-- Cliente Associado (4 colunas) -->
+            <div class="space-y-2 md:col-span-4">
+                <label for="client" class="block text-sm font-semibold text-gray-900 dark:text-white">
+                    Cliente Associado
+                </label>
+                <select id="client" formControlName="client"
+                    class="block w-full py-2.5 px-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 dark:text-white rounded-lg shadow-sm focus:ring-2 focus:ring-redshift-red text-sm transition">
+                    <option [ngValue]="null">Geral / Sem Cliente</option>
+                    <option *ngFor="let c of clients" [ngValue]="c.id || c.pk">
+                        {{ c.name }}
+                    </option>
+                </select>
+            </div>
+
+            <!-- Estado (2 colunas) -->
+            <div class="space-y-2 md:col-span-2">
+                <label for="status" class="block text-sm font-semibold text-gray-900 dark:text-white">Estado</label>
+                <select id="status" formControlName="status"
+                    class="block w-full py-2.5 px-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 dark:text-white rounded-lg shadow-sm focus:ring-2 focus:ring-redshift-red text-sm transition">
+                    <option *ngFor="let opt of statusOptions" [value]="opt">{{ opt || '(Vazio)' }}</option>
+                </select>
+            </div>
+
+            <!-- Tipo (3 colunas) -->
+            <div class="space-y-2 md:col-span-3">
+                <label for="selectedType" class="block text-sm font-semibold text-gray-900 dark:text-white">Tipo</label>
+                <select id="selectedType" formControlName="selectedType" [(ngModel)]="selectedType"
+                    (change)="onTypeChange()"
+                    class="block w-full py-2.5 px-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 dark:text-white rounded-lg shadow-sm focus:ring-2 focus:ring-redshift-red text-sm transition">
+                    <option *ngFor="let option of typeKeys()" [value]="option">{{ option }}</option>
+                </select>
+            </div>
+
+            <!-- Sintaxe (3 colunas) -->
+            <div class="space-y-2 md:col-span-3">
+                <label for="syntax" class="block text-sm font-semibold text-gray-900 dark:text-white">Sintaxe</label>
+                <select id="syntax" formControlName="syntax" [(ngModel)]="selectedSyntax" (change)="onSyntaxChange()"
+                    class="block w-full py-2.5 px-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 dark:text-white rounded-lg shadow-sm focus:ring-2 focus:ring-redshift-red text-sm transition">
+                    <option *ngFor="let option of getAvailableSyntaxes()" [value]="option">{{ option }}</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- 2. Modelo Base Associado (Apenas Leitura) -->
+        <div class="space-y-2 col-span-1 md:col-span-2">
+            <label class="block text-sm font-semibold text-gray-900 dark:text-white">
+                Modelo de Regra Base
+            </label>
+            <input type="text" [value]="rule?.ruleModel?.title || ('RedModel #' + rule?.ruleModel?.id)" disabled
+                class="block w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2.5 text-gray-500 bg-gray-100 dark:bg-gray-700/60 dark:text-gray-400 shadow-sm text-sm cursor-not-allowed">
+        </div>
+
+        <!-- 3. LogSources Associadas com tag-input -->
+        <div class="space-y-2 col-span-1 md:col-span-2">
+            <div class="flex items-center justify-between">
+                <label for="logsources" class="block text-sm font-semibold text-gray-900 dark:text-white">
+                    LogSources Associadas
+                </label>
+                <span class="text-xs text-gray-400 font-normal">Opcional</span>
+            </div>
+            <tag-input [onlyFromAutocomplete]="true" theme="minimal" [secondaryPlaceholder]="'+ Nova Log Source'"
+                [placeholder]="''" formControlName="logsources"
+                class="block w-full rounded-lg border border-gray-300 dark:border-gray-600 px-2 py-1 bg-white dark:bg-gray-700 text-sm">
+                <tag-input-dropdown [showDropdownIfEmpty]="true" [autocompleteItems]="registeredLogsources">
+                </tag-input-dropdown>
+            </tag-input>
+        </div>
+
+        <!-- 4. Editor de Código -->
+        <div class="space-y-3 col-span-1 md:col-span-2">
+            <label class="block text-sm font-semibold text-gray-900 dark:text-white mb-0">
+                Regra ({{ selectedSyntax }})
+            </label>
+            <div class="w-full border border-gray-300 dark:border-gray-700 rounded-lg overflow-hidden">
+                <app-code-editor [code]="code" [language]="selectedSyntax" height="420px"
+                    (codeChange)="onCodeChanged($event)">
+                </app-code-editor>
+            </div>
+        </div>
+
+        <!-- 5. Ações (Submit e Cancelar) -->
+        <div class="col-span-1 md:col-span-2 flex items-center gap-4 pt-2">
+            <button type="submit" [disabled]="!editRuleForm.valid"
+                class="disabled:opacity-50 disabled:cursor-not-allowed w-full md:w-60 py-2.5 px-5 text-white font-medium bg-redshift-red rounded-lg hover:bg-redshift-hover transition shadow-sm text-sm">
+                Guardar Alterações
+            </button>
+            <a [routerLink]="['/rule-Details', ruleId]"
+                class="w-full md:w-32 py-2.5 px-4 text-center text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg font-medium transition text-sm">
+                Cancelar
+            </a>
+        </div>
+
+    </form>
 </div>
-
-<form *ngIf="!isLoading"
-    class="grid grid-cols-1 md:grid-cols-2 gap-8 px-8 md:px-24 lg:px-32 pt-10 pb-16 dark:text-white"
-    (ngSubmit)="updateRule()" [formGroup]="editRuleForm">
-
-    <!-- 1. Linha Superior: Cliente, Estado, Tipo e Sintaxe -->
-    <div class="col-span-1 md:col-span-2 grid grid-cols-1 md:grid-cols-12 gap-6">
-
-        <!-- Cliente Associado (4 colunas) -->
-        <div class="space-y-2 md:col-span-4">
-            <label for="client" class="block text-sm font-semibold text-gray-900 dark:text-white">
-                Cliente Associado
-            </label>
-            <select id="client" formControlName="client"
-                class="block w-full py-2.5 px-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 dark:text-white rounded-lg shadow-sm focus:ring-2 focus:ring-redshift-red text-sm transition">
-                <option [ngValue]="null">Geral / Sem Cliente</option>
-                <option *ngFor="let c of clients" [ngValue]="c.id || c.pk">
-                    {{ c.name }}
-                </option>
-            </select>
-        </div>
-
-        <!-- Estado (2 colunas) -->
-        <div class="space-y-2 md:col-span-2">
-            <label for="status" class="block text-sm font-semibold text-gray-900 dark:text-white">Estado</label>
-            <select id="status" formControlName="status"
-                class="block w-full py-2.5 px-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 dark:text-white rounded-lg shadow-sm focus:ring-2 focus:ring-redshift-red text-sm transition">
-                <option *ngFor="let opt of statusOptions" [value]="opt">{{ opt || '(Vazio)' }}</option>
-            </select>
-        </div>
-
-        <!-- Tipo (3 colunas) -->
-        <div class="space-y-2 md:col-span-3">
-            <label for="selectedType" class="block text-sm font-semibold text-gray-900 dark:text-white">Tipo</label>
-            <select id="selectedType" formControlName="selectedType" [(ngModel)]="selectedType"
-                (change)="onTypeChange()"
-                class="block w-full py-2.5 px-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 dark:text-white rounded-lg shadow-sm focus:ring-2 focus:ring-redshift-red text-sm transition">
-                <option *ngFor="let option of typeKeys()" [value]="option">{{ option }}</option>
-            </select>
-        </div>
-
-        <!-- Sintaxe (3 colunas) -->
-        <div class="space-y-2 md:col-span-3">
-            <label for="syntax" class="block text-sm font-semibold text-gray-900 dark:text-white">Sintaxe</label>
-            <select id="syntax" formControlName="syntax" [(ngModel)]="selectedSyntax" (change)="onSyntaxChange()"
-                class="block w-full py-2.5 px-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 dark:text-white rounded-lg shadow-sm focus:ring-2 focus:ring-redshift-red text-sm transition">
-                <option *ngFor="let option of getAvailableSyntaxes()" [value]="option">{{ option }}</option>
-            </select>
-        </div>
-    </div>
-
-    <!-- 2. Modelo Base Associado (Apenas Leitura) -->
-    <div class="space-y-2 col-span-1 md:col-span-2">
-        <label class="block text-sm font-semibold text-gray-900 dark:text-white">
-            Modelo de Regra Base
-        </label>
-        <input type="text" [value]="rule?.ruleModel?.title || ('RedModel #' + rule?.ruleModel?.id)" disabled
-            class="block w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2.5 text-gray-500 bg-gray-100 dark:bg-gray-700/60 dark:text-gray-400 shadow-sm text-sm cursor-not-allowed">
-    </div>
-
-    <!-- 3. LogSources Associadas com tag-input -->
-    <div class="space-y-2 col-span-1 md:col-span-2">
-        <div class="flex items-center justify-between">
-            <label for="logsources" class="block text-sm font-semibold text-gray-900 dark:text-white">
-                LogSources Associadas
-            </label>
-            <span class="text-xs text-gray-400 font-normal">Opcional</span>
-        </div>
-        <tag-input [onlyFromAutocomplete]="true" theme="minimal" [secondaryPlaceholder]="'+ Nova Log Source'"
-            [placeholder]="''" formControlName="logsources"
-            class="block w-full rounded-lg border border-gray-300 dark:border-gray-600 px-2 py-1 bg-white dark:bg-gray-700 text-sm">
-            <tag-input-dropdown [showDropdownIfEmpty]="true" [autocompleteItems]="registeredLogsources">
-            </tag-input-dropdown>
-        </tag-input>
-    </div>
-
-    <!-- 4. Editor de Código -->
-    <div class="space-y-3 col-span-1 md:col-span-2">
-        <label class="block text-sm font-semibold text-gray-900 dark:text-white mb-0">
-            Regra ({{ selectedSyntax }})
-        </label>
-        <div class="w-full border border-gray-300 dark:border-gray-700 rounded-lg overflow-hidden">
-            <app-code-editor [code]="code" [language]="selectedSyntax" height="420px"
-                (codeChange)="onCodeChanged($event)">
-            </app-code-editor>
-        </div>
-    </div>
-
-    <!-- 5. Ações (Submit e Cancelar) -->
-    <div class="col-span-1 md:col-span-2 flex items-center gap-4 pt-2">
-        <button type="submit" [disabled]="!editRuleForm.valid"
-            class="disabled:opacity-50 disabled:cursor-not-allowed w-full md:w-60 py-2.5 px-5 text-white font-medium bg-redshift-red rounded-lg hover:bg-redshift-hover transition shadow-sm text-sm">
-            Guardar Alterações
-        </button>
-        <a [routerLink]="['/rule-Details', ruleId]"
-            class="w-full md:w-32 py-2.5 px-4 text-center text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg font-medium transition text-sm">
-            Cancelar
-        </a>
-    </div>
-
-</form>

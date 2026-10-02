@@ -2,6 +2,466 @@
 
 <app-titlebanner title="RedModel{{ ruleModel.id }}" image="./assets/bannercover.jpg"></app-titlebanner>
 
+<div class="page-container px-4 py-8 dark:text-white transition">
+
+  <!-- Cabeçalho: Título + Botão Editar -->
+  <div class="flex items-center justify-between mb-4">
+    <h1 class="font-inter font-semibold text-2xl text-gray-700 dark:text-white">
+      {{ ruleModel.title }}
+    </h1>
+
+    <div class="flex-shrink-0">
+      <button [routerLink]="['/edit-rule-model', ruleModel.id]"
+        class="inline-flex items-center gap-2 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 font-semibold text-sm py-2 px-4 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm transition">
+        <i class="fas fa-pen-to-square text-redshift-red text-sm"></i>
+        <span>Editar Modelo de Regra</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Barra de Metadados Principais -->
+  <div
+    class="flex items-center flex-wrap gap-8 py-3 px-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm mb-6">
+
+    <!-- Use Case -->
+    <div class="flex items-center gap-3">
+      <i class="fas fa-tag text-gray-500 dark:text-gray-400 text-xl"></i>
+      <div class="flex flex-col">
+        <span class="text-sm font-bold text-gray-900 dark:text-white leading-tight">
+          <span class="text-redshift-red font-bold">Red</span>UC{{ ruleModel.useCaseId || 'N/D' }}
+        </span>
+        <span class="text-xs text-gray-500 dark:text-gray-400">Use Case Associado</span>
+      </div>
+    </div>
+
+    <!-- Técnicas MITRE (Apenas ID visível + Nome no Hover) -->
+    <div class="flex items-center gap-3" *ngIf="ruleModel.mitreTechniques?.length">
+      <span class="bg-[#0b1b2b] text-white text-[11px] font-bold px-2 py-1 rounded">
+        MITRE
+      </span>
+      <div class="flex flex-col">
+        <div class="flex items-center flex-wrap gap-1 max-w-xs">
+          <div *ngFor="let mitre of ruleModel.mitreTechniques"
+            [routerLink]="'/techniqueDetails/' + (mitre.includes(' - ') ? mitre.split(' - ')[0] : mitre)"
+            [title]="mitre"
+            class="bg-[#0d2f52] hover:bg-[#15467a] transition cursor-pointer text-white text-xs px-2 py-0.5 rounded font-medium select-none">
+            {{ mitre.includes(' - ') ? mitre.split(' - ')[0] : mitre }}
+          </div>
+        </div>
+        <span class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Técnicas MITRE</span>
+      </div>
+    </div>
+
+    <!-- Tipo -->
+    <div class="flex items-center gap-3">
+      <i class="fas fa-cubes text-gray-500 dark:text-gray-400 text-xl"></i>
+      <div class="flex flex-col">
+        <span class="text-sm font-bold text-gray-900 dark:text-white leading-tight">
+          {{ ruleModel.type || 'SIEM' }}
+        </span>
+        <span class="text-xs text-gray-500 dark:text-gray-400">Tipo</span>
+      </div>
+    </div>
+
+    <!-- Sintaxe -->
+    <div class="flex items-center gap-3">
+      <i class="fas fa-code text-redshift-red text-xl"></i>
+      <div class="flex flex-col">
+        <span class="text-sm font-bold text-gray-900 dark:text-white leading-tight">
+          {{ ruleModel.syntax || 'N/D' }}
+        </span>
+        <span class="text-xs text-gray-500 dark:text-gray-400">Sintaxe</span>
+      </div>
+    </div>
+
+    <!-- Logsources (Após a Sintaxe) -->
+    <div class="flex items-center gap-3">
+      <i class="fas fa-network-wired text-gray-500 dark:text-gray-400 text-xl"></i>
+      <div class="flex flex-col">
+        <div class="flex items-center gap-2 max-w-md">
+          <span *ngFor="let log of ruleModel.logsources?.slice(0, 2)" [title]="log"
+            class="bg-[#0d2f52] text-white text-xs px-2.5 py-1 rounded font-medium truncate max-w-[200px]">
+            {{ log }}
+          </span>
+
+          <span *ngIf="ruleModel.logsources?.length > 2" [title]="ruleModel.logsources.slice(2).join(', ')"
+            class="bg-[#0d2f52] hover:bg-[#15467a] text-white text-xs px-2 py-0.5 rounded-full font-bold cursor-help">
+            +{{ ruleModel.logsources.length - 2 }}
+          </span>
+
+          <span *ngIf="!ruleModel.logsources?.length" class="text-xs text-gray-400 dark:text-gray-500 italic">N/D</span>
+        </div>
+        <span class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">LogSources</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Área Principal (Editor + Coluna Lateral de Ações) -->
+  <div class="flex flex-col lg:flex-row gap-8 items-start w-full">
+
+    <!-- Coluna do Editor (75%) -->
+    <div class="w-full lg:w-[75%] min-w-0">
+      <app-code-editor [code]="selectedModel.value" [language]="ruleModel.syntax || 'yaml'" height="550px"
+        (codeChange)="onCodeChanged($event)">
+      </app-code-editor>
+    </div>
+
+    <!-- Coluna Lateral de Ações (25%) -->
+    <div class="w-full lg:w-[25%] flex flex-col gap-4">
+      <div
+        class="bg-gray-100 dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 flex flex-col space-y-3 transition">
+        <h3 class="text-sm uppercase font-semibold text-gray-500 dark:text-gray-400 mb-1">
+          Ações
+        </h3>
+
+        <button (click)="copyToClipboard()" type="button"
+          class="flex items-center w-full px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 hover:text-redshift-red dark:hover:text-white shadow-sm transition gap-3">
+          <i class="fas fa-copy w-5 text-center text-gray-500 dark:text-gray-400"></i>
+          <span>Copiar para Clipboard</span>
+        </button>
+
+        <button (click)="openConvertModal()" type="button"
+          class="flex items-center w-full px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 hover:text-redshift-red dark:hover:text-white shadow-sm transition gap-3">
+          <i class="fas fa-exchange-alt w-5 text-center text-gray-500 dark:text-gray-400"></i>
+          <span>Converter Regra</span>
+        </button>
+
+        <button (click)="openAssignModal()" data-modal-target="crud-modal" data-modal-toggle="crud-modal" type="button"
+          class="flex items-center w-full px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 hover:text-redshift-red dark:hover:text-white shadow-sm transition gap-3">
+          <i class="fas fa-user-plus w-5 text-center text-gray-500 dark:text-gray-400"></i>
+          <span>Atribuir a Clientes</span>
+        </button>
+
+        <button (click)="updateRuleModelCode()" type="button"
+          class="flex items-center w-full px-4 py-2.5 text-sm font-medium text-white bg-redshift-red rounded-lg hover:bg-redshift-hover shadow-sm transition gap-3 justify-center">
+          <i class="fas fa-save w-5 text-center"></i>
+          <span>Guardar Alterações</span>
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Instâncias da Regra -->
+  <div class="mt-12 mb-8">
+    <div class="flex items-center justify-between mb-4">
+      <div>
+        <h2 class="font-inter font-semibold text-2xl text-gray-700 dark:text-white">
+          Regras baseadas neste Modelo
+        </h2>
+        <p class="text-sm text-gray-500 dark:text-gray-400">
+          Instâncias ativas criadas e atribuídas a clientes a partir deste modelo
+        </p>
+      </div>
+      <span
+        class="text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700">
+        {{ ruleInstances?.length || 0 }} regra(s)
+      </span>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+      <div *ngFor="let rule of ruleInstances" [routerLink]="'/rule-Details/' + rule.id"
+        class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-4 rounded-xl shadow-sm cursor-pointer hover:shadow-md hover:border-gray-300 dark:hover:border-gray-600 transition duration-200 flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between gap-2 mb-2">
+            <span class="text-xs font-mono font-bold text-redshift-red dark:text-red-400">#{{ rule.id }}</span>
+            <span
+              class="text-[11px] font-semibold px-2 py-0.5 rounded bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-600">
+              {{ rule.syntax || 'N/D' }}
+            </span>
+          </div>
+          <h3 class="font-inter font-semibold text-sm text-gray-800 dark:text-white truncate"
+            [title]="rule.client?.name || 'Geral (Sem Cliente)'">
+            {{ rule.client?.name || 'Geral (Sem Cliente)' }}
+          </h3>
+        </div>
+
+        <p class="text-gray-500 dark:text-gray-400 text-xs mt-3 truncate"
+          [title]="(rule.logsources && rule.logsources.length) ? rule.logsources.join(', ') : 'Sem LogSources'">
+          <i class="fas fa-network-wired mr-1 text-[10px]"></i>
+          {{ (rule.logsources && rule.logsources.length) ? rule.logsources.join(', ') : 'Sem LogSources' }}
+        </p>
+      </div>
+    </div>
+
+    <div *ngIf="!ruleInstances?.length"
+      class="py-8 text-center text-sm text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
+      <i class="fas fa-inbox text-2xl mb-2 block opacity-40"></i>
+      Nenhuma instância criada para este modelo de regra.
+    </div>
+  </div>
+
+</div>
+
+<!-- Modal Atribuir Regra (crud-modal) -->
+<div id="crud-modal" tabindex="-1" aria-hidden="true"
+  class="bg-black/60 backdrop-blur-sm hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full">
+  <div class="relative p-4 w-10/12 min-w-96 max-h-full">
+    <div class="relative bg-white rounded-lg shadow dark:bg-gray-800 border border-transparent dark:border-gray-700">
+
+      <!-- Header -->
+      <div class="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-700">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+          Copiar regra para cliente
+        </h3>
+        <button type="button"
+          class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-700 dark:hover:text-white transition"
+          data-modal-toggle="crud-modal">
+          <i class="fas fa-times text-base"></i>
+          <span class="sr-only">Close modal</span>
+        </button>
+      </div>
+
+      <!-- Formulário -->
+      <form class="p-4 md:p-5" [formGroup]="createRuleForm">
+        <div class="grid gap-4 mb-4 grid-cols-2 grid-rows-2">
+
+          <!-- Seleção de Cliente -->
+          <div class="col-span-1 row-span-1">
+            <label for="client" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Seleção de
+              cliente</label>
+
+            <select *ngIf="user.companies?.length === 0" id="client" formControlName="client" required
+              class="block w-full rounded-md border-0 px-2 py-2.5 text-gray-900 bg-white dark:bg-gray-700 dark:text-white shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-600 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 dark:focus:ring-indigo-500 sm:text-sm transition">
+              <option *ngFor="let client of clients" [ngValue]="client.pk">
+                {{ client.name }}
+              </option>
+            </select>
+
+            <select *ngIf="user.companies?.length > 0" id="client" formControlName="client" required
+              class="block w-full rounded-md border-0 px-2 py-2.5 text-gray-900 bg-white dark:bg-gray-700 dark:text-white shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-600 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 dark:focus:ring-indigo-500 sm:text-sm transition">
+              <option *ngFor="let client of user.companies ?? []" [ngValue]="client">
+                {{ client }}
+              </option>
+            </select>
+          </div>
+
+          <!-- LogSources -->
+          <div class="col-span-1 row-span-2">
+            <label for="logsources"
+              class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Logsources</label>
+            <select id="logsources" formControlName="logsources" required multiple
+              class="block w-full rounded-md border-0 h-32 px-2 py-2.5 text-gray-900 bg-white dark:bg-gray-700 dark:text-white shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-600 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 dark:focus:ring-indigo-500 sm:text-sm transition">
+              <option *ngFor="let logsource of ruleModel.logsources" [ngValue]="logsource">
+                {{ logsource }}
+              </option>
+            </select>
+          </div>
+
+          <!-- Sintaxe Pré-selecionada -->
+          <div class="col-span-1 row-span-1">
+            <label for="syntax" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Sintaxe da
+              Regra</label>
+            <select id="syntax" formControlName="syntax" (change)="onSyntaxChange()" required
+              class="block w-full rounded-md border-0 px-2 py-2.5 text-gray-900 bg-white dark:bg-gray-700 dark:text-white shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-600 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 dark:focus:ring-indigo-500 sm:text-sm transition">
+              <ng-container *ngIf="ruleModel.type === 'SOAR'">
+                <option *ngFor="let sintax of soarSintaxes" [ngValue]="sintax">{{ sintax }}</option>
+              </ng-container>
+              <ng-container *ngIf="ruleModel.type === 'SIEM'">
+                <option *ngFor="let sintax of siemSintaxes" [ngValue]="sintax">{{ sintax }}</option>
+              </ng-container>
+              <ng-container *ngIf="ruleModel.type === 'EDR'">
+                <option *ngFor="let sintax of edrSintaxes" [ngValue]="sintax">{{ sintax }}</option>
+              </ng-container>
+            </select>
+          </div>
+
+          <!-- Editor / Textarea -->
+          <div class="col-span-2">
+            <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Personalização da
+              Regra</label>
+            <textarea rows="16" formControlName="modalCode"
+              class="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white font-mono rounded-lg p-2.5 text-xs focus:ring-2 focus:ring-indigo-600 dark:focus:ring-indigo-500 transition">
+              </textarea>
+          </div>
+        </div>
+
+        <!-- Footer Modal -->
+        <div class="flex items-center justify-end p-4 border-t border-gray-200 dark:border-gray-700 space-x-3">
+          <button (click)="createRule()" [disabled]="createRuleForm.invalid" type="button"
+            class="py-2 px-4 text-sm font-medium text-white bg-redshift-red hover:bg-redshift-hover disabled:opacity-50 disabled:cursor-not-allowed rounded-lg shadow-sm transition">
+            Guardar
+          </button>
+          <button type="button" data-modal-hide="crud-modal"
+            class="py-2 px-4 text-sm font-medium text-gray-500 dark:text-gray-300 bg-white dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600 hover:text-gray-900 dark:hover:text-white transition">
+            Fechar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Converter Regra (IA + pySigma) -->
+<div *ngIf="showConvertModal"
+  class="fixed top-0 left-0 w-full h-full flex items-center justify-center bg-black/60 backdrop-blur-sm z-50 p-4">
+
+  <div
+    class="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-6xl overflow-hidden border border-transparent dark:border-gray-700 transition">
+
+    <!-- Header -->
+    <div class="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+      <h3 class="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+        <i class="fas fa-brain text-redshift-red"></i>
+        Converter Regra (IA + pySigma)
+      </h3>
+      <button (click)="closeConvertModal()" type="button"
+        class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 inline-flex justify-center items-center dark:hover:bg-gray-700 dark:hover:text-white transition">
+        <i class="fas fa-times text-base"></i>
+        <span class="sr-only">Fechar</span>
+      </button>
+    </div>
+
+    <!-- Banner de Erro (Mantém a página segura caso ocorra falha de backend ou formato) -->
+    <div *ngIf="conversionError"
+      class="mx-6 mt-4 p-3 text-sm text-red-700 bg-red-100 rounded-lg dark:bg-red-950/40 dark:text-red-400 border border-red-200 dark:border-red-900/50 flex items-center gap-2">
+      <i class="fas fa-circle-exclamation text-base flex-shrink-0"></i>
+      <span>{{ conversionError }}</span>
+    </div>
+
+    <!-- Body com Grid -->
+    <div class="p-6">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-center">
+
+        <!-- Campo Texto: Antes -->
+        <div class="lg:col-span-5 flex flex-col h-full">
+          <label class="block mb-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
+            Sintaxe Original
+            <span *ngIf="ruleModel?.syntax" class="text-xs font-normal text-gray-500 dark:text-gray-400">({{
+              ruleModel.syntax }})</span>
+          </label>
+          <textarea [(ngModel)]="sourceRuleContent" rows="14" readonly
+            class="w-full p-3 text-xs font-mono bg-gray-50 dark:bg-gray-700/60 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-0 resize-none"></textarea>
+        </div>
+
+        <!-- Painel Central de Ações (Dropdown Atualizado sem Lucene, com EQL e CQL) -->
+        <div class="lg:col-span-2 flex flex-col items-center justify-center space-y-4 py-2">
+          <div class="w-full">
+            <label
+              class="block mb-1 text-xs font-medium text-gray-600 dark:text-gray-400 text-center whitespace-nowrap">
+              Converter para
+            </label>
+            <select [(ngModel)]="targetSyntax" [disabled]="isConverting"
+              class="bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded-lg focus:ring-redshift-red focus:border-redshift-red block w-full p-2.5 truncate dark:bg-gray-700 dark:border-gray-600 dark:text-white disabled:opacity-50 transition">
+              <option value="" disabled selected>Selecionar</option>
+              <option value="SPL (Splunk)">SPL (Splunk)</option>
+              <option value="KQL (Sentinel)">KQL (Sentinel)</option>
+              <option value="AQL (QRadar)">AQL (QRadar)</option>
+              <option value="EQL (Elastic)">EQL (Elastic)</option>
+              <option value="CQL (CrowdStrike)">CQL (CrowdStrike)</option>
+              <option value="Sigma Rule">Sigma Rule</option>
+            </select>
+          </div>
+
+          <button (click)="convertRule()" [disabled]="!targetSyntax || isConverting" type="button"
+            class="w-full inline-flex items-center justify-center gap-2 py-2.5 px-4 text-white bg-redshift-red hover:bg-redshift-hover disabled:opacity-50 disabled:cursor-not-allowed font-medium rounded-lg text-sm shadow-sm transition">
+            <i *ngIf="isConverting" class="fas fa-spinner fa-spin"></i>
+            <i *ngIf="!isConverting" class="fas fa-arrow-right hidden lg:inline"></i>
+            <i *ngIf="!isConverting" class="fas fa-arrow-down lg:hidden"></i>
+            <span>{{ isConverting ? 'A converter...' : 'Converter' }}</span>
+          </button>
+        </div>
+
+        <div class="lg:col-span-5 flex flex-col h-full">
+          <div class="flex justify-between items-center mb-2">
+            <div class="flex items-center gap-2">
+              <label class="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                Resultado da Conversão
+              </label>
+
+              <!-- Badge Determinístico (pySigma) -->
+              <span *ngIf="conversionEngine === 'pysigma' && !isConverting"
+                class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-medium bg-emerald-100 text-emerald-800 dark:bg-emerald-500/10 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-500/20"
+                title="Compilação 100% determinística via AST do pySigma">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400"></span>
+                pySigma
+              </span>
+
+              <!-- Badge Híbrido (pySigma + Ollama) -->
+              <span *ngIf="conversionEngine === 'hybrid' && !isConverting"
+                class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-medium bg-amber-100 text-amber-800 dark:bg-amber-500/10 dark:text-amber-400 border border-amber-300 dark:border-amber-500/20"
+                title="Filtro base via pySigma com correlações/agregações enriquecidas via IA">
+                <span class="w-1.5 h-1.5 rounded-full bg-amber-500 dark:bg-amber-400"></span>
+                Híbrido
+              </span>
+
+              <!-- Badge Modelo IA (LLM Puro) -->
+              <span *ngIf="conversionEngine === 'llm' && !isConverting"
+                class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-medium bg-indigo-100 text-indigo-800 dark:bg-indigo-500/10 dark:text-indigo-400 border border-indigo-300 dark:border-indigo-500/20"
+                title="Tradução generativa direta via Ollama">
+                <span class="w-1.5 h-1.5 rounded-full bg-indigo-500 dark:bg-indigo-400"></span>
+                Modelo IA
+              </span>
+            </div>
+
+            <button *ngIf="convertedRuleContent && !isConverting" (click)="copyConvertedToClipboard()" type="button"
+              class="text-xs text-gray-500 dark:text-gray-400 hover:text-redshift-red dark:hover:text-redshift-red inline-flex items-center transition">
+              <i class="fas fa-copy mr-1"></i> Copiar
+            </button>
+          </div>
+
+          <div class="relative">
+            <textarea [(ngModel)]="convertedRuleContent" rows="14" [readonly]="isConverting"
+              [placeholder]="isConverting ? 'Aguarde, o motor está a processar a query...' : 'O resultado aparecerá aqui...'"
+              class="w-full p-3 text-xs font-mono bg-gray-50 dark:bg-gray-700/60 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-800 dark:text-gray-200 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:ring-redshift-red focus:border-redshift-red resize-none"></textarea>
+
+            <!-- Overlay Spinner -->
+            <div *ngIf="isConverting"
+              class="absolute inset-0 bg-white/70 dark:bg-gray-800/80 backdrop-blur-[1px] rounded-lg flex flex-col items-center justify-center gap-2">
+              <i class="fas fa-circle-notch fa-spin text-redshift-red text-2xl"></i>
+              <span class="text-xs font-medium text-gray-600 dark:text-gray-300">A processar conversão...</span>
+            </div>
+          </div>
+
+          <!-- Frase pequena a indicar quem converteu (pySigma ou IA) -->
+          <div *ngIf="conversionSource && !isConverting" class="mt-2 text-xs flex items-center gap-1">
+            <i class="fas fa-microchip" [ngClass]="{
+                'text-green-400': conversionSource.startsWith('pySigma ('),
+                'text-amber-400': conversionSource.includes('+ IA'),
+                'text-red-400': conversionSource.startsWith('IA (')
+              }"></i>
+            <span class="font-semibold" [ngClass]="{
+                'text-green-400': conversionSource.startsWith('pySigma ('),
+                'text-amber-400': conversionSource.includes('+ IA'),
+                'text-red-400': conversionSource.startsWith('IA (')
+              }">
+              Motor: {{ conversionSource }}
+            </span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- YAML Sigma Intermédio -->
+      <div *ngIf="intermediateSigmaContent && !intermediateSigmaContent.startsWith('N/A') && !isConverting"
+        class="mt-4 pt-3 border-t border-gray-200 dark:border-gray-700">
+        <details class="text-xs">
+          <summary class="cursor-pointer font-semibold text-gray-600 dark:text-gray-400 hover:text-redshift-red">
+            <i class="fas fa-code mr-1"></i> Ver Regra Canónica Sigma Intermédia
+          </summary>
+          <pre
+            class="mt-2 p-3 bg-gray-900 border border-gray-800 text-green-400 rounded-lg font-mono text-[11px] overflow-x-auto max-h-48">{{ intermediateSigmaContent }}</pre>
+        </details>
+      </div>
+
+    </div>
+
+    <!-- Footer Modal Conversão -->
+    <div class="flex items-center justify-end p-4 border-t border-gray-200 dark:border-gray-700 space-x-3">
+      <button (click)="applyConvertedRule()" [disabled]="!convertedRuleContent || isConverting" type="button"
+        class="py-2 px-4 text-sm font-medium text-white bg-redshift-red hover:bg-redshift-hover disabled:opacity-50 disabled:cursor-not-allowed rounded-lg shadow-sm transition">
+        Criar Regra Convertida
+      </button>
+      <button (click)="closeConvertModal()" type="button"
+        class="py-2 px-4 text-sm font-medium text-gray-500 dark:text-gray-300 bg-white dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600 hover:text-gray-900 dark:hover:text-white transition">
+        Fechar
+      </button>
+    </div>
+
+  </div>
+</div>
+
 <!-- Toast de Sucesso -->
 <div *ngIf="message" id="toast-success"
   class="fixed top-4 right-4 flex items-center w-full max-w-xs p-4 text-gray-500 bg-white rounded-lg shadow dark:text-gray-400 dark:bg-gray-800 z-50 transition border border-transparent dark:border-gray-700"
@@ -18,439 +478,4 @@
     <i class="fas fa-times"></i>
     <span class="sr-only">Fechar</span>
   </button>
-</div>
-
-<div class="px-20 pt-6 dark:text-white">
-  <h1 class="font-inter font-semibold text-2xl text-gray-700 dark:text-white mb-4">
-    {{ ruleModel.title }}
-  </h1>
-
-  <!-- Barra de Metadados e Ação -->
-  <div class="flex items-center justify-between gap-6 py-4 my-2">
-
-    <!-- Bloco de Metadados -->
-    <div class="flex items-center gap-7 flex-wrap">
-
-      <!-- Use Case -->
-      <div class="flex items-center gap-3">
-        <i class="fas fa-tag text-gray-500 dark:text-gray-400 text-2xl"></i>
-        <div class="flex flex-col justify-center">
-          <span class="text-base font-bold text-gray-900 dark:text-white leading-tight">
-            <span class="text-redshift-red font-bold">Red</span>UC{{ ruleModel.useCaseId }}
-          </span>
-          <span class="text-xs text-gray-500 dark:text-gray-400 font-normal">Use Case Associado</span>
-        </div>
-      </div>
-
-      <!-- Técnicas MITRE (se existirem) -->
-      <div class="flex items-center gap-3" *ngIf="ruleModel.mitreTechniques?.length">
-        <span class="bg-[#0b1b2b] text-white text-[11px] font-bold px-2 py-1 rounded">
-          MITRE
-        </span>
-        <div class="flex flex-col justify-center">
-          <div class="flex items-center gap-1">
-            <span *ngFor="let mitre of ruleModel.mitreTechniques"
-              class="bg-[#0d2f52] text-white text-xs px-2 py-0.5 rounded font-medium">
-              {{ mitre }}
-            </span>
-          </div>
-          <span class="text-xs text-gray-500 dark:text-gray-400 font-normal">Técnicas Mitre Associadas</span>
-        </div>
-      </div>
-
-      <!-- Tipo -->
-      <div class="flex items-center gap-3">
-        <i class="fas fa-cubes text-gray-500 dark:text-gray-400 text-2xl"></i>
-        <div class="flex flex-col justify-center">
-          <span class="text-base font-bold text-gray-900 dark:text-white leading-tight">{{ ruleModel.type }}</span>
-          <span class="text-xs text-gray-500 dark:text-gray-400 font-normal">Tipo</span>
-        </div>
-      </div>
-
-      <!-- Sintaxe -->
-      <div class="flex items-center gap-3">
-        <i class="fas fa-code text-redshift-red text-2xl"></i>
-        <div class="flex flex-col justify-center">
-          <span class="text-base font-bold text-gray-900 dark:text-white leading-tight">{{ ruleModel.syntax || 'N/D'
-            }}</span>
-          <span class="text-xs text-gray-500 dark:text-gray-400 font-normal">Sintaxe</span>
-        </div>
-      </div>
-
-      <!-- Logsources -->
-      <div class="flex items-center gap-3">
-        <i class="fas fa-network-wired text-gray-500 dark:text-gray-400 text-2xl"></i>
-        <div class="flex flex-col justify-center">
-          <div class="flex items-center gap-2 max-w-xl">
-            <span *ngFor="let log of ruleModel.logsources?.slice(0, 2)" [title]="log"
-              class="bg-[#0d2f52] text-white text-xs px-2.5 py-1 rounded font-medium truncate max-w-[220px]">
-              {{ log }}
-            </span>
-
-            <span *ngIf="ruleModel.logsources?.length > 2" [title]="ruleModel.logsources.slice(2).join(', ')"
-              class="bg-[#0d2f52] hover:bg-[#15467a] text-white text-xs px-2 py-0.5 rounded-full font-bold cursor-help">
-              +{{ ruleModel.logsources.length - 2 }}
-            </span>
-
-            <span *ngIf="!ruleModel.logsources?.length" class="text-sm text-gray-400 dark:text-gray-500">N/D</span>
-          </div>
-          <span class="text-xs text-gray-500 dark:text-gray-400 font-normal">LogSources</span>
-        </div>
-      </div>
-
-    </div>
-
-    <!-- Botão Editar Modelo de Regra -->
-    <div class="flex-shrink-0">
-      <button [routerLink]="['/edit-rule-model', ruleModel.id]"
-        class="inline-flex items-center gap-2 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 font-semibold text-sm py-2 px-4 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm transition">
-        <i class="fas fa-pen-to-square text-redshift-red text-base"></i>
-        <span>Editar Modelo de Regra</span>
-      </button>
-    </div>
-
-  </div>
-
-  <!-- Editor e Coluna de Ações -->
-  <div class="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start w-full mt-8">
-
-    <!-- Coluna do Editor Monaco -->
-    <div class="xl:col-span-10 w-full min-w-0">
-      <app-code-editor [code]="selectedModel.value" [language]="ruleModel.syntax" height="550px"
-        (codeChange)="onCodeChanged($event)">
-      </app-code-editor>
-    </div>
-
-    <!-- Coluna de Ações -->
-    <div class="xl:col-span-2 w-full flex flex-col space-y-4">
-      <div
-        class="bg-gray-100 dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 flex flex-col space-y-3 transition">
-        <h3 class="text-base font-semibold text-gray-700 dark:text-gray-200 mb-1">
-          Ações
-        </h3>
-
-        <button (click)="copyToClipboard()" type="button"
-          class="flex items-center w-full px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 hover:text-redshift-red dark:hover:text-white shadow-sm transition">
-          <i class="fas fa-copy mr-2 text-gray-500 dark:text-gray-400"></i>
-          Copiar para Clipboard
-        </button>
-
-        <button (click)="openConvertModal()" type="button"
-          class="flex items-center w-full px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 hover:text-redshift-red dark:hover:text-white shadow-sm transition">
-          <i class="fas fa-exchange-alt mr-2 text-gray-500 dark:text-gray-400"></i>
-          Converter Regra
-        </button>
-
-        <button (click)="openAssignModal()" data-modal-target="crud-modal" data-modal-toggle="crud-modal" type="button"
-          class="flex items-center w-full px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 hover:text-redshift-red dark:hover:text-white shadow-sm transition">
-          <i class="fas fa-user-plus mr-2 text-gray-500 dark:text-gray-400"></i>
-          Atribuir a clientes
-        </button>
-
-        <button (click)="updateRuleModelCode()" type="button"
-          class="flex items-center w-full px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 hover:text-redshift-red dark:hover:text-white shadow-sm transition">
-          <i class="fas fa-save mr-2 text-gray-500 dark:text-gray-400"></i>
-          Guardar Regra
-        </button>
-      </div>
-    </div>
-
-  </div>
-
-  <!-- Instâncias da Regra -->
-  <h1 class="font-inter font-semibold text-2xl text-gray-700 dark:text-white mb-4 mt-12">
-    Regras baseadas neste Modelo
-  </h1>
-
-  <div class="flex flex-wrap -mx-2 mb-12">
-    <div class="w-full sm:w-1/2 md:w-1/3 lg:w-1/6 p-2" *ngFor="let rule of ruleInstances">
-      <div
-        class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-4 rounded-lg shadow-sm cursor-pointer hover:shadow-md hover:border-gray-300 dark:hover:border-gray-600 transition duration-200"
-        [routerLink]="'/rule-Details/' + rule.id">
-
-        <!-- Mostra a sintaxe ou 'Sem Cliente' quando client for null -->
-        <h1 class="font-inter font-semibold text-base text-gray-800 dark:text-white truncate"
-          [title]="rule.client?.name || rule.syntax">
-          {{ rule.client?.name || (rule.syntax + ' (Geral)') }}
-        </h1>
-
-        <p class="text-gray-500 dark:text-gray-400 text-xs mt-1 truncate">
-          {{ (rule.logsources && rule.logsources.length) ? rule.logsources.join(', ') : 'Sem logsources' }}
-        </p>
-      </div>
-    </div>
-
-    <div *ngIf="!ruleInstances?.length" class="p-2 text-gray-500 dark:text-gray-400 text-sm">
-      Nenhuma instância criada para este modelo.
-    </div>
-  </div>
-
-  <!-- Modal Atribuir Regra (crud-modal) -->
-  <div id="crud-modal" tabindex="-1" aria-hidden="true"
-    class="bg-black/60 backdrop-blur-sm hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full">
-    <div class="relative p-4 w-10/12 min-w-96 max-h-full">
-      <div class="relative bg-white rounded-lg shadow dark:bg-gray-800 border border-transparent dark:border-gray-700">
-
-        <!-- Header -->
-        <div class="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-700">
-          <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
-            Copiar regra para cliente
-          </h3>
-          <button type="button"
-            class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-700 dark:hover:text-white transition"
-            data-modal-toggle="crud-modal">
-            <i class="fas fa-times text-base"></i>
-            <span class="sr-only">Close modal</span>
-          </button>
-        </div>
-
-        <!-- Formulário -->
-        <form class="p-4 md:p-5" [formGroup]="createRuleForm">
-          <div class="grid gap-4 mb-4 grid-cols-2 grid-rows-2">
-
-            <!-- Seleção de Cliente -->
-            <div class="col-span-1 row-span-1">
-              <label for="client" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Seleção de
-                cliente</label>
-
-              <select *ngIf="user.companies?.length === 0" id="client" formControlName="client" required
-                class="block w-full rounded-md border-0 px-2 py-2.5 text-gray-900 bg-white dark:bg-gray-700 dark:text-white shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-600 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 dark:focus:ring-indigo-500 sm:text-sm transition">
-                <option *ngFor="let client of clients" [ngValue]="client.pk">
-                  {{ client.name }}
-                </option>
-              </select>
-
-              <select *ngIf="user.companies?.length > 0" id="client" formControlName="client" required
-                class="block w-full rounded-md border-0 px-2 py-2.5 text-gray-900 bg-white dark:bg-gray-700 dark:text-white shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-600 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 dark:focus:ring-indigo-500 sm:text-sm transition">
-                <option *ngFor="let client of user.companies ?? []" [ngValue]="client">
-                  {{ client }}
-                </option>
-              </select>
-            </div>
-
-            <!-- LogSources -->
-            <div class="col-span-1 row-span-2">
-              <label for="logsources"
-                class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Logsources</label>
-              <select id="logsources" formControlName="logsources" required multiple
-                class="block w-full rounded-md border-0 h-32 px-2 py-2.5 text-gray-900 bg-white dark:bg-gray-700 dark:text-white shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-600 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 dark:focus:ring-indigo-500 sm:text-sm transition">
-                <option *ngFor="let logsource of ruleModel.logsources" [ngValue]="logsource">
-                  {{ logsource }}
-                </option>
-              </select>
-            </div>
-
-            <!-- Sintaxe Pré-selecionada -->
-            <div class="col-span-1 row-span-1">
-              <label for="syntax" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Sintaxe da
-                Regra</label>
-              <select id="syntax" formControlName="syntax" (change)="onSyntaxChange()" required
-                class="block w-full rounded-md border-0 px-2 py-2.5 text-gray-900 bg-white dark:bg-gray-700 dark:text-white shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-600 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 dark:focus:ring-indigo-500 sm:text-sm transition">
-                <ng-container *ngIf="ruleModel.type === 'SOAR'">
-                  <option *ngFor="let sintax of soarSintaxes" [ngValue]="sintax">{{ sintax }}</option>
-                </ng-container>
-                <ng-container *ngIf="ruleModel.type === 'SIEM'">
-                  <option *ngFor="let sintax of siemSintaxes" [ngValue]="sintax">{{ sintax }}</option>
-                </ng-container>
-                <ng-container *ngIf="ruleModel.type === 'EDR'">
-                  <option *ngFor="let sintax of edrSintaxes" [ngValue]="sintax">{{ sintax }}</option>
-                </ng-container>
-              </select>
-            </div>
-
-            <!-- Editor / Textarea -->
-            <div class="col-span-2">
-              <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Personalização da
-                Regra</label>
-              <textarea rows="16" formControlName="modalCode"
-                class="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white font-mono rounded-lg p-2.5 text-xs focus:ring-2 focus:ring-indigo-600 dark:focus:ring-indigo-500 transition">
-              </textarea>
-            </div>
-          </div>
-
-          <!-- Footer Modal -->
-          <div class="flex items-center justify-end p-4 border-t border-gray-200 dark:border-gray-700 space-x-3">
-            <button (click)="createRule()" [disabled]="createRuleForm.invalid" type="button"
-              class="py-2 px-4 text-sm font-medium text-white bg-redshift-red hover:bg-redshift-hover disabled:opacity-50 disabled:cursor-not-allowed rounded-lg shadow-sm transition">
-              Guardar
-            </button>
-            <button type="button" data-modal-hide="crud-modal"
-              class="py-2 px-4 text-sm font-medium text-gray-500 dark:text-gray-300 bg-white dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600 hover:text-gray-900 dark:hover:text-white transition">
-              Fechar
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  </div>
-
-  <!-- Modal Converter Regra (IA + pySigma) -->
-  <div *ngIf="showConvertModal"
-    class="fixed top-0 left-0 w-full h-full flex items-center justify-center bg-black/60 backdrop-blur-sm z-50 p-4">
-
-    <div
-      class="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-6xl overflow-hidden border border-transparent dark:border-gray-700 transition">
-
-      <!-- Header -->
-      <div class="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
-        <h3 class="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-          <i class="fas fa-brain text-redshift-red"></i>
-          Converter Regra (IA + pySigma)
-        </h3>
-        <button (click)="closeConvertModal()" type="button"
-          class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 inline-flex justify-center items-center dark:hover:bg-gray-700 dark:hover:text-white transition">
-          <i class="fas fa-times text-base"></i>
-          <span class="sr-only">Fechar</span>
-        </button>
-      </div>
-
-      <!-- Banner de Erro (Mantém a página segura caso ocorra falha de backend ou formato) -->
-      <div *ngIf="conversionError"
-        class="mx-6 mt-4 p-3 text-sm text-red-700 bg-red-100 rounded-lg dark:bg-red-950/40 dark:text-red-400 border border-red-200 dark:border-red-900/50 flex items-center gap-2">
-        <i class="fas fa-circle-exclamation text-base flex-shrink-0"></i>
-        <span>{{ conversionError }}</span>
-      </div>
-
-      <!-- Body com Grid -->
-      <div class="p-6">
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-center">
-
-          <!-- Campo Texto: Antes -->
-          <div class="lg:col-span-5 flex flex-col h-full">
-            <label class="block mb-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
-              Sintaxe Original
-              <span *ngIf="ruleModel?.syntax" class="text-xs font-normal text-gray-500 dark:text-gray-400">({{
-                ruleModel.syntax }})</span>
-            </label>
-            <textarea [(ngModel)]="sourceRuleContent" rows="14" readonly
-              class="w-full p-3 text-xs font-mono bg-gray-50 dark:bg-gray-700/60 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-0 resize-none"></textarea>
-          </div>
-
-          <!-- Painel Central de Ações (Dropdown Atualizado sem Lucene, com EQL e CQL) -->
-          <div class="lg:col-span-2 flex flex-col items-center justify-center space-y-4 py-2">
-            <div class="w-full">
-              <label
-                class="block mb-1 text-xs font-medium text-gray-600 dark:text-gray-400 text-center whitespace-nowrap">
-                Converter para
-              </label>
-              <select [(ngModel)]="targetSyntax" [disabled]="isConverting"
-                class="bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded-lg focus:ring-redshift-red focus:border-redshift-red block w-full p-2.5 truncate dark:bg-gray-700 dark:border-gray-600 dark:text-white disabled:opacity-50 transition">
-                <option value="" disabled selected>Selecionar</option>
-                <option value="SPL (Splunk)">SPL (Splunk)</option>
-                <option value="KQL (Sentinel)">KQL (Sentinel)</option>
-                <option value="AQL (QRadar)">AQL (QRadar)</option>
-                <option value="EQL (Elastic)">EQL (Elastic)</option>
-                <option value="CQL (CrowdStrike)">CQL (CrowdStrike)</option>
-                <option value="Sigma Rule">Sigma Rule</option>
-              </select>
-            </div>
-
-            <button (click)="convertRule()" [disabled]="!targetSyntax || isConverting" type="button"
-              class="w-full inline-flex items-center justify-center gap-2 py-2.5 px-4 text-white bg-redshift-red hover:bg-redshift-hover disabled:opacity-50 disabled:cursor-not-allowed font-medium rounded-lg text-sm shadow-sm transition">
-              <i *ngIf="isConverting" class="fas fa-spinner fa-spin"></i>
-              <i *ngIf="!isConverting" class="fas fa-arrow-right hidden lg:inline"></i>
-              <i *ngIf="!isConverting" class="fas fa-arrow-down lg:hidden"></i>
-              <span>{{ isConverting ? 'A converter...' : 'Converter' }}</span>
-            </button>
-          </div>
-
-          <div class="lg:col-span-5 flex flex-col h-full">
-            <div class="flex justify-between items-center mb-2">
-              <div class="flex items-center gap-2">
-                <label class="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                  Resultado da Conversão
-                </label>
-
-                <!-- Badge Determinístico (pySigma) -->
-                <span *ngIf="conversionEngine === 'pysigma' && !isConverting"
-                  class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-medium bg-emerald-100 text-emerald-800 dark:bg-emerald-500/10 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-500/20"
-                  title="Compilação 100% determinística via AST do pySigma">
-                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400"></span>
-                  pySigma
-                </span>
-
-                <!-- Badge Híbrido (pySigma + Ollama) -->
-                <span *ngIf="conversionEngine === 'hybrid' && !isConverting"
-                  class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-medium bg-amber-100 text-amber-800 dark:bg-amber-500/10 dark:text-amber-400 border border-amber-300 dark:border-amber-500/20"
-                  title="Filtro base via pySigma com correlações/agregações enriquecidas via IA">
-                  <span class="w-1.5 h-1.5 rounded-full bg-amber-500 dark:bg-amber-400"></span>
-                  Híbrido
-                </span>
-
-                <!-- Badge Modelo IA (LLM Puro) -->
-                <span *ngIf="conversionEngine === 'llm' && !isConverting"
-                  class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-medium bg-indigo-100 text-indigo-800 dark:bg-indigo-500/10 dark:text-indigo-400 border border-indigo-300 dark:border-indigo-500/20"
-                  title="Tradução generativa direta via Ollama">
-                  <span class="w-1.5 h-1.5 rounded-full bg-indigo-500 dark:bg-indigo-400"></span>
-                  Modelo IA
-                </span>
-              </div>
-
-              <button *ngIf="convertedRuleContent && !isConverting" (click)="copyConvertedToClipboard()" type="button"
-                class="text-xs text-gray-500 dark:text-gray-400 hover:text-redshift-red dark:hover:text-redshift-red inline-flex items-center transition">
-                <i class="fas fa-copy mr-1"></i> Copiar
-              </button>
-            </div>
-
-            <div class="relative">
-              <textarea [(ngModel)]="convertedRuleContent" rows="14" [readonly]="isConverting"
-                [placeholder]="isConverting ? 'Aguarde, o motor está a processar a query...' : 'O resultado aparecerá aqui...'"
-                class="w-full p-3 text-xs font-mono bg-gray-50 dark:bg-gray-700/60 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-800 dark:text-gray-200 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:ring-redshift-red focus:border-redshift-red resize-none"></textarea>
-
-              <!-- Overlay Spinner -->
-              <div *ngIf="isConverting"
-                class="absolute inset-0 bg-white/70 dark:bg-gray-800/80 backdrop-blur-[1px] rounded-lg flex flex-col items-center justify-center gap-2">
-                <i class="fas fa-circle-notch fa-spin text-redshift-red text-2xl"></i>
-                <span class="text-xs font-medium text-gray-600 dark:text-gray-300">A processar conversão...</span>
-              </div>
-            </div>
-
-            <!-- Frase pequena a indicar quem converteu (pySigma ou IA) -->
-            <div *ngIf="conversionSource && !isConverting" class="mt-2 text-xs flex items-center gap-1">
-              <i class="fas fa-microchip" [ngClass]="{
-                'text-green-400': conversionSource.startsWith('pySigma ('),
-                'text-amber-400': conversionSource.includes('+ IA'),
-                'text-red-400': conversionSource.startsWith('IA (')
-              }"></i>
-              <span class="font-semibold" [ngClass]="{
-                'text-green-400': conversionSource.startsWith('pySigma ('),
-                'text-amber-400': conversionSource.includes('+ IA'),
-                'text-red-400': conversionSource.startsWith('IA (')
-              }">
-                Motor: {{ conversionSource }}
-              </span>
-            </div>
-          </div>
-
-        </div>
-
-        <!-- YAML Sigma Intermédio -->
-        <div *ngIf="intermediateSigmaContent && !intermediateSigmaContent.startsWith('N/A') && !isConverting"
-          class="mt-4 pt-3 border-t border-gray-200 dark:border-gray-700">
-          <details class="text-xs">
-            <summary class="cursor-pointer font-semibold text-gray-600 dark:text-gray-400 hover:text-redshift-red">
-              <i class="fas fa-code mr-1"></i> Ver Regra Canónica Sigma Intermédia
-            </summary>
-            <pre
-              class="mt-2 p-3 bg-gray-900 border border-gray-800 text-green-400 rounded-lg font-mono text-[11px] overflow-x-auto max-h-48">{{ intermediateSigmaContent }}</pre>
-          </details>
-        </div>
-
-      </div>
-
-      <!-- Footer Modal Conversão -->
-      <div class="flex items-center justify-end p-4 border-t border-gray-200 dark:border-gray-700 space-x-3">
-        <button (click)="applyConvertedRule()" [disabled]="!convertedRuleContent || isConverting" type="button"
-          class="py-2 px-4 text-sm font-medium text-white bg-redshift-red hover:bg-redshift-hover disabled:opacity-50 disabled:cursor-not-allowed rounded-lg shadow-sm transition">
-          Criar Regra Convertida
-        </button>
-        <button (click)="closeConvertModal()" type="button"
-          class="py-2 px-4 text-sm font-medium text-gray-500 dark:text-gray-300 bg-white dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600 hover:text-gray-900 dark:hover:text-white transition">
-          Fechar
-        </button>
-      </div>
-
-    </div>
-  </div>
-
 </div>
