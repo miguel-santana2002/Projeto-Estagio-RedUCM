@@ -37,7 +37,6 @@ export class CreateRuleModelComponent implements OnInit {
     SIEM: [
       'AQL (QRadar)',
       'SPL (Splunk)',
-      'SPL2 (Splunk)',
       'KQL (Sentinel)',
       'EQL (Elastic)',
       'Sigma Rule',
@@ -53,6 +52,7 @@ export class CreateRuleModelComponent implements OnInit {
   code: string = '';
   isAutoDetecting = false;
   isLogsourceOpen: boolean = false;
+  message: string = '';
 
   // Removida obrigatoriedade estrita de logsources
   createRuleModelForm = new FormGroup({
@@ -171,7 +171,7 @@ level: medium`,
 
     if (uc) {
       this.createRuleModelForm.patchValue({
-        title: `${uc.title} - `,
+        title: `${uc.title} `,
       });
     }
   }
@@ -230,12 +230,6 @@ level: medium`,
       detectedType = 'SIEM';
       detectedSyntax = 'SPL (Splunk)';
     } else if (
-      lowerCode.includes('$data =') ||
-      lowerCode.includes('into $target_dataset;')
-    ) {
-      detectedType = 'SIEM';
-      detectedSyntax = 'SPL2 (Splunk)';
-    } else if (
       lowerCode.includes('| summarize') ||
       lowerCode.includes('| project') ||
       lowerCode.includes('timegenerated > ago')
@@ -280,43 +274,45 @@ level: medium`,
     }
   }
 
-  createRuleModel(): void {
-    if (this.createRuleModelForm.invalid) {
-      return;
-    }
+    createRuleModel(): void {
+    if (this.createRuleModelForm.invalid) return;
 
     const arrayLogsources: any = this.createRuleModelForm.value.logsources;
-
-    // Tratamento seguro para tags opcionais
     const logsources = Array.isArray(arrayLogsources)
-      ? arrayLogsources.map((logsource: any) =>
-          typeof logsource === 'string' ? logsource : logsource.value,
-        )
+      ? arrayLogsources.map((l: any) => (typeof l === 'string' ? l : l.value))
       : [];
+
+    const useCaseId = Number(this.createRuleModelForm.value.selectedUseCase);
+    const syntax = this.createRuleModelForm.value.syntax;
 
     const payload = {
       title: this.createRuleModelForm.value.title,
-      useCaseId: this.createRuleModelForm.value.selectedUseCase,
+      useCaseId,
       type: this.createRuleModelForm.value.selectedType,
-      syntax: this.createRuleModelForm.value.syntax,
+      syntax,
       ruleCode: this.code,
-      logsources: logsources,
+      logsources,
     };
 
-    this.rulesService.createRuleModel(payload).subscribe({
+    this.rulesService.createRule(payload).subscribe({
       next: () => {
-        this.router.navigate(['/manage-rule-models']);
+        const generatesSigma = syntax !== 'Sigma Rule' && syntax !== 'YARA Rule';
+        this.message = generatesSigma
+          ? 'Regra criada. A gerar Sigma associado, vai aparecer no use case.'
+          : 'Regra criada.';
+        setTimeout(() => this.router.navigate(['/usecase-Details', useCaseId]), 2500);
       },
-      error: (err) => console.error('Erro ao criar modelo de regra:', err),
+      error: (err) => console.error('Erro ao criar regra:', err),
     });
-  }
+    }
 
-  get isExampleCode(): boolean {
-    const exampleVal = this.examples[this.selectedSyntax] || '';
-    const normalize = (text: string) => text.replace(/\s+/g, ' ').trim();
+    get isExampleCode(): boolean {
+      const exampleVal = this.examples[this.selectedSyntax] || '';
+      const normalize = (text: string) => text.replace(/\s+/g, ' ').trim();
 
-    return (
-      this.code.trim() !== '' && normalize(this.code) === normalize(exampleVal)
+      return (
+        this.code.trim() !== '' && normalize(this.code) === normalize(exampleVal)
     );
   }
+
 }

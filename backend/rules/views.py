@@ -1,4 +1,5 @@
 import hashlib
+import threading
 from django.core.cache import cache
 from django.shortcuts import render, get_object_or_404
 from django.http import JsonResponse
@@ -20,7 +21,7 @@ from rules.serializers import (
 )
 
 # Importar o pipeline consolidado
-from rules.services.rule_converter import convert_single_engine
+from rules.services.rule_converter import convert_single_engine, decompile_to_sigma
 
 @extend_schema(request=RuleModelSerializer,
                description='RuleModel creation based on the data inserted in the request body.',
@@ -127,43 +128,67 @@ def deleteRuleById(request, id):
         400: OpenApiResponse(description='Dados inválidos ou entidades não encontradas')
     }
 )
+def _generate_sigma(sigma_id, source_code, source_syntax):
+    from django.db import connection
+    try:
+        sigma = decompile_to_sigma(source_code, source_syntax)
+        Rule.objects.filter(pk=sigma_id).update(
+            ruleCode=sigma, generationStatus='done', generationNote=None)
+    except Exception as e:
+        Rule.objects.filter(pk=sigma_id).update(
+            generationStatus='failed', generationNote=str(e)[:1000])
+    finally:
+        connection.close()
+
+
 @api_view(['POST'])
 def createRule(request):
     data = request.data
-    client_id = data.get('client')
 
-    # 1. Trata o cliente como opcional (só pesquisa se client_id não for None/vazio)
     client = None
-    if client_id:
-        try:
-            client = Company.objects.get(id=client_id)
-        except Company.DoesNotExist:
-            return Response(
-                {'error': f"Empresa com ID '{client_id}' não encontrada."}, 
-                status=status.HTTP_404_NOT_FOUND
-            )
+    if data.get('client'):
+        client = Company.objects.filter(id=data['client']).first()
+        if not client:
+            return Response({'error': 'Empresa não encontrada.'}, status=404)
 
-    # 2. Validação do RuleModel associado
-    try:
-        rule_model = RuleModel.objects.get(id=data.get('ruleModel'))
-    except RuleModel.DoesNotExist:
-        return Response(
-            {'error': "Modelo de regra não encontrado."}, 
-            status=status.HTTP_404_NOT_FOUND
-        )
+    rule_model = None
+    if data.get('ruleModel'):
+        rule_model = RuleModel.objects.filter(id=data['ruleModel']).first()
+        if not rule_model:
+            return Response({'error': 'Modelo de regra não encontrado.'}, status=404)
 
-    # 3. Criação da instância da regra
-    new_rule = Rule(
-        ruleModel=rule_model,
+    parent = None
+    if data.get('parent'):
+        parent = Rule.objects.filter(id=data['parent']).first()
+    elif rule_model and client:
+        parent = Rule.objects.filter(
+            ruleModel=rule_model, client__isnull=True, parent__isnull=True).first()
+
+    src = parent or rule_model
+    new_rule = Rule.objects.create(
+        title=data.get('title') or (src.title if src else None),
+        useCaseId=data.get('useCaseId') or (src.useCaseId if src else None),
+        type=data.get('type') or (src.type if src else None),
+        ruleModel=rule_model, parent=parent,
         logsources=data.get('logsources', []),
         ruleCode=data.get('ruleCode', ''),
-        syntax=data.get('syntax', rule_model.syntax),
-        client=client,
-        status=data.get('status') or 'Regra não validada'
+        syntax=data.get('syntax') or (src.syntax if src else None),
+        client=client, status=data.get('status', ''),
     )
-    new_rule.save()
 
-    # 4. Devolve o objeto serializado com o novo ID gerado para o Angular atualizar o ecrã
+    # Regra geral noutra linguagem: cria o Sigma associado em segundo plano
+    if (client is None and parent is None
+            and new_rule.syntax not in ('Sigma Rule', 'YARA Rule')
+            and (new_rule.ruleCode or '').strip()):
+        sigma = Rule.objects.create(
+            title=new_rule.title, useCaseId=new_rule.useCaseId, type=new_rule.type,
+            syntax='Sigma Rule', ruleCode='', logsources=new_rule.logsources,
+            status='Regra não validada', parent=new_rule,
+            generated=True, generationStatus='pending')
+        threading.Thread(target=_generate_sigma,
+                         args=(sigma.id, new_rule.ruleCode, new_rule.syntax),
+                         daemon=True).start()
+
     return Response(RuleSerializer(new_rule).data, status=status.HTTP_201_CREATED)
 
 

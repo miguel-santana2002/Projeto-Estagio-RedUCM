@@ -48,7 +48,7 @@ class RuleSerializer(serializers.ModelSerializer):
         fields = '__all__'
         extra_kwargs = {
             'client': {'required': False, 'allow_null': True},
-            'ruleModel': {'required': True},
+            'ruleModel': {'required': False, 'allow_null': True},
             'status': {'required': False, 'allow_blank': True, 'allow_null': True},
         }
 
