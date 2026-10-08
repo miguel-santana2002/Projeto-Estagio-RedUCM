@@ -60,6 +60,12 @@ export class ManageUsersComponent implements OnInit, AfterViewInit {
   selectedClients: string[] = [];
   selectedRoles: string[] = [];
 
+  // Flag para controlo do reset manual de TOTP e estado de bloqueio
+  forceTotpReset: boolean = false;
+  isUserBlocked: boolean = false;
+  isUpdatingTotp: boolean = false;
+  isUpdatingBlockStatus: boolean = false;
+
   constructor(private authService: AuthService) {}
 
   ngOnInit(): void {
@@ -277,6 +283,8 @@ export class ManageUsersComponent implements OnInit, AfterViewInit {
   // Modal Detalhes
   openModalDetails(user: any): void {
     this.selectedUser = user;
+    this.forceTotpReset = Boolean(user.showTotp);
+    this.isUserBlocked = user.is_active === false;
     this.modalDetailsFlowbite?.show();
   }
 
@@ -286,5 +294,58 @@ export class ManageUsersComponent implements OnInit, AfterViewInit {
 
   toggleCompanies(): void {
     this.showAllCompanies = !this.showAllCompanies;
+  }
+
+  // Controlo do botão de forçar QR Code
+  toggleResetTotp(): void {
+    if (!this.selectedUser || this.isUpdatingTotp) return;
+
+    this.isUpdatingTotp = true;
+    const newForceState = !this.forceTotpReset;
+
+    this.authService.resetTotp(this.selectedUser.pk, newForceState).subscribe({
+      next: (res: any) => {
+        this.forceTotpReset = Boolean(res.showTotp);
+        this.selectedUser.showTotp = this.forceTotpReset;
+
+        const foundUser = this.users.find((u) => u.pk === this.selectedUser.pk);
+        if (foundUser) {
+          foundUser.showTotp = this.forceTotpReset;
+        }
+        this.isUpdatingTotp = false;
+      },
+      error: (err) => {
+        console.error('Erro ao atualizar QR Code:', err);
+        this.isUpdatingTotp = false;
+      },
+    });
+  }
+
+  // Controlo da checkbox de bloqueio do utilizador
+  toggleUserBlock(): void {
+    if (!this.selectedUser || this.isUpdatingBlockStatus) return;
+
+    this.isUpdatingBlockStatus = true;
+    const newBlockedState = !this.isUserBlocked;
+
+    this.authService
+      .toggleUserStatus(this.selectedUser.pk, newBlockedState)
+      .subscribe({
+        next: (res: any) => {
+          this.isUserBlocked = Boolean(res.is_blocked);
+          const newIsActive = !this.isUserBlocked;
+          this.selectedUser.is_active = newIsActive;
+
+          const foundUser = this.users.find((u) => u.pk === this.selectedUser.pk);
+          if (foundUser) {
+            foundUser.is_active = newIsActive;
+          }
+          this.isUpdatingBlockStatus = false;
+        },
+        error: (err) => {
+          console.error('Erro ao atualizar estado de bloqueio:', err);
+          this.isUpdatingBlockStatus = false;
+        },
+      });
   }
 }

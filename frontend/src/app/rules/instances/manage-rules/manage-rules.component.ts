@@ -57,14 +57,12 @@ export class ManageRulesComponent implements OnInit, AfterViewInit {
 
   selectedTypes: string[] = [];
   selectedSintaxes: string[] = [];
-  selectedUseCases: (string | number)[] = [];
-  selectedClients: string[] = [];
+  selectedLogSources: string[] = [];
   selectedStatus: string[] = [];
 
   uniqueTypes: string[] = [];
   uniqueSintaxes: string[] = [];
-  uniqueUseCases: (string | number)[] = [];
-  uniqueClients: string[] = [];
+  uniqueLogSources: string[] = [];
 
   constructor(
     private authService: AuthService,
@@ -111,14 +109,6 @@ export class ManageRulesComponent implements OnInit, AfterViewInit {
   }
 
   startFilters(): void {
-    this.uniqueClients = Array.from(
-      new Set(
-        this.rules
-          .map((item: any) => item.client?.name)
-          .filter((name): name is string => Boolean(name)),
-      ),
-    ).sort();
-
     this.uniqueTypes = Array.from(
       new Set(
         this.rules
@@ -135,15 +125,13 @@ export class ManageRulesComponent implements OnInit, AfterViewInit {
       ),
     ).sort();
 
-    this.uniqueUseCases = Array.from(
+    this.uniqueLogSources = Array.from(
       new Set(
         this.rules
-          .map((item: any) => item.ruleModel?.useCaseId)
-          .filter(
-            (uc): uc is number | string => uc !== null && uc !== undefined,
-          ),
+          .flatMap((item: any) => this.getRuleLogSources(item))
+          .filter((log): log is string => Boolean(log)),
       ),
-    ).sort((a: any, b: any) => Number(a) - Number(b));
+    ).sort();
   }
 
   getStatusClasses(status: string): string {
@@ -186,11 +174,15 @@ export class ManageRulesComponent implements OnInit, AfterViewInit {
     });
   }
 
-  toggleClient(client: string): void {
+  toggleLogSource(logSource: string): void {
     this.page = 1;
-    this.selectedClients = this.selectedClients.includes(client)
-      ? this.selectedClients.filter((c) => c !== client)
-      : [...this.selectedClients, client];
+    this.selectedLogSources = this.selectedLogSources.includes(logSource)
+      ? this.selectedLogSources.filter((l) => l !== logSource)
+      : [...this.selectedLogSources, logSource];
+  }
+
+  isLogSourceSelected(logSource: string): boolean {
+    return this.selectedLogSources.includes(logSource);
   }
 
   toggleType(type: string): void {
@@ -207,13 +199,6 @@ export class ManageRulesComponent implements OnInit, AfterViewInit {
       : [...this.selectedSintaxes, syntax];
   }
 
-  toggleUseCase(uc: string | number): void {
-    this.page = 1;
-    this.selectedUseCases = this.selectedUseCases.includes(uc)
-      ? this.selectedUseCases.filter((u) => u !== uc)
-      : [...this.selectedUseCases, uc];
-  }
-
   toggleStatus(status: string): void {
     this.page = 1;
     this.selectedStatus = this.selectedStatus.includes(status)
@@ -223,16 +208,28 @@ export class ManageRulesComponent implements OnInit, AfterViewInit {
 
   clearAllFilters(): void {
     this.page = 1;
-    this.selectedClients = [];
+    this.selectedLogSources = [];
     this.selectedTypes = [];
     this.selectedSintaxes = [];
-    this.selectedUseCases = [];
     this.selectedStatus = [];
     this.nameSearch = '';
   }
 
   onSearchChange(): void {
     this.page = 1;
+  }
+
+  getRuleLogSources(rule: any): string[] {
+    const directLogs = Array.isArray(rule?.logsources)
+      ? rule.logsources.filter((l: string) => Boolean(l))
+      : [];
+    if (directLogs.length > 0) {
+      return directLogs;
+    }
+    const modelLogs = Array.isArray(rule?.ruleModel?.logsources)
+      ? rule.ruleModel.logsources.filter((l: string) => Boolean(l))
+      : [];
+    return modelLogs;
   }
 
   sortTable(column: string): void {
@@ -253,13 +250,9 @@ export class ManageRulesComponent implements OnInit, AfterViewInit {
           valA = a.ruleModel?.title || '';
           valB = b.ruleModel?.title || '';
           break;
-        case 'client':
-          valA = a.client?.name || '';
-          valB = b.client?.name || '';
-          break;
-        case 'useCaseId':
-          valA = a.ruleModel?.useCaseId ?? 0;
-          valB = b.ruleModel?.useCaseId ?? 0;
+        case 'logsources':
+          valA = this.getRuleLogSources(a).join(', ');
+          valB = this.getRuleLogSources(b).join(', ');
           break;
         case 'type':
           valA = a.ruleModel?.type || '';
@@ -316,14 +309,10 @@ export class ManageRulesComponent implements OnInit, AfterViewInit {
         this.selectedSintaxes.length === 0 ||
         (currentSyntax && this.selectedSintaxes.includes(currentSyntax));
 
-      const matchesUseCase =
-        this.selectedUseCases.length === 0 ||
-        (rule.ruleModel?.useCaseId != null &&
-          this.selectedUseCases.includes(rule.ruleModel.useCaseId));
-
-      const matchesClient =
-        this.selectedClients.length === 0 ||
-        (rule.client?.name && this.selectedClients.includes(rule.client.name));
+      const ruleLogs = this.getRuleLogSources(rule);
+      const matchesLogSources =
+        this.selectedLogSources.length === 0 ||
+        ruleLogs.some((log: string) => this.selectedLogSources.includes(log));
 
       const matchesStatus =
         this.selectedStatus.length === 0 ||
@@ -333,8 +322,7 @@ export class ManageRulesComponent implements OnInit, AfterViewInit {
         matchesName &&
         matchesType &&
         matchesSyntax &&
-        matchesUseCase &&
-        matchesClient &&
+        matchesLogSources &&
         matchesStatus
       );
     });

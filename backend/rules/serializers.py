@@ -73,6 +73,7 @@ class RuleSerializer(serializers.ModelSerializer):
                 'type': getattr(instance.ruleModel, 'type', None),
                 'syntax': getattr(instance.ruleModel, 'syntax', None),
                 'useCaseId': getattr(instance.ruleModel, 'useCaseId', None),
+                'logsources': getattr(instance.ruleModel, 'logsources', []),
             }
         else:
             data['ruleModel'] = None

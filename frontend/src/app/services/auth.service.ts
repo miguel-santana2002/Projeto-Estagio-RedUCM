@@ -32,8 +32,22 @@ export class AuthService {
         return { otpSent: false };
       }),
       catchError((e) => {
-        console.error(e.message);
-        return throwError(() => new Error('Invalid Credentials'));
+        let errorMsg = 'Credenciais inválidas para início de sessão';
+        if (e.error) {
+          if (typeof e.error === 'string') {
+            errorMsg = e.error;
+          } else if (e.error.detail) {
+            errorMsg = e.error.detail;
+          } else if (e.error.error) {
+            errorMsg = e.error.error;
+          } else if (
+            e.error.non_field_errors &&
+            e.error.non_field_errors.length > 0
+          ) {
+            errorMsg = e.error.non_field_errors[0];
+          }
+        }
+        return throwError(() => new Error(errorMsg));
       }),
     );
   }
@@ -45,8 +59,17 @@ export class AuthService {
         return true;
       }),
       catchError((e) => {
-        console.error(e.message);
-        return throwError(() => new Error('Invalid OTP'));
+        let errorMsg = 'Código de verificação inválido';
+        if (e.error) {
+          if (typeof e.error === 'string') {
+            errorMsg = e.error;
+          } else if (e.error.detail) {
+            errorMsg = e.error.detail;
+          } else if (e.error.error) {
+            errorMsg = e.error.error;
+          }
+        }
+        return throwError(() => new Error(errorMsg));
       }),
     );
   }
@@ -176,6 +199,20 @@ export class AuthService {
   updateUserInfo(userData: any, id: any): Observable<any> {
     const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
     return this.http.post<any>(`${AUTH_URL}updateUserInfo/` + id, userData, {
+      headers,
+    });
+  }
+
+  resetTotp(id: any, force?: boolean): Observable<any> {
+    const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
+    const body = force !== undefined ? { force } : {};
+    return this.http.post<any>(`${AUTH_URL}resetTotp/` + id, body, { headers });
+  }
+
+  toggleUserStatus(id: any, isBlocked?: boolean): Observable<any> {
+    const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
+    const body = isBlocked !== undefined ? { is_blocked: isBlocked } : {};
+    return this.http.post<any>(`${AUTH_URL}toggleUserStatus/` + id, body, {
       headers,
     });
   }

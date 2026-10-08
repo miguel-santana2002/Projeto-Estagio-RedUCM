@@ -32,9 +32,6 @@ export class EditUserComponent implements OnInit {
   clientNames: string[] = [];
   userId: string = '';
 
-  // Flag para controlo do reset manual de TOTP
-  forceTotpReset: boolean = false;
-
   isChangePasswordModalOpen: boolean = false;
 
   user: any = {
@@ -97,11 +94,6 @@ export class EditUserComponent implements OnInit {
 
   get confirmPassword() {
     return this.changePasswordForm.get('confirmPassword');
-  }
-
-  // Controlo do botão de forçar QR Code
-  toggleResetTotp(): void {
-    this.forceTotpReset = !this.forceTotpReset;
   }
 
   // Gestão de Perfil / Roles
@@ -191,7 +183,6 @@ export class EditUserComponent implements OnInit {
       companies: this.isAdminSelected ? [] : this.companies?.value || [],
       email: this.email?.value || '',
       otpMethod: this.otpMethod?.value || 'totp',
-      resetTotp: this.forceTotpReset,
     };
 
     this.authService.updateUserInfo(userData, this.userId).subscribe({

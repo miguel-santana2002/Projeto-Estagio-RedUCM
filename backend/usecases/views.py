@@ -14,8 +14,21 @@ from rest_framework.decorators import api_view
 from django.http import JsonResponse
 from drf_spectacular.utils import extend_schema
 from drf_spectacular.utils import OpenApiResponse
+from usecases.mitre_manager import (
+    get_attack_instance,
+    get_techniques,
+    check_and_update_if_expired,
+)
 
-attack = enterpriseattack.Attack()
+
+class _AttackProxy:
+    """Proxy lazy para o singleton enterpriseattack."""
+    def __getattr__(self, name):
+        return getattr(get_attack_instance(), name)
+
+
+attack = _AttackProxy()
+
 
 @extend_schema(description='Get technique by ID',
                responses={
@@ -73,6 +86,9 @@ def getTechniqueTacticBasedOnListIds(request):
 def createUseCase(request):
     if request.method == 'POST':
         try:
+            # Valida há quanto tempo o ficheiro local MITRE foi atualizado (regra das 24h)
+            check_and_update_if_expired()
+
             data = request.data
 
             # 1. Parsing seguro dos arrays JSON
@@ -316,13 +332,7 @@ def updateUseCase(request, id):
 @api_view(['GET'])
 def getAllTechniques(request):
     if request.method == 'GET':
-        techniques_list = []
-        for technique in attack.techniques:
-            techniques_list.append({
-                'id': technique.id,
-                'name': technique.name,
-                'tactics': [tactic.name for tactic in technique.tactics],
-            })
+        techniques_list = get_techniques()
         return JsonResponse(techniques_list, safe=False)
     else:
         return JsonResponse({'error': 'Invalid request method'}, status=400)

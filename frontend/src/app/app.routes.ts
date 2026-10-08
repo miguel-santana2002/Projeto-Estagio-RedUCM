@@ -58,18 +58,8 @@ export const routes: Routes = [
     canActivate: [numericIdGuard],
   },
   {
-    path: 'create-rule-model',
-    component: CreateRuleModelComponent,
-  },
-  { path: 'techniqueDetails/:id', component: TechniqueDetailsComponent },
-  {
-    path: 'manage-rule-models',
-    component: ManageRuleModelsComponent,
-  },
-  {
-    path: 'ruleModel-Details/:id',
-    component: RuleModelDetailsComponent,
-    canActivate: [numericIdGuard],
+    path: 'techniqueDetails/:id',
+    component: TechniqueDetailsComponent,
   },
   {
     path: 'manage-rules',
