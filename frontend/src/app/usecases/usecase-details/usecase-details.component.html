@@ -1,4 +1,4 @@
-<app-header></app-header>
+﻿<app-header></app-header>
 <app-titlebanner title="RedUC{{usecase.id | number:'2.0'}}" image="./assets/bannercover.jpg"></app-titlebanner>
 
 <div class="page-container px-4 py-16">
@@ -127,9 +127,8 @@
       </div>
 
       <div>
-        <h3 class="text-xs uppercase font-semibold text-gray-500 dark:text-gray-400">Número de modelo de regras
-          associados</h3>
-        <p class="text-sm font-semibold text-gray-800 dark:text-gray-200">{{ruleModels.length || 0}}</p>
+        <h3 class="text-xs uppercase font-semibold text-gray-500 dark:text-gray-400">Regras e Sigmas associados</h3>
+        <p class="text-sm font-semibold text-gray-800 dark:text-gray-200">{{ (regras.length + sigmas.length) || 0 }}</p>
       </div>
 
       <div>
@@ -149,149 +148,80 @@
     </div>
   </div>
 
-  <!-- Tabela de Modelos de Regras Associadas -->
+    <!-- Regras associadas -->
   <div class="mb-8 mt-6">
-    <div class="flex items-center gap-2 mb-1">
-      <h1 class="font-inter font-semibold text-2xl text-gray-700 dark:text-white">Modelos de Regras Associadas</h1>
-      <i class="fas fa-question-circle text-sm text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition cursor-help"
-        title='Regra de deteção original, genérica, independente de cliente e reutilizável, escrita em qualquer formato ou linguagem suportada. É a base utilizada para converter em diferentes linguagens.'></i>
-    </div>
-    <p class="text-sm text-gray-500 dark:text-gray-400">Armazenadas no sistema RedUCM</p>
-
+    <h1 class="font-inter font-semibold text-2xl text-gray-700 dark:text-white">Regras Associadas</h1>
+    <p class="text-sm text-gray-500 dark:text-gray-400">Regras nativas do SIEM (SPL, EQL, AQL, KQL, CQL...)</p>
     <div class="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden mt-3 shadow-sm">
-      <table class="min-w-full leading-normal text-sm divide-y divide-gray-200 dark:divide-gray-700">
-        <thead class="bg-gray-100 dark:bg-gray-700 text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase">
+      <table class="min-w-full text-sm divide-y divide-gray-200 dark:divide-gray-700">
+        <thead class="bg-gray-100 dark:bg-gray-700 font-semibold text-gray-700 dark:text-gray-300 uppercase">
           <tr>
             <th class="w-24 px-5 py-3 text-left">ID</th>
             <th class="px-5 py-3 text-left">Título</th>
-            <th class="w-36 px-5 py-3 text-left">Tipo</th>
-            <th class="w-48 px-5 py-3 text-left">Sintaxe</th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
-          <tr *ngFor="let rule of ruleModels; let i = index" [routerLink]="'/ruleModel-Details/' + rule.id"
-            [ngClass]="i % 2 === 0 ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-900'"
-            class="hover:bg-gray-100 dark:hover:bg-gray-700 transition cursor-pointer h-14">
-            <td class="px-5 py-3 font-semibold text-gray-700 dark:text-gray-300">
-              RedModel{{ rule.id }}
-            </td>
-            <td class="px-5 py-3 font-medium text-gray-900 dark:text-white">
-              {{ rule.title }}
-            </td>
-            <td class="px-5 py-3 text-gray-800 dark:text-gray-200">
-              {{ rule.type }}
-            </td>
-            <!-- Sintaxe (Modelos) -->
-            <td class="px-5 py-3">
-              <span
-                class="inline-flex items-center gap-1.5 text-xs font-semibold text-gray-800 dark:text-gray-200 bg-gray-100 dark:bg-gray-700/60 px-2.5 py-1 rounded border border-gray-200 dark:border-gray-600">
-                <i class="fas fa-code text-xs text-redshift-red"></i>
-                {{ rule.syntax || 'N/D' }}
-              </span>
-            </td>
-          </tr>
-
-          <!-- Empty State quando não existem modelos -->
-          <tr *ngIf="!ruleModels || ruleModels.length === 0">
-            <td colspan="4" class="py-8 text-center text-sm text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-800">
-              <i class="fas fa-inbox text-2xl mb-2 block opacity-40"></i>
-              Nenhum modelo de regra associado a este Use Case.
-            </td>
-          </tr>
-
-        </tbody>
-      </table>
-    </div>
-  </div>
-
-  <!-- Tabela de Regras Associadas -->
-  <div class="mb-8 mt-6">
-    <div class="flex items-center justify-between">
-      <div>
-        <div class="flex items-center gap-2 mb-1">
-          <h1 class="font-inter font-semibold text-2xl text-gray-700 dark:text-white">Regras Associadas</h1>
-          <i class="fas fa-question-circle text-sm text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition cursor-help"
-            title="O produto final resultante da conversão, adaptado à sintaxe de um SIEM concreto. Pode ter um cliente atribuído e inclui o respetivo estado de validação para indicar se já foi testada"></i>
-        </div>
-        <p class="text-sm text-gray-500 dark:text-gray-400">Instâncias ativas criadas a partir dos modelos deste Use
-          Case</p>
-      </div>
-      <span
-        class="text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700">
-        {{ rules.length || 0 }} regra(s)
-      </span>
-    </div>
-
-    <div class="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden mt-3 shadow-sm">
-      <table class="min-w-full leading-normal text-sm divide-y divide-gray-200 dark:divide-gray-700">
-        <thead class="bg-gray-100 dark:bg-gray-700 text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase">
-          <tr>
-            <th class="w-24 px-5 py-3 text-left">ID</th>
-            <th class="w-48 px-5 py-3 text-left">Cliente</th>
-            <th class="px-5 py-3 text-left">Modelo Base</th>
             <th class="w-44 px-5 py-3 text-left">Sintaxe</th>
             <th class="w-64 px-5 py-3 text-left">LogSources</th>
           </tr>
         </thead>
         <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
-          <tr *ngFor="let r of rules; let i = index" [routerLink]="'/rule-Details/' + r.id"
+          <tr *ngFor="let r of regras; let i = index" [routerLink]="'/ruleModel-Details/' + r.id"
             [ngClass]="i % 2 === 0 ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-900'"
-            class="hover:bg-gray-100 dark:hover:bg-gray-700 transition cursor-pointer h-14">
-
-            <!-- ID Regra -->
-            <td class="px-5 py-3 font-mono font-bold text-sm text-redshift-red dark:text-red-400">
-              #{{ r.id }}
-            </td>
-
-            <!-- Cliente -->
-            <td class="px-5 py-3 text-gray-900 dark:text-white font-medium">
-              <span class="inline-flex items-center gap-1.5">
-                <i class="fas" [ngClass]="r.client?.name ? 'fa-building text-gray-400' : 'fa-globe text-gray-400'"></i>
-                <span class="truncate max-w-[170px]" [title]="r.client?.name || 'Geral (Sem Cliente)'">
-                  {{ r.client?.name || 'Geral (Sem Cliente)' }}
-                </span>
+            class="hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer h-14">
+            <td class="px-5 py-3 font-mono font-bold text-redshift-red">#{{ r.id }}</td>
+            <td class="px-5 py-3 font-medium text-gray-900 dark:text-white">{{ r.title }}</td>
+            <td class="px-5 py-3">
+              <span class="inline-flex items-center gap-1 text-xs font-semibold bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded border border-gray-200 dark:border-gray-600">
+                <i class="fas fa-code text-redshift-red"></i> {{ r.syntax || 'N/D' }}
               </span>
             </td>
+            <td class="px-5 py-3 text-xs text-gray-600 dark:text-gray-300">{{ r.logsources?.join(', ') || 'N/D' }}</td>
+          </tr>
+          <tr *ngIf="regras.length === 0">
+            <td colspan="4" class="py-8 text-center text-sm text-gray-500 bg-white dark:bg-gray-800">Nenhuma regra associada a este Use Case.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
 
-            <!-- Modelo Base -->
-            <td class="px-5 py-3 font-medium text-gray-700 dark:text-gray-300">
-              {{ r.ruleModel?.title || ('RedModel ' + (r.ruleModel?.id || r.ruleModel)) }}
-            </td>
-
-            <!-- Sintaxe -->
-            <td class="px-5 py-3">
-              <span
-                class="inline-flex items-center gap-1 text-xs font-semibold text-gray-800 dark:text-gray-200 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded border border-gray-200 dark:border-gray-600">
-                <i class="fas fa-code text-xs text-redshift-red"></i>
-                {{ r.syntax || 'N/D' }}
+  <!-- Sigmas associados -->
+  <div class="mb-8 mt-6">
+    <h1 class="font-inter font-semibold text-2xl text-gray-700 dark:text-white">Sigmas Associados</h1>
+    <p class="text-sm text-gray-500 dark:text-gray-400">Versão Sigma, gerada automaticamente ou criada à mão. A partir dela converte-se para qualquer SIEM.</p>
+    <div class="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden mt-3 shadow-sm">
+      <table class="min-w-full text-sm divide-y divide-gray-200 dark:divide-gray-700">
+        <thead class="bg-gray-100 dark:bg-gray-700 font-semibold text-gray-700 dark:text-gray-300 uppercase">
+          <tr>
+            <th class="w-24 px-5 py-3 text-left">ID</th>
+            <th class="px-5 py-3 text-left">Título</th>
+            <th class="w-56 px-5 py-3 text-left">Estado</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+          <tr *ngFor="let r of sigmas; let i = index" [routerLink]="'/ruleModel-Details/' + r.id"
+            [ngClass]="i % 2 === 0 ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-900'"
+            class="hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer h-14">
+            <td class="px-5 py-3 font-mono font-bold text-redshift-red">#{{ r.id }}</td>
+            <td class="px-5 py-3 font-medium text-gray-900 dark:text-white">{{ r.title }}</td>
+            <td class="px-5 py-3 text-xs font-semibold">
+              <span *ngIf="r.generationStatus === 'pending'" class="text-amber-600">
+                <i class="fas fa-spinner fa-spin mr-1"></i>A gerar Sigma...
               </span>
-            </td>
-
-            <!-- Logsources -->
-            <td class="px-5 py-3">
-              <div class="flex items-center gap-1 max-w-[240px] truncate" [title]="r.logsources?.join(', ') || 'N/D'">
-                <span *ngFor="let log of r.logsources?.slice(0, 2)"
-                  class="bg-[#0d2f52] text-white text-xs px-2 py-0.5 rounded font-medium truncate">
-                  {{ log }}
-                </span>
-                <span *ngIf="r.logsources?.length > 2"
-                  class="bg-[#0d2f52] text-white text-xs px-1.5 py-0.5 rounded font-bold">
-                  +{{ r.logsources.length - 2 }}
-                </span>
-                <span *ngIf="!r.logsources?.length" class="text-xs text-gray-400 italic">N/D</span>
-              </div>
+              <span *ngIf="r.generationStatus === 'failed'" class="text-red-600" [title]="r.generationNote || ''">
+                <i class="fas fa-circle-exclamation mr-1"></i>Falhou
+              </span>
+              <span *ngIf="r.generationStatus !== 'pending' && r.generationStatus !== 'failed'"
+                [ngClass]="r.status === 'Regra validada' ? 'text-green-600' : 'text-gray-500 dark:text-gray-400'">
+                {{ r.status === 'Regra validada' ? 'Validada' : (r.generated ? 'Gerado, a rever' : 'Não validada') }}
+              </span>
             </td>
           </tr>
-
-          <!-- Empty State -->
-          <tr *ngIf="rules.length === 0">
-            <td colspan="5" class="py-8 text-center text-sm text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-800">
-              <i class="fas fa-inbox text-2xl mb-2 block opacity-40"></i>
-              Nenhuma regra instanciada para este Use Case.
-            </td>
+          <tr *ngIf="sigmas.length === 0">
+            <td colspan="3" class="py-8 text-center text-sm text-gray-500 bg-white dark:bg-gray-800">Nenhum Sigma associado a este Use Case.</td>
           </tr>
         </tbody>
       </table>
     </div>
   </div>
 </div>
+
+
