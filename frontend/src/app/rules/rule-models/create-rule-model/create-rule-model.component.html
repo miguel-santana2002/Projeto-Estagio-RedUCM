@@ -131,6 +131,24 @@
             </div>
         </div>
 
+        <!-- Checkbox de Auto-Geração de Sigma -->
+        <div *ngIf="selectedSyntax !== 'Sigma Rule'" class="col-span-1 md:col-span-2 flex items-center mb-6 p-4 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg">
+            
+            <input type="checkbox" id="generateSigma" 
+                   [(ngModel)]="generateSigma" 
+                   [disabled]="forceSigma"
+                   [ngModelOptions]="{standalone: true}"
+                   class="w-5 h-5 text-redshift-red bg-white border-gray-300 rounded focus:ring-redshift-red focus:ring-2 dark:bg-gray-700 dark:border-gray-600 disabled:opacity-40 cursor-pointer">
+            
+            <label for="generateSigma" class="ml-3 text-sm font-medium text-gray-900 dark:text-gray-200" [ngClass]="{'cursor-pointer': !forceSigma}">
+                Converter e associar automaticamente Regra Sigma
+                
+                <span *ngIf="forceSigma" class="block text-xs text-redshift-red mt-0.5 font-normal">
+                    * Obrigatório: Este Use Case ainda não possui nenhuma regra associada.
+                </span>
+            </label>
+        </div>
+
         <!-- 5. Ações -->
         <div class="col-span-1 md:col-span-2 flex items-center gap-4 pt-2">
             <button type="submit" [disabled]="!createRuleModelForm.valid"

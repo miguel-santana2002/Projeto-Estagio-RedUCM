@@ -48,11 +48,14 @@ export class CreateRuleModelComponent implements OnInit {
   selectedType: string = 'SIEM';
   selectedSyntax: string = 'AQL (QRadar)';
   selectedUseCase: any = '';
+  generateSigma: boolean = true;
+  forceSigma: boolean = false;
 
   code: string = '';
   isAutoDetecting = false;
   isLogsourceOpen: boolean = false;
   message: string = '';
+
 
   // Removida obrigatoriedade estrita de logsources
   createRuleModelForm = new FormGroup({
@@ -173,6 +176,19 @@ level: medium`,
       this.createRuleModelForm.patchValue({
         title: `${uc.title} `,
       });
+
+      // Agora uc.rules vem devidamente preenchido pelo Backend
+      const temRegras = uc.rules && uc.rules.length > 0;
+
+      if (!temRegras) {
+        // Use Case sem regras: Marcado e bloqueado
+        this.forceSigma = true;
+        this.generateSigma = true;
+      } else {
+        // Use Case com regras: Desbloqueado para o utilizador
+        this.forceSigma = false;
+        this.generateSigma = false;
+      }
     }
   }
 
@@ -285,6 +301,9 @@ level: medium`,
     const useCaseId = Number(this.createRuleModelForm.value.selectedUseCase);
     const syntax = this.createRuleModelForm.value.syntax;
 
+    // A flag só será enviada se a checkbox estiver marcada E a sintaxe NÃO for Sigma Rule
+    const willGenerateSigma = this.generateSigma && syntax !== 'Sigma Rule';
+
     const payload = {
       title: this.createRuleModelForm.value.title,
       useCaseId,
@@ -292,19 +311,19 @@ level: medium`,
       syntax,
       ruleCode: this.code,
       logsources,
+      generate_sigma: willGenerateSigma // Envia a flag para o Backend
     };
 
     this.rulesService.createRule(payload).subscribe({
       next: () => {
-        const generatesSigma = syntax !== 'Sigma Rule' && syntax !== 'YARA Rule';
-        this.message = generatesSigma
+        this.message = willGenerateSigma
           ? 'Regra criada. A gerar Sigma associado, vai aparecer no use case.'
           : 'Regra criada.';
         setTimeout(() => this.router.navigate(['/usecase-Details', useCaseId]), 2500);
       },
       error: (err) => console.error('Erro ao criar regra:', err),
     });
-    }
+  }
 
     get isExampleCode(): boolean {
       const exampleVal = this.examples[this.selectedSyntax] || '';
