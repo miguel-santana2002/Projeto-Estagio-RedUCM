@@ -91,16 +91,17 @@
                         class="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">
                         Técnicas Mitre Associadas <span class="text-red-500">*</span>
                     </label>
-                    <mat-form-field appearance="outline" class="w-full">
-                        <mat-select formControlName="mitreTechniques" multiple placeholder="Selecione as técnicas..."
-                            (selectionChange)="onTechniqueChange()" panelClass="custom-dark-panel">
-                            <mat-option *ngFor="let tech of filteredTechniquesList" [value]="tech">{{ tech
-                                }}</mat-option>
-                        </mat-select>
-                    </mat-form-field>
+                    <app-tag-combobox
+                        formControlName="mitreTechniques"
+                        [items]="filteredTechniquesList"
+                        [allItems]="mitreAutocompleteList"
+                        placeholder="Selecione da lista ou escreva uma técnica (ex: T1687)..."
+                        [isInvalid]="!!(editUseCaseForm.get('mitreTechniques')?.touched && editUseCaseForm.get('mitreTechniques')?.invalid)"
+                        (selectionChange)="onTechniqueChange()">
+                    </app-tag-combobox>
                     <div *ngIf="editUseCaseForm.get('mitreTechniques')?.touched && editUseCaseForm.get('mitreTechniques')?.invalid"
                         class="text-red-600 dark:text-red-400 text-xs mt-1">
-                        Técnicas Mitre são obrigatórias.
+                        Selecione ou escreva pelo menos uma técnica.
                     </div>
                 </div>
 
@@ -109,15 +110,16 @@
                     <label for="tactics" class="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">
                         Táticas (MITRE ATT&CK) <span class="text-red-500">*</span>
                     </label>
-                    <mat-form-field appearance="outline" class="w-full">
-                        <mat-select formControlName="tactics" multiple placeholder="Selecione as táticas..."
-                            (selectionChange)="onTacticChange()" panelClass="custom-dark-panel">
-                            <mat-option *ngFor="let tactic of allTacticsList" [value]="tactic">{{ tactic }}</mat-option>
-                        </mat-select>
-                    </mat-form-field>
+                    <app-tag-combobox
+                        formControlName="tactics"
+                        [items]="allTacticsList"
+                        placeholder="Selecione da lista ou escreva uma tática..."
+                        [isInvalid]="!!(editUseCaseForm.get('tactics')?.touched && editUseCaseForm.get('tactics')?.invalid)"
+                        (selectionChange)="onTacticChange()">
+                    </app-tag-combobox>
                     <div *ngIf="editUseCaseForm.get('tactics')?.touched && editUseCaseForm.get('tactics')?.invalid"
                         class="text-red-600 dark:text-red-400 text-xs mt-1">
-                        Táticas são obrigatórias.
+                        Selecione ou escreva pelo menos uma tática.
                     </div>
                 </div>
 
