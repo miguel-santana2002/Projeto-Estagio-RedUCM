@@ -131,9 +131,18 @@ def deleteRuleById(request, id):
 def _generate_sigma(sigma_id, source_code, source_syntax):
     from django.db import connection
     try:
-        sigma = decompile_to_sigma(source_code, source_syntax)
+        from rules.services.rule_converter import convert_single_engine
+        
+        # Usa o mesmo motor híbrido (ai) que o conversor interativo usa, 
+        # garantindo que o resultado é limpo e consistente.
+        res = convert_single_engine(source_code, source_syntax, "Sigma Rule", "ai")
+        sigma_code = res.get("ai_result") or res.get("sigma_rule")
+        
+        if not sigma_code or "Erro" in sigma_code:
+            raise ValueError("O motor de IA não conseguiu gerar um Sigma válido.")
+
         Rule.objects.filter(pk=sigma_id).update(
-            ruleCode=sigma, generationStatus='done', generationNote=None)
+            ruleCode=sigma_code, generationStatus='done', generationNote=None)
     except Exception as e:
         Rule.objects.filter(pk=sigma_id).update(
             generationStatus='failed', generationNote=str(e)[:1000])
@@ -176,9 +185,11 @@ def createRule(request):
         client=client, status=data.get('status', ''),
     )
 
-    # Regra geral noutra linguagem: cria o Sigma associado em segundo plano
+    # Regra geral noutra linguagem: cria o Sigma associado apenas se solicitado
+    should_generate_sigma = data.get('generate_sigma', True)
     if (client is None and parent is None
             and new_rule.syntax not in ('Sigma Rule', 'YARA Rule')
+            and should_generate_sigma
             and (new_rule.ruleCode or '').strip()):
         sigma = Rule.objects.create(
             title=new_rule.title, useCaseId=new_rule.useCaseId, type=new_rule.type,

@@ -2,6 +2,7 @@ import os
 import re
 import requests
 import yaml
+import html
 
 from sigma.collection import SigmaCollection
 from sigma.backends.splunk import SplunkBackend
@@ -103,16 +104,40 @@ def decompile_to_sigma(source_query: str, source_syntax: str, retries: int = 1) 
             prompt += CORRELATION_HINT
         if last_err:
             prompt += f"\nThe previous attempt was invalid: {last_err}\nFix it and output only YAML."
+        
         payload = {
             "model": MODEL_NAME, "prompt": prompt, "stream": False, "keep_alive": "1h",
             "options": {"num_predict": 800, "num_ctx": 2048, "temperature": 0.0},
         }
+        
         response = requests.post(f"{OLLAMA_HOST}/api/generate", json=payload, timeout=300)
         response.raise_for_status()
         raw = response.json().get("response", "").strip()
         text = re.sub(r"^```(?:ya?ml)?\s*|\s*```$", "", raw, flags=re.MULTILINE).strip()
-        # o modelo por vezes escreve "campo: !null", que não é YAML válido
+        
+        # ---------------------------------------------------------
+        # ESCUDO DE LIMPEZA YAML (Corrige alucinações comuns da IA)
+        # ---------------------------------------------------------
+        text = html.unescape(text)
+        
+        # 1. Corrige o LLM quando separa o modificador com vírgula e pipe (ex: "Field: |contains, val")
+        text = re.sub(r'(\w+):\s*\|([a-zA-Z]+),\s*(.*)', r'\1|\2: \3', text)
+        text = re.sub(r'(\w+):\s*\|([a-zA-Z]+)', r'\1|\2:', text)
+        
+        # 2. Corrige asteriscos isolados sem aspas (ex: "Field: *" passa para "Field: '*'"), senão o YAML crasha
+        text = re.sub(r'^(\s*[\w\-\|]+:\s*)\*(?=\s|$)', r'\1"*"', text, flags=re.MULTILINE)
+        text = re.sub(r'^(\s*-\s*)\*(?=\s|$)', r'\1"*"', text, flags=re.MULTILINE)
+        
+        # 3. Força aspas em valores numéricos/IPs com modificadores (ex: "Field|startswith: 3" passa para "Field|startswith: '3'")
+        text = re.sub(r'^(\s*[\w\-]+\|(?:startswith|contains|endswith|re):\s*)([^\s\'\"\[\{][^\n\'\"]*?)\s*$', r'\1"\2"', text, flags=re.MULTILINE)
+        
+        # 4. Força aspas em itens de lista que sejam apenas números/IPs
+        text = re.sub(r'^(\s*-\s*)([0-9][0-9\.\/]*)\s*$', r'\1"\2"', text, flags=re.MULTILINE)
+
+        # 5. Remove propriedades "!null" (não são suportadas no Sigma)
         text = re.sub(r"^\s*[\w.\-|]+:\s*!?null\s*$\n?", "", text, flags=re.MULTILINE)
+        # ---------------------------------------------------------
+
         try:
             docs = _unwrap_docs([d for d in yaml.safe_load_all(text) if d])
             if not docs or not all(isinstance(d, dict) for d in docs):
@@ -124,11 +149,14 @@ def decompile_to_sigma(source_query: str, source_syntax: str, retries: int = 1) 
                         raise ValueError("falta o bloco detection")
                     d.setdefault("logsource", {"category": "process_creation", "product": "linux"})
                     d["status"] = "experimental"
+            
             out = yaml.dump_all(docs, sort_keys=False, allow_unicode=True)
-            SigmaCollection.from_yaml(out)  # valida com o pySigma
+            SigmaCollection.from_yaml(out)  # valida rigorosamente com o pySigma
             return out
+            
         except Exception as e:
             last_err = str(e)
+            
     raise ValueError(f"Não foi possível gerar Sigma válido: {last_err} | resposta do modelo: {text[:300]!r}")
 
 
