@@ -13,6 +13,7 @@ import { HttpClient } from '@angular/common/http';
 import { HeaderComponent } from '../../../layout/header/header.component';
 import { TitlebannerComponent } from '../../../layout/titlebanner/titlebanner.component';
 import { AppCodeEditorComponent } from '../../../shared/components/app-code-editor/app-code-editor.component';
+import { TagComboboxComponent } from '../../../shared/components/tag-combobox/tag-combobox.component';
 import { RulesService } from '../../../services/rules.service';
 
 @Component({
@@ -28,6 +29,7 @@ import { RulesService } from '../../../services/rules.service';
     HeaderComponent,
     TitlebannerComponent,
     AppCodeEditorComponent,
+    TagComboboxComponent,
   ],
 })
 export class EditRuleComponent implements OnInit {
@@ -56,7 +58,7 @@ export class EditRuleComponent implements OnInit {
   statusOptions = [
     { value: '', label: '(Vazio)' },
     { value: 'Regra validada', label: 'Regra validada' },
-    { value: 'Regra nao validada', label: 'Regra não validada' }
+    { value: 'Regra não validada', label: 'Regra não validada' }
   ];
 
   clients: any[] = [];
@@ -164,9 +166,14 @@ export class EditRuleComponent implements OnInit {
         // Já não precisamos de formatar em objetos para os chips, strings simples bastam
         const flatLogsources = rule.logsources || [];
 
+        let ruleStatus = (rule.status || '').trim();
+        if (ruleStatus.toLowerCase() === 'regra nao validada') {
+          ruleStatus = 'Regra não validada';
+        }
+
         this.editRuleForm.patchValue({
           client: rule.client?.pk || rule.client?.id || rule.client || null,
-          status: rule.status || '',
+          status: ruleStatus,
           selectedType: this.selectedType,
           syntax: this.selectedSyntax,
           logsources: flatLogsources,

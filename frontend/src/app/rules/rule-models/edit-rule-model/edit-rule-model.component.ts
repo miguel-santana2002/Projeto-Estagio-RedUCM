@@ -15,6 +15,7 @@ import { UsecasesService } from '../../../services/usecases.service';
 import { HeaderComponent } from '../../../layout/header/header.component';
 import { TitlebannerComponent } from '../../../layout/titlebanner/titlebanner.component';
 import { AppCodeEditorComponent } from '../../../shared/components/app-code-editor/app-code-editor.component';
+import { TagComboboxComponent } from '../../../shared/components/tag-combobox/tag-combobox.component';
 
 @Component({
   selector: 'app-edit-rule-model',
@@ -28,6 +29,7 @@ import { AppCodeEditorComponent } from '../../../shared/components/app-code-edit
     HeaderComponent,
     TitlebannerComponent,
     AppCodeEditorComponent,
+    TagComboboxComponent,
   ],
   templateUrl: './edit-rule-model.component.html',
   styleUrl: './edit-rule-model.component.css',

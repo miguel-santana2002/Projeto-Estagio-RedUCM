@@ -13,6 +13,7 @@ import { UsecasesService } from '../../../services/usecases.service';
 import { RulesService } from '../../../services/rules.service';
 import { Router, RouterModule } from '@angular/router';
 import { AppCodeEditorComponent } from '../../../shared/components/app-code-editor/app-code-editor.component';
+import { TagComboboxComponent } from '../../../shared/components/tag-combobox/tag-combobox.component';
 
 @Component({
   selector: 'app-create-rule-model',
@@ -27,6 +28,7 @@ import { AppCodeEditorComponent } from '../../../shared/components/app-code-edit
     ReactiveFormsModule,
     RouterModule,
     AppCodeEditorComponent,
+    TagComboboxComponent,
   ],
 })
 export class CreateRuleModelComponent implements OnInit {

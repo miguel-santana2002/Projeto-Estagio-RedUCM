@@ -164,7 +164,6 @@ export class CreateUseCaseComponent implements OnInit {
         });
 
         this.allTacticsList = Array.from(tacticSet).sort();
-        console.log('EXEMPLO TECNICA:', this.rawMitreData[0]);
         this.mitreAutocompleteList = this.rawMitreData.map(
           (t: any) => `${t.id} - ${t.name}`,
         );
