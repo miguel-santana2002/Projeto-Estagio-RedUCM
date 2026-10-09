@@ -1,5 +1,5 @@
 import { CommonModule } from "@angular/common";
-import { Component, ViewChild } from "@angular/core";
+import { Component, Input, OnChanges, OnInit, SimpleChanges, ViewChild } from "@angular/core";
 
 import {
   ApexAxisChartSeries,
@@ -28,9 +28,9 @@ export type ChartOptions = {
   templateUrl: './radar-tactics.component.html',
   styleUrl: './radar-tactics.component.css'
 })
-export class RadarTacticsComponent {
+export class RadarTacticsComponent implements OnInit, OnChanges {
+  @Input() useCases: any[] = [];
   tacticsCount: any = [];
-  useCases: any = [];
   allTactics: string[] = [
     "Execution",
     "Persistence",
@@ -45,41 +45,71 @@ export class RadarTacticsComponent {
     "Impact",
   ];
 
-  ngOnInit() {
-    this.useCasesService.getUseCases().subscribe((data: any) => {
-      this.useCases = data;
-      console.log(this.useCases);
-
-      var ids: any = [];
-      this.useCases.forEach((useCase: any) => {
-        useCase.mitreTechniques.forEach((mitreTechnique: any) => {
-          ids.push(mitreTechnique);
-        });
+  ngOnInit(): void {
+    if (this.useCases && this.useCases.length > 0) {
+      this.loadTacticsFromUseCases(this.useCases);
+    } else {
+      this.useCasesService.getUseCases().subscribe({
+        next: (data: any) => {
+          this.useCases = Array.isArray(data) ? data : [];
+          this.loadTacticsFromUseCases(this.useCases);
+        },
+        error: (err) => console.error('Erro ao carregar use cases no radar:', err)
       });
+    }
+  }
 
-      this.useCasesService.getTechniqueTacticBasedOnListIds(ids).subscribe((data: any) => {
-        console.log(data);
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['useCases'] && changes['useCases'].currentValue && changes['useCases'].currentValue.length > 0) {
+      this.loadTacticsFromUseCases(changes['useCases'].currentValue);
+    }
+  }
 
-        this.tacticsCount = data;
+  private loadTacticsFromUseCases(useCasesList: any[]): void {
+    const ids: string[] = [];
+    useCasesList.forEach((useCase: any) => {
+      if (Array.isArray(useCase.mitreTechniques)) {
+        useCase.mitreTechniques.forEach((technique: any) => {
+          const id =
+            typeof technique === 'string'
+              ? technique
+              : technique?.id || technique?.name;
+          if (id) {
+            ids.push(id);
+          }
+        });
+      }
+    });
+
+    if (ids.length === 0) {
+      return;
+    }
+
+    this.useCasesService.getTechniqueTacticBasedOnListIds(ids).subscribe({
+      next: (data: any) => {
+        this.tacticsCount = Array.isArray(data) ? data : [];
 
         // Inicializar objeto de contagem com todas as táticas
-        let tacticCounts: { [key: string]: number } = {};
+        const tacticCounts: { [key: string]: number } = {};
         this.allTactics.forEach((tactic) => {
           tacticCounts[tactic] = 0;
         });
 
         // Atualizar contagens reais
         this.tacticsCount.forEach((item: any) => {
-          tacticCounts[item.tactic] = item.count;
+          if (item && item.tactic) {
+            tacticCounts[item.tactic] = item.count || 0;
+          }
         });
 
         // Extrair contagens em ordem das táticas
         const seriesData = this.allTactics.map((tactic) => tacticCounts[tactic]);
 
         // Atualizar as séries e categorias do gráfico
-        this.chartOptions.series = [{ data: seriesData }];
+        this.chartOptions.series = [{ name: "Casos de Uso", data: seriesData }];
         this.chartOptions.xaxis = { categories: this.allTactics };
-      });
+      },
+      error: (err) => console.error('Erro ao carregar táticas MITRE:', err)
     });
   }
 

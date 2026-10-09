@@ -1,6 +1,7 @@
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { forkJoin } from 'rxjs';
 
 import { HeaderComponent } from '../../layout/header/header.component';
 import { TitlebannerComponent } from '../../layout/titlebanner/titlebanner.component';
@@ -33,7 +34,6 @@ export class StatisticsPageComponent implements OnInit {
   rules: any[] = [];
   filteredRules: any[] = [];
   useCases: any[] = [];
-  ruleModels: any[] = [];
   users: any[] = [];
   clientsFromBd: any[] = [];
 
@@ -46,8 +46,9 @@ export class StatisticsPageComponent implements OnInit {
   uniqueClientsName: string[] = [];
   selectedClients: string[] = [];
 
-  // Controlo do Painel de Filtros
+  // Controlo do Painel de Filtros e Carregamento
   showFilters: boolean = false;
+  isLoading: boolean = true;
 
   constructor(
     private cdr: ChangeDetectorRef,
@@ -61,39 +62,40 @@ export class StatisticsPageComponent implements OnInit {
   }
 
   loadAllStatistics(): void {
-    this.rulesService.getRules().subscribe((rulesData: any) => {
-      console.log('Regras recebidas nas estatísticas:', rulesData);
-      this.rules = Array.isArray(rulesData) ? rulesData : [];
-      this.filteredRules = [...this.rules];
+    this.isLoading = true;
 
-      this.useCasesService.getUseCases().subscribe((useCasesData: any) => {
-        this.useCases = Array.isArray(useCasesData) ? useCasesData : [];
+    // Disparar todos os pedidos em paralelo simultaneamente via forkJoin
+    forkJoin({
+      rules: this.rulesService.getRules(),
+      useCases: this.useCasesService.getUseCases(),
+      users: this.authService.getUsers(),
+      clients: this.authService.getClients(),
+    }).subscribe({
+      next: ({ rules, useCases, users, clients }) => {
+        this.rules = Array.isArray(rules) ? rules : [];
+        this.filteredRules = [...this.rules];
+        this.useCases = Array.isArray(useCases) ? useCases : [];
+        this.users = Array.isArray(users) ? users : [];
+        this.clientsFromBd = Array.isArray(clients) ? clients : [];
 
-        this.rulesService.getRuleModels().subscribe((ruleModelsData: any) => {
-          this.ruleModels = Array.isArray(ruleModelsData) ? ruleModelsData : [];
+        this.uniqueClientsName = Array.from(
+          new Set(
+            this.clientsFromBd
+              .map((item: any) => item.name)
+              .filter((name: string) => Boolean(name)),
+          ),
+        ).sort();
 
-          this.authService.getUsers().subscribe((usersData: any) => {
-            this.users = Array.isArray(usersData) ? usersData : [];
-
-            this.authService.getClients().subscribe((clientsData: any) => {
-              this.clientsFromBd = Array.isArray(clientsData)
-                ? clientsData
-                : [];
-
-              this.uniqueClientsName = Array.from(
-                new Set(
-                  this.clientsFromBd
-                    .map((item: any) => item.name)
-                    .filter((name: string) => Boolean(name)),
-                ),
-              ).sort();
-
-              this.mitreTableGenerate();
-              this.clientsTableGenerate();
-            });
-          });
-        });
-      });
+        this.mitreTableGenerate();
+        this.clientsTableGenerate();
+        this.isLoading = false;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('Erro ao carregar estatísticas:', err);
+        this.isLoading = false;
+        this.cdr.detectChanges();
+      },
     });
   }
 
@@ -131,56 +133,56 @@ export class StatisticsPageComponent implements OnInit {
   }
 
   mitreTableGenerate(): void {
-    this.mitreTechniques = [];
-    this.mitreTechniquesCount = [];
+    const counts = new Map<string, number>();
 
-    this.useCases.forEach((useCase: any) => {
+    for (const useCase of this.useCases) {
       if (Array.isArray(useCase.mitreTechniques)) {
-        useCase.mitreTechniques.forEach((technique: any) => {
+        for (const technique of useCase.mitreTechniques) {
           const techName =
             typeof technique === 'string'
               ? technique
               : technique?.id || technique?.name;
-          if (!techName) return;
-
-          const index = this.mitreTechniques.indexOf(techName);
-          if (index === -1) {
-            this.mitreTechniques.push(techName);
-            this.mitreTechniquesCount.push(1);
-          } else {
-            this.mitreTechniquesCount[index]++;
+          if (techName) {
+            counts.set(techName, (counts.get(techName) || 0) + 1);
           }
-        });
+        }
       }
-    });
+    }
 
     // Ordenar por frequência decrescente
-    const combined = this.mitreTechniques.map((tech, i) => ({
-      technique: tech,
-      count: this.mitreTechniquesCount[i],
-    }));
+    const sorted = Array.from(counts.entries())
+      .map(([technique, count]) => ({ technique, count }))
+      .sort((a, b) => b.count - a.count);
 
-    combined.sort((a, b) => b.count - a.count);
-
-    this.mitreTechniques = combined.map((item) => item.technique);
-    this.mitreTechniquesCount = combined.map((item) => item.count);
+    this.mitreTechniques = sorted.map((item) => item.technique);
+    this.mitreTechniquesCount = sorted.map((item) => item.count);
   }
 
   clientsTableGenerate(): void {
-    this.clients = [];
-    this.clientsCount = [];
+    const counts = new Map<string, number>();
 
-    this.rules.forEach((rule: any) => {
+    for (const rule of this.rules) {
       const clientName = rule.client?.name;
-      if (!clientName) return;
-
-      const index = this.clients.indexOf(clientName);
-      if (index === -1) {
-        this.clients.push(clientName);
-        this.clientsCount.push(1);
-      } else {
-        this.clientsCount[index]++;
+      if (clientName) {
+        counts.set(clientName, (counts.get(clientName) || 0) + 1);
       }
-    });
+    }
+
+    // Ordenar por frequência decrescente
+    const sorted = Array.from(counts.entries())
+      .map(([client, count]) => ({ client, count }))
+      .sort((a, b) => b.count - a.count);
+
+    this.clients = sorted.map((item) => item.client);
+    this.clientsCount = sorted.map((item) => item.count);
+  }
+
+  trackByClient(index: number, client: string): string {
+    return client;
+  }
+
+  trackByTechnique(index: number, technique: string): string {
+    return technique;
   }
 }
+

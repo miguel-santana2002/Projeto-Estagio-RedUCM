@@ -201,12 +201,12 @@ def createRule(request):
 @api_view(['GET'])
 def getRules(request):
     if request.method == 'GET':
-        rules = Rule.objects.all()
+        rules = Rule.objects.select_related('client', 'ruleModel').all()
         serializer = RuleSerializer(rules, many=True)
         return JsonResponse(serializer.data, safe=False)
 
     else:
-        return JsonResponse({'error': 'Invalid request method'})
+        return JsonResponse({'error': 'Invalid request method'}, status=400)
     
 @extend_schema(request=RuleSerializer,
                 description='Get rules based on ID.',
@@ -217,7 +217,7 @@ def getRules(request):
 @api_view(['GET'])
 def getRuleById(request, id):
     try:
-        rule = Rule.objects.get(id=id)
+        rule = Rule.objects.select_related('client', 'ruleModel').get(id=id)
         serializer = RuleSerializer(rule, many=False)
         return JsonResponse(serializer.data, safe=False)
     except Rule.DoesNotExist:

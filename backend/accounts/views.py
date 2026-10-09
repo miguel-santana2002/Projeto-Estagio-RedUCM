@@ -101,11 +101,9 @@ def getUsers(request):
     if request.method == 'GET':
         users = User.objects.all()
         serializer = UserSerializer(users, many=True)
-        user_list = serializers.serialize('json', users, indent=2)
-        
         return JsonResponse(serializer.data, safe=False)
     else:
-        return JsonResponse({'error': 'Invalid request method'})
+        return JsonResponse({'error': 'Invalid request method'}, status=400)
     
 @extend_schema(description=' Endpoint to get a list of all clients.',
                responses={

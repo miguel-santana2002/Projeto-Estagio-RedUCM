@@ -15,23 +15,126 @@
   <!-- Só renderiza o footer quando o utilizador está autenticado -->
   <footer *ngIf="!isLoginPage"
     class="mt-10 border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 transition-colors duration-200">
-    <div class="mx-auto w-full max-w-screen-xl px-6 py-8 sm:flex sm:items-center sm:justify-between">
-      <span class="text-sm text-gray-500 sm:text-center dark:text-gray-400">
-        © 2024 - {{ currentYear }} <a href="https://redshift.global/" target="_blank" rel="noopener noreferrer"
-          class="hover:underline text-redshift-red font-medium">RedShift</a>
-      </span>
-      <div class="flex mt-4 sm:justify-center sm:mt-0 space-x-6">
-        <a href="https://www.facebook.com/redshiftglobal/?locale=pt_BR" target="_blank" rel="noopener noreferrer"
-          class="text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition">
-          <i class="fab fa-facebook-f text-base"></i>
-          <span class="sr-only">Facebook page</span>
-        </a>
-        <a href="https://pt.linkedin.com/company/redshiftglobal" target="_blank" rel="noopener noreferrer"
-          class="text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition">
-          <i class="fab fa-linkedin-in text-base"></i>
-          <span class="sr-only">LinkedIn</span>
-        </a>
+
+    <div class="mx-auto w-full max-w-screen-xl px-6 py-10">
+
+      <!-- Linha superior: Logo + Colunas de navegação -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
+
+        <!-- Coluna 1: Marca / Branding -->
+        <div class="col-span-1 sm:col-span-2 lg:col-span-1">
+          <a href="https://redshift.global/" target="_blank" rel="noopener noreferrer" class="inline-block mb-3">
+            <img src="./assets/logo.png" class="h-7" alt="RedShift Logo" />
+          </a>
+          <p class="text-xs text-gray-500 dark:text-gray-400 leading-relaxed max-w-xs">
+            Plataforma de gestão de regras e use cases de segurança — RedUCM.
+          </p>
+          <!-- Redes Sociais -->
+          <div class="flex space-x-3 mt-4">
+            <a href="https://www.facebook.com/redshiftglobal/?locale=pt_BR" target="_blank" rel="noopener noreferrer"
+              title="Facebook"
+              class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 hover:bg-redshift-red hover:text-white dark:hover:bg-redshift-red dark:hover:text-white transition">
+              <i class="fab fa-facebook-f text-xs"></i>
+              <span class="sr-only">Facebook</span>
+            </a>
+            <a href="https://pt.linkedin.com/company/redshiftglobal" target="_blank" rel="noopener noreferrer"
+              title="LinkedIn"
+              class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 hover:bg-redshift-red hover:text-white dark:hover:bg-redshift-red dark:hover:text-white transition">
+              <i class="fab fa-linkedin-in text-xs"></i>
+              <span class="sr-only">LinkedIn</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- Coluna 2: Plataforma -->
+        <div>
+          <h3 class="text-xs font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500 mb-3">Plataforma</h3>
+          <ul class="space-y-2 text-sm">
+            <li>
+              <a routerLink="/home" class="text-gray-600 dark:text-gray-400 hover:text-redshift-red dark:hover:text-redshift-red transition">
+                Home
+              </a>
+            </li>
+            <li>
+              <a routerLink="/manage-usecases" class="text-gray-600 dark:text-gray-400 hover:text-redshift-red dark:hover:text-redshift-red transition">
+                Use Cases
+              </a>
+            </li>
+            <li>
+              <a routerLink="/manage-rules" class="text-gray-600 dark:text-gray-400 hover:text-redshift-red dark:hover:text-redshift-red transition">
+                Regras
+              </a>
+            </li>
+            <li>
+              <a routerLink="/manage-clients" class="text-gray-600 dark:text-gray-400 hover:text-redshift-red dark:hover:text-redshift-red transition">
+                Clientes
+              </a>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Coluna 3: Ferramentas / Administração -->
+        <div>
+          <h3 class="text-xs font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500 mb-3">Ferramentas</h3>
+          <ul class="space-y-2 text-sm">
+            <li>
+              <a routerLink="/statistics" class="text-gray-600 dark:text-gray-400 hover:text-redshift-red dark:hover:text-redshift-red transition">
+                Estatísticas
+              </a>
+            </li>
+            <li *ngIf="isAdmin">
+              <a routerLink="/audit" class="text-gray-600 dark:text-gray-400 hover:text-redshift-red dark:hover:text-redshift-red transition">
+                Auditoria
+              </a>
+            </li>
+            <li *ngIf="isAdmin">
+              <a routerLink="/manage-users" class="text-gray-600 dark:text-gray-400 hover:text-redshift-red dark:hover:text-redshift-red transition">
+                Utilizadores
+              </a>
+            </li>
+            <li>
+              <a routerLink="/manage-logsources" class="text-gray-600 dark:text-gray-400 hover:text-redshift-red dark:hover:text-redshift-red transition">
+                Log Sources
+              </a>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Coluna 4: Empresa -->
+        <div>
+          <h3 class="text-xs font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500 mb-3">Empresa</h3>
+          <ul class="space-y-2 text-sm">
+            <li>
+              <a href="https://redshift.global/" target="_blank" rel="noopener noreferrer"
+                class="text-gray-600 dark:text-gray-400 hover:text-redshift-red dark:hover:text-redshift-red transition">
+                Website
+              </a>
+            </li>
+            <li>
+              <a href="https://redshift.global/" target="_blank" rel="noopener noreferrer"
+                class="text-gray-600 dark:text-gray-400 hover:text-redshift-red dark:hover:text-redshift-red transition">
+                Sobre nós
+              </a>
+            </li>
+          </ul>
+        </div>
+
       </div>
+
+      <!-- Linha inferior: Divider + Copyright -->
+      <div class="border-t border-gray-100 dark:border-gray-800 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3">
+        <p class="text-xs text-gray-500 dark:text-gray-500">
+          © 2024 – {{ currentYear }}
+          <a href="https://redshift.global/" target="_blank" rel="noopener noreferrer"
+            class="font-medium text-redshift-red hover:underline">RedShift</a>.
+          Todos os direitos reservados.
+        </p>
+        <p class="text-xs text-gray-400 dark:text-gray-600">
+          RedUCM &mdash; Use Case Management Platform
+        </p>
+      </div>
+
     </div>
   </footer>
+
 </div>

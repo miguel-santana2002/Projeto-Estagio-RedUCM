@@ -107,6 +107,8 @@ def update_mitre_cache(force_dataset_download=False) -> list:
                 json.dump(techniques_list, f, indent=2, ensure_ascii=False)
 
             temp_file.replace(TECHNIQUES_CACHE_FILE)
+            global _TECHNIQUES_MAP
+            _TECHNIQUES_MAP = None
             logger.info(f"Cache local do MITRE atualizada com sucesso ({len(techniques_list)} técnicas).")
             return techniques_list
         except Exception as e:
@@ -144,3 +146,33 @@ def check_and_update_if_expired():
             update_mitre_cache(force_dataset_download=False)
         except Exception as e:
             logger.warning(f"Não foi possível atualizar o ficheiro local do MITRE: {e}")
+
+
+_TECHNIQUES_MAP = None
+
+
+def get_technique_tactics_map() -> dict:
+    """
+    Devolve um dicionário em memória {id_ou_nome: [taticas]} indexado em O(1),
+    evitando iterações sequenciais pesadas sobre objetos MITRE.
+    """
+    global _TECHNIQUES_MAP
+    if _TECHNIQUES_MAP is None:
+        techniques = get_techniques()
+        mapping = {}
+        for item in techniques:
+            tactics = item.get('tactics', [])
+            t_id = item.get('id')
+            t_name = item.get('name')
+            if t_id:
+                clean_id = t_id.strip()
+                mapping[clean_id] = tactics
+                mapping[clean_id.upper()] = tactics
+                mapping[clean_id.lower()] = tactics
+            if t_name:
+                clean_name = t_name.strip()
+                mapping[clean_name] = tactics
+                mapping[clean_name.upper()] = tactics
+                mapping[clean_name.lower()] = tactics
+        _TECHNIQUES_MAP = mapping
+    return _TECHNIQUES_MAP
