@@ -6,6 +6,7 @@ import { CommonModule } from '@angular/common';
 import { RulesService } from '../../services/rules.service';
 import { AuthService } from '../../services/auth.service';
 import { HttpErrorResponse } from '@angular/common/http';
+import { smartMatch } from '../../helper/search-utils';
 
 @Component({
   selector: 'app-manage-logsources',
@@ -95,11 +96,19 @@ export class ManageLogsourcesComponent implements OnInit {
     if (!this.searchTerm.trim()) {
       return this.logsources;
     }
-    const term = this.searchTerm.toLowerCase();
-    return this.logsources.filter(
-      (log: any) =>
-        log.name?.toLowerCase().includes(term) ||
-        log.description?.toLowerCase().includes(term),
+    return this.logsources.filter((log: any) =>
+      smartMatch(
+        [
+          log.id,
+          log.name,
+          log.description,
+          log.type,
+          this.typeLabel(log.type),
+          log.collectionMethod,
+          this.collectionLabel(log.collectionMethod),
+        ],
+        this.searchTerm,
+      ),
     );
   }
 

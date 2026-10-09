@@ -14,6 +14,7 @@ import { AuthService } from '../../services/auth.service';
 import { UsecasesService } from '../../services/usecases.service';
 import { TitlebannerComponent } from '../../layout/titlebanner/titlebanner.component';
 import { HeaderComponent } from '../../layout/header/header.component';
+import { smartMatch } from '../../helper/search-utils';
 
 @Component({
   selector: 'app-manage-use-cases',
@@ -172,11 +173,26 @@ export class ManageUseCasesComponent implements OnInit, AfterViewInit {
   }
 
   get filteredUseCases(): any[] {
-    const term = this.nameSearch.trim().toLowerCase();
-
     return this.useCases.filter((u: any) => {
-      const matchesSearch =
-        !term || (u.title && u.title.toLowerCase().includes(term));
+      const mitreTechs = Array.isArray(u.mitreTechniques)
+        ? u.mitreTechniques
+            .map((t: any) => (typeof t === 'string' ? t : t?.id || t?.name || ''))
+            .join(' ')
+        : '';
+      const tactics = Array.isArray(u.tactics) ? u.tactics.join(' ') : '';
+      const matchesSearch = smartMatch(
+        [
+          u.id,
+          u.title,
+          u.description,
+          u.mitigation,
+          u.cncsClass,
+          u.cncsType,
+          mitreTechs,
+          tactics,
+        ],
+        this.nameSearch
+      );
 
       const matchesMitre =
         this.selectedMitreTechniques.length === 0 ||

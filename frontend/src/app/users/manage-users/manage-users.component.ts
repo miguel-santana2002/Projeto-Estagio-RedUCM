@@ -13,6 +13,7 @@ import { Modal } from 'flowbite';
 import { HeaderComponent } from '../../layout/header/header.component';
 import { TitlebannerComponent } from '../../layout/titlebanner/titlebanner.component';
 import { AuthService } from '../../services/auth.service';
+import { smartMatch } from '../../helper/search-utils';
 
 @Component({
   selector: 'app-manage-users',
@@ -158,14 +159,32 @@ export class ManageUsersComponent implements OnInit, AfterViewInit {
 
   // Filtragem Reativa Completa
   get filteredUsers(): any[] {
-    const term = this.nameSearch.trim().toLowerCase();
-
     return this.users.filter((user: any) => {
-      // 1. Pesquisa por Nome de Utilizador ou Email
-      const matchesSearch =
-        !term ||
-        (user.username && user.username.toLowerCase().includes(term)) ||
-        (user.email && user.email.toLowerCase().includes(term));
+      const userCompanies = Array.isArray(user.companies)
+        ? user.companies.join(' ')
+        : '';
+      const isAdminUser = Boolean(user.is_superuser || user.is_admin);
+      const roleLabel = isAdminUser
+        ? 'Administrador Admin Superuser'
+        : 'Operador Operator';
+      const statusLabel = user.is_active
+        ? 'Ativo Active'
+        : 'Bloqueado Inativo Inactive';
+
+      // 1. Pesquisa Inteligente Multi-campo
+      const matchesSearch = smartMatch(
+        [
+          user.pk,
+          user.id,
+          user.username,
+          user.email,
+          roleLabel,
+          statusLabel,
+          userCompanies,
+          user.otpMethod,
+        ],
+        this.nameSearch
+      );
 
       // 2. Filtro por Clientes Atribuídos
       const matchesClients =
@@ -175,7 +194,6 @@ export class ManageUsersComponent implements OnInit, AfterViewInit {
 
       // 3. Filtro por Role real (Flags booleanas da API)
       let matchesRole = true;
-      const isAdminUser = Boolean(user.is_superuser || user.is_admin);
 
       if (
         this.selectedRoles.length > 0 &&

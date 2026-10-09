@@ -14,6 +14,7 @@ import { TitlebannerComponent } from '../../../layout/titlebanner/titlebanner.co
 import { HeaderComponent } from '../../../layout/header/header.component';
 import { AuthService } from '../../../services/auth.service';
 import { RulesService } from '../../../services/rules.service';
+import { smartMatch } from '../../../helper/search-utils';
 
 @Component({
   selector: 'app-manage-rules',
@@ -291,35 +292,58 @@ export class ManageRulesComponent implements OnInit, AfterViewInit {
   }
 
   get filteredRules(): any[] {
-    const term = this.nameSearch.trim().toLowerCase();
-
     return this.rules.filter((rule: any) => {
-      const ruleTitle = rule.ruleModel?.title?.toLowerCase() || '';
-      const ruleCode = rule.ruleCode?.toLowerCase() || '';
-      const matchesName =
-        !term || ruleTitle.includes(term) || ruleCode.includes(term);
+      const ruleTitle = rule.ruleModel?.title || rule.title || '';
+      const ruleCode = rule.ruleCode || '';
+      const ruleType = rule.ruleModel?.type || rule.type || '';
+      const currentSyntax = rule.syntax || rule.ruleModel?.syntax || '';
+      const ruleLogs = this.getRuleLogSources(rule).join(' ');
+      const clientName =
+        typeof rule.client === 'object' && rule.client?.name
+          ? rule.client.name
+          : typeof rule.client === 'string'
+            ? rule.client
+            : '';
+      const modelId = rule.ruleModel?.id ? `RedModel${rule.ruleModel.id}` : '';
+      const ruleIdStr = rule.id ? `RedRule${rule.id}` : '';
+
+      const matchesSearch = smartMatch(
+        [
+          rule.id,
+          ruleIdStr,
+          modelId,
+          ruleTitle,
+          ruleCode,
+          ruleType,
+          currentSyntax,
+          ruleLogs,
+          clientName,
+          rule.status,
+          rule.generationStatus,
+        ],
+        this.nameSearch
+      );
 
       const matchesType =
         this.selectedTypes.length === 0 ||
         (rule.ruleModel?.type &&
           this.selectedTypes.includes(rule.ruleModel.type));
 
-      const currentSyntax = rule.syntax || rule.ruleModel?.syntax;
       const matchesSyntax =
         this.selectedSintaxes.length === 0 ||
         (currentSyntax && this.selectedSintaxes.includes(currentSyntax));
 
-      const ruleLogs = this.getRuleLogSources(rule);
+      const ruleLogList = this.getRuleLogSources(rule);
       const matchesLogSources =
         this.selectedLogSources.length === 0 ||
-        ruleLogs.some((log: string) => this.selectedLogSources.includes(log));
+        ruleLogList.some((log: string) => this.selectedLogSources.includes(log));
 
       const matchesStatus =
         this.selectedStatus.length === 0 ||
         (rule.status && this.selectedStatus.includes(rule.status));
 
       return (
-        matchesName &&
+        matchesSearch &&
         matchesType &&
         matchesSyntax &&
         matchesLogSources &&

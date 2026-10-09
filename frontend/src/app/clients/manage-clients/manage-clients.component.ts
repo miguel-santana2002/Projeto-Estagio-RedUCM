@@ -14,6 +14,7 @@ import { HeaderComponent } from '../../layout/header/header.component';
 import { TitlebannerComponent } from '../../layout/titlebanner/titlebanner.component';
 import { AuthService } from '../../services/auth.service';
 import { RulesService } from '../../services/rules.service';
+import { smartMatch } from '../../helper/search-utils';
 
 @Component({
   selector: 'app-manage-clients',
@@ -198,22 +199,28 @@ export class ManageClientsComponent implements OnInit {
   }
 
   get filteredClients(): any[] {
-    const term = this.nameSearch.trim().toLowerCase();
-
     return this.clients.filter((c: any) => {
-      const matchesName =
-        !term || (c.name && c.name.toLowerCase().includes(term));
+      // 1. Pesquisa inteligente dinâmica em todos os campos relevantes
+      const clientLogs = Array.isArray(c.logsources) ? c.logsources.join(' ') : '';
+      const matchesSearch = smartMatch(
+        [c.name, c.pk, c.id, c.siem, clientLogs],
+        this.nameSearch,
+      );
+
+      // 2. Filtro Log Sources
       const matchesLogs =
         this.selectedLogsources.length === 0 ||
         (Array.isArray(c.logsources) &&
           c.logsources.some((log: string) =>
             this.selectedLogsources.includes(log),
           ));
+
+      // 3. Filtro SIEM
       const matchesSiem =
         this.selectedSiems.length === 0 ||
         (c.siem && this.selectedSiems.includes(c.siem));
 
-      return matchesName && matchesLogs && matchesSiem;
+      return matchesSearch && matchesLogs && matchesSiem;
     });
   }
 
