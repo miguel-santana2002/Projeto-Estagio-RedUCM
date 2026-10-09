@@ -14,6 +14,7 @@ import { TitlebannerComponent } from '../../../layout/titlebanner/titlebanner.co
 import { HeaderComponent } from '../../../layout/header/header.component';
 import { AuthService } from '../../../services/auth.service';
 import { RulesService } from '../../../services/rules.service';
+import { smartMatch } from '../../../helper/search-utils';
 
 @Component({
   selector: 'app-manage-rules',
@@ -33,7 +34,7 @@ export class ManageRulesComponent implements OnInit, AfterViewInit {
   @ViewChild('modal') modal!: ElementRef<HTMLElement>;
   modalFlowbite!: Modal;
 
-  isAdmin: boolean = false; // Controlo de permissões (Admin / Superuser)
+  isAdmin: boolean = false;
 
   sortType = 'id';
   sortReverse = false;
@@ -47,22 +48,22 @@ export class ManageRulesComponent implements OnInit, AfterViewInit {
   pageSize: number = 10;
   pageSizeOptions: number[] = [5, 10, 25, 50];
 
-  // Controlo do Painel de Filtros
   showFilters: boolean = false;
 
-  // Filtros Selecionados
+  statusOptions = [
+    { value: '', label: '(Vazio)' },
+    { value: 'Regra validada', label: 'Regra validada' },
+    { value: 'Regra não validada', label: 'Regra não validada' },
+  ];
+
   selectedTypes: string[] = [];
   selectedSintaxes: string[] = [];
-  selectedUseCases: (string | number)[] = [];
-  selectedClients: string[] = [];
-  selectedLogsources: string[] = [];
+  selectedLogSources: string[] = [];
+  selectedStatus: string[] = [];
 
-  // Opções Únicas para as Pills
   uniqueTypes: string[] = [];
   uniqueSintaxes: string[] = [];
-  uniqueUseCases: (string | number)[] = [];
-  uniqueClients: string[] = [];
-  uniqueLogsources: string[] = [];
+  uniqueLogSources: string[] = [];
 
   constructor(
     private authService: AuthService,
@@ -83,7 +84,6 @@ export class ManageRulesComponent implements OnInit, AfterViewInit {
   loadUserInfo(): void {
     this.authService.loggedInInfo().subscribe({
       next: (data: any) => {
-        // Superuser ou Admin têm privilégios totais; staff/operador fica como false
         this.isAdmin = Boolean(data?.is_superuser || data?.is_admin);
       },
       error: (err) => {
@@ -96,7 +96,12 @@ export class ManageRulesComponent implements OnInit, AfterViewInit {
   loadRules(): void {
     this.rulesService.getRules().subscribe({
       next: (data: any) => {
-        this.rules = Array.isArray(data) ? data : [];
+        this.rules = Array.isArray(data)
+          ? data.map((rule) => ({
+              ...rule,
+              status: (rule.status || '').trim(),
+            }))
+          : [];
         this.startFilters();
         this.rules.sort((a: any, b: any) => this.sortNumeric(a.id, b.id));
       },
@@ -105,14 +110,6 @@ export class ManageRulesComponent implements OnInit, AfterViewInit {
   }
 
   startFilters(): void {
-    this.uniqueClients = Array.from(
-      new Set(
-        this.rules
-          .map((item: any) => item.client?.name)
-          .filter((name): name is string => Boolean(name)),
-      ),
-    ).sort();
-
     this.uniqueTypes = Array.from(
       new Set(
         this.rules
@@ -129,33 +126,64 @@ export class ManageRulesComponent implements OnInit, AfterViewInit {
       ),
     ).sort();
 
-    this.uniqueUseCases = Array.from(
+    this.uniqueLogSources = Array.from(
       new Set(
         this.rules
-          .map((item: any) => item.ruleModel?.useCaseId)
-          .filter(
-            (uc): uc is number | string => uc !== null && uc !== undefined,
-          ),
-      ),
-    ).sort((a: any, b: any) => Number(a) - Number(b));
-
-    this.uniqueLogsources = Array.from(
-      new Set(
-        this.rules
-          .flatMap(
-            (item: any) => item.logsources ?? item.ruleModel?.logsources ?? [],
-          )
+          .flatMap((item: any) => this.getRuleLogSources(item))
           .filter((log): log is string => Boolean(log)),
       ),
     ).sort();
   }
 
-  // Toggles de Seleção com Reset de Página
-  toggleClient(client: string): void {
+  getStatusClasses(status: string): string {
+    switch (status) {
+      case 'Regra validada':
+        return 'text-green-400 font-semibold border border-green-600/40 bg-green-950/20';
+      case 'Regra não validada':
+        return 'text-amber-400 font-medium border border-amber-600/40 bg-amber-950/20';
+      default:
+        return 'text-gray-400 border border-dashed border-gray-600 bg-transparent';
+    }
+  }
+
+  // Atualização direta e envio de payload completo
+  updateRuleStatus(rule: any): void {
+    const payload = {
+      ruleModel: rule.ruleModel?.id ?? rule.ruleModel ?? null,
+      client:
+        rule.client?.id ??
+        rule.client?.pk ??
+        (typeof rule.client === 'number' ? rule.client : null),
+      status: rule.status || '',
+      syntax: rule.syntax || rule.ruleModel?.syntax || '',
+      logsources: rule.logsources || [],
+      ruleCode: rule.ruleCode || '',
+    };
+
+    this.rulesService.updateRule(rule.id, payload).subscribe({
+      next: (res: any) => {
+        // Confirma a persistência do valor retornado
+        if (res && res.status !== undefined) {
+          rule.status = res.status;
+        }
+      },
+      error: (err: any) => {
+        console.error('Erro ao atualizar estado da regra:', err);
+        // Recarrega em caso de erro para não manter dados inconsistentes na UI
+        this.loadRules();
+      },
+    });
+  }
+
+  toggleLogSource(logSource: string): void {
     this.page = 1;
-    this.selectedClients = this.selectedClients.includes(client)
-      ? this.selectedClients.filter((c) => c !== client)
-      : [...this.selectedClients, client];
+    this.selectedLogSources = this.selectedLogSources.includes(logSource)
+      ? this.selectedLogSources.filter((l) => l !== logSource)
+      : [...this.selectedLogSources, logSource];
+  }
+
+  isLogSourceSelected(logSource: string): boolean {
+    return this.selectedLogSources.includes(logSource);
   }
 
   toggleType(type: string): void {
@@ -172,28 +200,19 @@ export class ManageRulesComponent implements OnInit, AfterViewInit {
       : [...this.selectedSintaxes, syntax];
   }
 
-  toggleUseCase(uc: string | number): void {
+  toggleStatus(status: string): void {
     this.page = 1;
-    this.selectedUseCases = this.selectedUseCases.includes(uc)
-      ? this.selectedUseCases.filter((u) => u !== uc)
-      : [...this.selectedUseCases, uc];
+    this.selectedStatus = this.selectedStatus.includes(status)
+      ? this.selectedStatus.filter((s) => s !== status)
+      : [...this.selectedStatus, status];
   }
 
-  toggleLogsource(log: string): void {
-    this.page = 1;
-    this.selectedLogsources = this.selectedLogsources.includes(log)
-      ? this.selectedLogsources.filter((l) => l !== log)
-      : [...this.selectedLogsources, log];
-  }
-
-  // Limpeza
   clearAllFilters(): void {
     this.page = 1;
-    this.selectedClients = [];
+    this.selectedLogSources = [];
     this.selectedTypes = [];
     this.selectedSintaxes = [];
-    this.selectedUseCases = [];
-    this.selectedLogsources = [];
+    this.selectedStatus = [];
     this.nameSearch = '';
   }
 
@@ -201,7 +220,19 @@ export class ManageRulesComponent implements OnInit, AfterViewInit {
     this.page = 1;
   }
 
-  // Ordenação com suporte para campos aninhados e nulos
+  getRuleLogSources(rule: any): string[] {
+    const directLogs = Array.isArray(rule?.logsources)
+      ? rule.logsources.filter((l: string) => Boolean(l))
+      : [];
+    if (directLogs.length > 0) {
+      return directLogs;
+    }
+    const modelLogs = Array.isArray(rule?.ruleModel?.logsources)
+      ? rule.ruleModel.logsources.filter((l: string) => Boolean(l))
+      : [];
+    return modelLogs;
+  }
+
   sortTable(column: string): void {
     if (this.sortType === column) {
       this.sortReverse = !this.sortReverse;
@@ -220,13 +251,9 @@ export class ManageRulesComponent implements OnInit, AfterViewInit {
           valA = a.ruleModel?.title || '';
           valB = b.ruleModel?.title || '';
           break;
-        case 'client':
-          valA = a.client?.name || '';
-          valB = b.client?.name || '';
-          break;
-        case 'useCaseId':
-          valA = a.ruleModel?.useCaseId ?? 0;
-          valB = b.ruleModel?.useCaseId ?? 0;
+        case 'logsources':
+          valA = this.getRuleLogSources(a).join(', ');
+          valB = this.getRuleLogSources(b).join(', ');
           break;
         case 'type':
           valA = a.ruleModel?.type || '';
@@ -236,9 +263,9 @@ export class ManageRulesComponent implements OnInit, AfterViewInit {
           valA = a.syntax || a.ruleModel?.syntax || '';
           valB = b.syntax || b.ruleModel?.syntax || '';
           break;
-        case 'logsources':
-          valA = (a.logsources ?? a.ruleModel?.logsources ?? []).length;
-          valB = (b.logsources ?? b.ruleModel?.logsources ?? []).length;
+        case 'status':
+          valA = a.status || '';
+          valB = b.status || '';
           break;
         default:
           valA = a[column];
@@ -264,52 +291,67 @@ export class ManageRulesComponent implements OnInit, AfterViewInit {
     return (a - b) * (this.sortReverse ? -1 : 1);
   }
 
-  // Filtragem Reativa Segura
   get filteredRules(): any[] {
-    const term = this.nameSearch.trim().toLowerCase();
-
     return this.rules.filter((rule: any) => {
-      const ruleTitle = rule.ruleModel?.title?.toLowerCase() || '';
-      const ruleCode = rule.ruleCode?.toLowerCase() || '';
-      const matchesName =
-        !term || ruleTitle.includes(term) || ruleCode.includes(term);
+      const ruleTitle = rule.ruleModel?.title || rule.title || '';
+      const ruleCode = rule.ruleCode || '';
+      const ruleType = rule.ruleModel?.type || rule.type || '';
+      const currentSyntax = rule.syntax || rule.ruleModel?.syntax || '';
+      const ruleLogs = this.getRuleLogSources(rule).join(' ');
+      const clientName =
+        typeof rule.client === 'object' && rule.client?.name
+          ? rule.client.name
+          : typeof rule.client === 'string'
+            ? rule.client
+            : '';
+      const modelId = rule.ruleModel?.id ? `RedModel${rule.ruleModel.id}` : '';
+      const ruleIdStr = rule.id ? `RedRule${rule.id}` : '';
+
+      const matchesSearch = smartMatch(
+        [
+          rule.id,
+          ruleIdStr,
+          modelId,
+          ruleTitle,
+          ruleCode,
+          ruleType,
+          currentSyntax,
+          ruleLogs,
+          clientName,
+          rule.status,
+          rule.generationStatus,
+        ],
+        this.nameSearch
+      );
 
       const matchesType =
         this.selectedTypes.length === 0 ||
         (rule.ruleModel?.type &&
           this.selectedTypes.includes(rule.ruleModel.type));
 
-      const currentSyntax = rule.syntax || rule.ruleModel?.syntax;
       const matchesSyntax =
         this.selectedSintaxes.length === 0 ||
         (currentSyntax && this.selectedSintaxes.includes(currentSyntax));
 
-      const matchesUseCase =
-        this.selectedUseCases.length === 0 ||
-        (rule.ruleModel?.useCaseId != null &&
-          this.selectedUseCases.includes(rule.ruleModel.useCaseId));
+      const ruleLogList = this.getRuleLogSources(rule);
+      const matchesLogSources =
+        this.selectedLogSources.length === 0 ||
+        ruleLogList.some((log: string) => this.selectedLogSources.includes(log));
 
-      const matchesClient =
-        this.selectedClients.length === 0 ||
-        (rule.client?.name && this.selectedClients.includes(rule.client.name));
-
-      const logs = rule.logsources ?? rule.ruleModel?.logsources ?? [];
-      const matchesLogs =
-        this.selectedLogsources.length === 0 ||
-        this.selectedLogsources.some((r: string) => logs.includes(r));
+      const matchesStatus =
+        this.selectedStatus.length === 0 ||
+        (rule.status && this.selectedStatus.includes(rule.status));
 
       return (
-        matchesName &&
+        matchesSearch &&
         matchesType &&
         matchesSyntax &&
-        matchesUseCase &&
-        matchesClient &&
-        matchesLogs
+        matchesLogSources &&
+        matchesStatus
       );
     });
   }
 
-  // Segmentação Paginada
   get pagedRules(): any[] {
     const start = (this.page - 1) * this.pageSize;
     return this.filteredRules.slice(start, start + this.pageSize);
@@ -330,7 +372,6 @@ export class ManageRulesComponent implements OnInit, AfterViewInit {
     this.page = 1;
   }
 
-  // Gestão de Modal Eliminar
   updateSelectDelete(event: Event, id: number): void {
     event.stopPropagation();
     if (!this.isAdmin) return;
@@ -372,21 +413,17 @@ export class ManageRulesComponent implements OnInit, AfterViewInit {
       return;
     }
 
-    // Sanitiza o título removendo caracteres não permitidos e substitui espaços por underscores
     const rawTitle = rule.ruleModel?.title || 'rule';
     const sanitizedTitle = rawTitle
       .trim()
-      .replace(/\s*-\s*/g, '-') // transforma " - " ou " - " diretamente em "-"
-      .replace(/\s+/g, '_') // substitui outros espaços por "_"
-      .replace(/[^a-zA-Z0-9_-]/g, '') // remove caracteres não alfanuméricos exceto _ e -
+      .replace(/\s*-\s*/g, '-')
+      .replace(/\s+/g, '_')
+      .replace(/[^a-zA-Z0-9_-]/g, '')
       .replace(/_+/g, '_');
 
-    // Formato da data: YYYY-MM-DD
     const dateStr = new Date().toISOString().split('T')[0];
-
     const filename = `RedRule${rule.id}_${sanitizedTitle}_${dateStr}.yml`;
 
-    // Criação e trigger do download
     const blob = new Blob([yamlContent], { type: 'text/yaml;charset=utf-8' });
     const downloadUrl = window.URL.createObjectURL(blob);
     const anchor = document.createElement('a');
@@ -396,7 +433,6 @@ export class ManageRulesComponent implements OnInit, AfterViewInit {
     document.body.appendChild(anchor);
     anchor.click();
 
-    // Limpeza de recursos
     document.body.removeChild(anchor);
     window.URL.revokeObjectURL(downloadUrl);
   }

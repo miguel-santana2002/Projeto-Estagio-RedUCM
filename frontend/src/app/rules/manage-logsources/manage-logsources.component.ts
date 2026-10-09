@@ -6,6 +6,7 @@ import { CommonModule } from '@angular/common';
 import { RulesService } from '../../services/rules.service';
 import { AuthService } from '../../services/auth.service';
 import { HttpErrorResponse } from '@angular/common/http';
+import { smartMatch } from '../../helper/search-utils';
 
 @Component({
   selector: 'app-manage-logsources',
@@ -43,7 +44,6 @@ export class ManageLogsourcesComponent implements OnInit {
   ];
 
   newLog: any = this.emptyLog();
-  productsInput: string = '';
   customType: string = '';
   customCollection: string = '';
 
@@ -88,8 +88,7 @@ export class ManageLogsourcesComponent implements OnInit {
       name: '',
       description: '',
       type: '',
-      collectionMethod: '',
-      products: [],
+      collectionMethod: ''
     };
   }
 
@@ -97,11 +96,19 @@ export class ManageLogsourcesComponent implements OnInit {
     if (!this.searchTerm.trim()) {
       return this.logsources;
     }
-    const term = this.searchTerm.toLowerCase();
-    return this.logsources.filter(
-      (log: any) =>
-        log.name?.toLowerCase().includes(term) ||
-        log.description?.toLowerCase().includes(term),
+    return this.logsources.filter((log: any) =>
+      smartMatch(
+        [
+          log.id,
+          log.name,
+          log.description,
+          log.type,
+          this.typeLabel(log.type),
+          log.collectionMethod,
+          this.collectionLabel(log.collectionMethod),
+        ],
+        this.searchTerm,
+      ),
     );
   }
 
@@ -145,10 +152,9 @@ export class ManageLogsourcesComponent implements OnInit {
       name: log.name,
       description: log.description,
       type: mappedType,
-      collectionMethod: mappedCollection,
-      products: log.products || [],
+      collectionMethod: mappedCollection
     };
-    this.productsInput = (log.products || []).join(', ');
+    
     this.errorMessage = null;
   }
 
@@ -160,7 +166,6 @@ export class ManageLogsourcesComponent implements OnInit {
 
   private resetFormState() {
     this.newLog = this.emptyLog();
-    this.productsInput = '';
     this.customType = '';
     this.customCollection = '';
     if (this.logForm) {
@@ -176,15 +181,7 @@ export class ManageLogsourcesComponent implements OnInit {
     }, 2500);
   }
 
-  private syncProducts() {
-    this.newLog.products = this.productsInput
-      .split(',')
-      .map((p) => p.trim())
-      .filter((p) => p.length > 0);
-  }
-
   submitForm() {
-    this.syncProducts();
     if (this.isEditing) {
       this.updateLogSource();
     } else {
@@ -286,13 +283,5 @@ export class ManageLogsourcesComponent implements OnInit {
 
   closeDetails() {
     this.selectedLog = null;
-  }
-
-  visibleProducts(products: string[]): string[] {
-    return (products || []).slice(0, 3);
-  }
-
-  extraProductsCount(products: string[]): number {
-    return Math.max((products || []).length - 3, 0);
   }
 }

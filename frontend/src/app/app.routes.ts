@@ -13,8 +13,6 @@ import { ManageUseCasesComponent } from './usecases/manage-use-cases/manage-use-
 import { UsecaseDetailsComponent } from './usecases/usecase-details/usecase-details.component';
 import { CreateRuleModelComponent } from './rules/rule-models/create-rule-model/create-rule-model.component';
 import { TechniqueDetailsComponent } from './techniques/technique-details/technique-details.component';
-import { ManageRuleModelsComponent } from './rules/rule-models/manage-rule-models/manage-rule-models.component';
-import { RuleModelDetailsComponent } from './rules/rule-models/rule-model-details/rule-model-details.component';
 import { ManageRulesComponent } from './rules/instances/manage-rules/manage-rules.component';
 import { RuleDetailsComponent } from './rules/instances/rule-details/rule-details.component';
 import { StatisticsPageComponent } from './statistics/statistics-page/statistics-page.component';
@@ -45,7 +43,7 @@ export const routes: Routes = [
   {
     path: 'manage-clients',
     component: ManageClientsComponent,
-    canActivate: [isAdminGuard],
+    canActivate: [authGuard], // Permite qualquer utilizador autenticado ver a listagem
   },
   {
     path: 'create-usecase',
@@ -61,15 +59,9 @@ export const routes: Routes = [
     path: 'create-rule-model',
     component: CreateRuleModelComponent,
   },
-  { path: 'techniqueDetails/:id', component: TechniqueDetailsComponent },
   {
-    path: 'manage-rule-models',
-    component: ManageRuleModelsComponent,
-  },
-  {
-    path: 'ruleModel-Details/:id',
-    component: RuleModelDetailsComponent,
-    canActivate: [numericIdGuard],
+    path: 'techniqueDetails/:id',
+    component: TechniqueDetailsComponent,
   },
   {
     path: 'manage-rules',
@@ -103,7 +95,7 @@ export const routes: Routes = [
   {
     path: 'edit-client/:id',
     component: EditClientComponent,
-    canActivate: [isAdminGuard, numericIdGuard],
+    canActivate: [authGuard, numericIdGuard], // Removido o isAdminGuard da rota para permitir aceder (o componente bloqueia a gravação se for operador)
   },
   {
     path: 'edit-rule-model/:id',

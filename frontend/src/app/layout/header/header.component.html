@@ -12,28 +12,29 @@
       <div *ngIf="isLoggedIn" class="items-center justify-center hidden lg:flex flex-1" id="mobile-menu-2">
         <ul class="flex font-medium lg:space-x-4 xl:space-x-6">
 
-          <!-- Início -->
+          <!-- Home -->
           <li>
             <a [routerLink]="['/home']" routerLinkActive="text-redshift-red font-semibold"
               [routerLinkActiveOptions]="{ exact: true }"
               class="block py-2 text-gray-700 dark:text-gray-400 lg:dark:hover:text-white hover:text-redshift-hover transition-colors">
-              Início
+              Home
             </a>
           </li>
 
-          <!-- Utilizadores (Exclusivo Admin / Superuser) -->
-          <li *ngIf="isAdmin">
-            <a [routerLink]="['/manage-users']" routerLinkActive="text-redshift-red font-semibold"
-              class="block py-2 text-gray-700 dark:text-gray-400 lg:dark:hover:text-white hover:text-redshift-hover transition-colors">
-              Utilizadores
-            </a>
-          </li>
 
-          <!-- Clientes (Exclusivo Admin / Superuser) -->
-          <li *ngIf="isAdmin">
+          <!-- Clientes (Visível para Admins e Operadores) -->
+          <li>
             <a [routerLink]="['/manage-clients']" routerLinkActive="text-redshift-red font-semibold"
               class="block py-2 text-gray-700 dark:text-gray-400 lg:dark:hover:text-white hover:text-redshift-hover transition-colors">
               Clientes
+            </a>
+          </li>
+
+          <!-- Log Sources (Visível para Admins e Operadores) -->
+          <li>
+            <a [routerLink]="['/manage-logsources']" routerLinkActive="text-redshift-red font-semibold"
+              class="block py-2 text-gray-700 dark:text-gray-400 lg:dark:hover:text-white hover:text-redshift-hover transition-colors">
+              Log Sources
             </a>
           </li>
 
@@ -73,8 +74,8 @@
           <li class="relative">
             <button id="dropdownRulesButton" data-dropdown-toggle="dropdownRules" data-dropdown-placement="bottom-start"
               type="button"
-              [class.text-redshift-red]="isRouteActive(['/manage-rule-models', '/create-rule-model', '/ruleModel-Details', '/manage-rules', '/rule-Details', '/manage-logsources'])"
-              [class.font-semibold]="isRouteActive(['/manage-rule-models', '/create-rule-model', '/ruleModel-Details', '/manage-rules', '/rule-Details', '/manage-logsources'])"
+              [class.text-redshift-red]="isRouteActive(['/manage-rule-models', '/create-rule-model', '/ruleModel-Details', '/manage-rules', '/rule-Details'])"
+              [class.font-semibold]="isRouteActive(['/manage-rule-models', '/create-rule-model', '/ruleModel-Details', '/manage-rules', '/rule-Details'])"
               class="flex items-center justify-between w-full py-2 text-gray-700 hover:text-redshift-hover dark:text-gray-400 dark:hover:text-white transition-colors">
               Regras
               <i class="fas fa-chevron-down text-xs ml-1.5"></i>
@@ -87,15 +88,7 @@
                   <a [routerLink]="['/create-rule-model']"
                     routerLinkActive="bg-gray-100 text-redshift-red font-semibold border-l-4 border-redshift-red dark:bg-gray-600 dark:text-white"
                     class="block px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-600 dark:hover:text-white transition-colors">
-                    Criar Modelo de Regra
-                  </a>
-                </li>
-
-                <li>
-                  <a [routerLink]="['/manage-rule-models']"
-                    routerLinkActive="bg-gray-100 text-redshift-red font-semibold border-l-4 border-redshift-red dark:bg-gray-600 dark:text-white"
-                    class="block px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-600 dark:hover:text-white transition-colors">
-                    Gerir Modelos de Regra
+                    Criar Regra
                   </a>
                 </li>
 
@@ -108,33 +101,60 @@
                     Gerir Regras
                   </a>
                 </li>
+              </ul>
+            </div>
+          </li>
+
+          <!-- Dropdown Administração (Exclusivo Admin: Utilizadores, Auditoria, Estatísticas) -->
+          <li *ngIf="isAdmin" class="relative">
+            <button id="dropdownAdminButton" data-dropdown-toggle="dropdownAdmin" data-dropdown-placement="bottom-start"
+              type="button"
+              [class.text-redshift-red]="isRouteActive(['/manage-users', '/create-user', '/edit-user', '/audit', '/statistics'])"
+              [class.font-semibold]="isRouteActive(['/manage-users', '/create-user', '/edit-user', '/audit', '/statistics'])"
+              class="flex items-center justify-between w-full py-2 text-gray-700 hover:text-redshift-hover dark:text-gray-400 dark:hover:text-white transition-colors">
+              Administração
+              <i class="fas fa-chevron-down text-xs ml-1.5"></i>
+            </button>
+
+            <div id="dropdownAdmin"
+              class="z-30 hidden font-normal bg-white divide-y divide-gray-100 rounded-lg shadow-lg w-52 border border-gray-100 dark:bg-gray-700 dark:divide-gray-600 dark:border-gray-600">
+              <ul class="py-2 text-sm text-gray-700 dark:text-gray-200" aria-labelledby="dropdownAdminButton">
+                <li>
+                  <a [routerLink]="['/manage-users']"
+                    routerLinkActive="bg-gray-100 text-redshift-red font-semibold border-l-4 border-redshift-red dark:bg-gray-600 dark:text-white"
+                    class="block px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-600 dark:hover:text-white transition-colors">
+                    Utilizadores
+                  </a>
+                </li>
 
                 <hr class="border-gray-200 dark:border-gray-600 my-1">
 
                 <li>
-                  <a [routerLink]="['/manage-logsources']"
+                  <a [routerLink]="['/audit']"
                     routerLinkActive="bg-gray-100 text-redshift-red font-semibold border-l-4 border-redshift-red dark:bg-gray-600 dark:text-white"
                     class="block px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-600 dark:hover:text-white transition-colors">
-                    Gerir Logsources
+                    Auditoria
+                  </a>
+                </li>
+
+                <hr class="border-gray-200 dark:border-gray-600 my-1">
+
+                <li>
+                  <a [routerLink]="['/statistics']"
+                    routerLinkActive="bg-gray-100 text-redshift-red font-semibold border-l-4 border-redshift-red dark:bg-gray-600 dark:text-white"
+                    class="block px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-600 dark:hover:text-white transition-colors">
+                    Estatísticas
                   </a>
                 </li>
               </ul>
             </div>
           </li>
 
-          <!-- Estatísticas -->
-          <li>
+          <!-- Estatísticas (Apenas visível como link direto para Não-Admins / Operadores) -->
+          <li *ngIf="!isAdmin">
             <a [routerLink]="['/statistics']" routerLinkActive="text-redshift-red font-semibold"
               class="block py-2 text-gray-700 dark:text-gray-400 lg:dark:hover:text-white hover:text-redshift-hover transition-colors">
               Estatísticas
-            </a>
-          </li>
-
-          <!-- Auditoria -->
-          <li *ngIf="isAdmin">
-            <a [routerLink]="['/audit']" routerLinkActive="text-redshift-red font-semibold"
-              class="block py-2 text-gray-700 dark:text-gray-400 lg:dark:hover:text-white hover:text-redshift-hover transition-colors">
-              Auditoria
             </a>
           </li>
 

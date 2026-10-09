@@ -17,6 +17,7 @@ import { MatIconModule } from '@angular/material/icon';
 
 import { MitreService } from '../../services/mitre.service';
 import { UsecasesService } from '../../services/usecases.service';
+import { TagComboboxComponent } from '../../shared/components/tag-combobox/tag-combobox.component';
 
 @Component({
   selector: 'app-edit-use-case',
@@ -26,6 +27,7 @@ import { UsecasesService } from '../../services/usecases.service';
   imports: [
     TitlebannerComponent,
     HeaderComponent,
+    TagComboboxComponent,
     TagInputModule,
     MatFormFieldModule,
     MatSelectModule,
@@ -49,15 +51,15 @@ export class EditUseCaseComponent implements OnInit {
   private tacticsByTechnique = new Map<string, string[]>();
 
   chavesTaxonomia: string[] = [
-    'Malicious Code', 
-    'Availability', 
-    'Information Gathering', 
+    'Malicious Code',
+    'Availability',
+    'Information Gathering',
     'Intrusion',
-    'Intrusion Attempt', 
-    'Information Security', 
+    'Intrusion Attempt',
+    'Information Security',
     'Fraud',
-    'Abusive Content', 
-    'Vulnerability', 
+    'Abusive Content',
+    'Vulnerability',
     'Other',
   ];
 
@@ -71,7 +73,7 @@ export class EditUseCaseComponent implements OnInit {
       ],
     },
     {
-      'Availability': [
+      Availability: [
         'Denial of Service',
         'Resource Abuse',
         'Outage / Unavailability',
@@ -85,7 +87,7 @@ export class EditUseCaseComponent implements OnInit {
       ],
     },
     {
-      'Intrusion': [
+      Intrusion: [
         'Vulnerability Exploitation',
         'Account Compromise',
         'Credential Access',
@@ -105,29 +107,16 @@ export class EditUseCaseComponent implements OnInit {
       ],
     },
     {
-      'Fraud': [
-        'Scams',
-        'Identity Theft / Forgery',
-        'Misuse of Resources',
-      ],
+      Fraud: ['Scams', 'Identity Theft / Forgery', 'Misuse of Resources'],
     },
     {
-      'Abusive Content': [
-        'SPAM',
-        'Phishing',
-        'Improper Content Hosting',
-      ],
+      'Abusive Content': ['SPAM', 'Phishing', 'Improper Content Hosting'],
     },
     {
-      'Vulnerability': [
-        'Vulnerable System',
-        'Vulnerable Application',
-      ],
+      Vulnerability: ['Vulnerable System', 'Vulnerable Application'],
     },
     {
-      'Other': [
-        'Other',
-      ],
+      Other: ['Other'],
     },
   ];
 
@@ -138,7 +127,6 @@ export class EditUseCaseComponent implements OnInit {
     title: new FormControl('', [Validators.required]),
     description: new FormControl('', [Validators.required]),
     mitigation: new FormControl('', [Validators.required]),
-    playbook: new FormControl(''),
     mitreTechniques: new FormControl<any[]>([], [Validators.required]),
     cncsClass: new FormControl('', [Validators.required]),
     cncsType: new FormControl('', [Validators.required]),
@@ -163,12 +151,18 @@ export class EditUseCaseComponent implements OnInit {
         next: (useCase: any) => {
           let mitreData = useCase.mitreTechniques || [];
           if (typeof mitreData === 'string') {
-            mitreData = mitreData.replace(/[{}]/g, '').split(',').filter(Boolean);
+            mitreData = mitreData
+              .replace(/[{}]/g, '')
+              .split(',')
+              .filter(Boolean);
           }
 
           let tacticsData = useCase.tactics || [];
           if (typeof tacticsData === 'string') {
-            tacticsData = tacticsData.replace(/[{}]/g, '').split(',').filter(Boolean);
+            tacticsData = tacticsData
+              .replace(/[{}]/g, '')
+              .split(',')
+              .filter(Boolean);
           }
 
           this.selectedCategory = useCase.cncsClass || '';
@@ -195,7 +189,8 @@ export class EditUseCaseComponent implements OnInit {
         },
         error: (err) => {
           console.error('Erro ao carregar use case:', err);
-          this.errorMessage = 'Não foi possível carregar os detalhes do Use Case.';
+          this.errorMessage =
+            'Não foi possível carregar os detalhes do Use Case.';
         },
       });
     }
@@ -210,7 +205,11 @@ export class EditUseCaseComponent implements OnInit {
 
         this.rawMitreData.forEach((tech: any) => {
           const names: string[] = (tech.tactics || [])
-            .map((t: any) => this.prettyTactic(typeof t === 'string' ? t : (t?.name || t?.shortname || '')))
+            .map((t: any) =>
+              this.prettyTactic(
+                typeof t === 'string' ? t : t?.name || t?.shortname || '',
+              ),
+            )
             .filter((n: string) => n);
 
           this.tacticsByTechnique.set(tech.id, names);
@@ -218,7 +217,9 @@ export class EditUseCaseComponent implements OnInit {
         });
 
         this.allTacticsList = Array.from(tacticSet).sort();
-        this.mitreAutocompleteList = this.rawMitreData.map((t: any) => `${t.id} - ${t.name}`);
+        this.mitreAutocompleteList = this.rawMitreData.map(
+          (t: any) => `${t.id} - ${t.name}`,
+        );
         this.filteredTechniquesList = [...this.mitreAutocompleteList];
         this.onTacticChange();
       },
@@ -229,8 +230,10 @@ export class EditUseCaseComponent implements OnInit {
   }
 
   onTacticChange(): void {
-    const selTactics: string[] = this.editUseCaseForm.get('tactics')?.value || [];
-    const selTechs: string[] = this.editUseCaseForm.get('mitreTechniques')?.value || [];
+    const selTactics: string[] =
+      this.editUseCaseForm.get('tactics')?.value || [];
+    const selTechs: string[] =
+      this.editUseCaseForm.get('mitreTechniques')?.value || [];
 
     if (selTactics.length === 0) {
       this.filteredTechniquesList = [...this.mitreAutocompleteList];
@@ -240,17 +243,24 @@ export class EditUseCaseComponent implements OnInit {
         const techTactics = this.tacticsByTechnique.get(techId) || [];
         return techTactics.some((t) => selTactics.includes(t));
       });
-      this.filteredTechniquesList = Array.from(new Set([...selTechs, ...filtered]));
+      this.filteredTechniquesList = Array.from(
+        new Set([...selTechs, ...filtered]),
+      );
     }
   }
 
   onTechniqueChange(): void {
-    const selTechs: string[] = this.editUseCaseForm.get('mitreTechniques')?.value || [];
+    const selTechs: string[] =
+      this.editUseCaseForm.get('mitreTechniques')?.value || [];
     const tacticsCtrl = this.editUseCaseForm.get('tactics');
     const currentTactics: string[] = tacticsCtrl?.value || [];
 
-    const derivedTactics = selTechs.flatMap((t) => this.tacticsByTechnique.get(this.techId(t)) || []);
-    const unionTactics = Array.from(new Set([...currentTactics, ...derivedTactics]));
+    const derivedTactics = selTechs.flatMap(
+      (t) => this.tacticsByTechnique.get(this.techId(t)) || [],
+    );
+    const unionTactics = Array.from(
+      new Set([...currentTactics, ...derivedTactics]),
+    );
 
     if (unionTactics.length !== currentTactics.length) {
       tacticsCtrl?.setValue(unionTactics);
@@ -259,7 +269,8 @@ export class EditUseCaseComponent implements OnInit {
   }
 
   private techId(t: any): string {
-    const val = typeof t === 'string' ? t : (t?.display || t?.value || t?.id || '');
+    const val =
+      typeof t === 'string' ? t : t?.display || t?.value || t?.id || '';
     return val.split(' - ')[0].trim();
   }
 
@@ -269,14 +280,20 @@ export class EditUseCaseComponent implements OnInit {
       .trim()
       .replace(/\s+/g, ' ')
       .split(' ')
-      .map((w) => (w.toLowerCase() === 'and' ? 'and' : w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()))
+      .map((w) =>
+        w.toLowerCase() === 'and'
+          ? 'and'
+          : w.charAt(0).toUpperCase() + w.slice(1).toLowerCase(),
+      )
       .join(' ');
   }
 
   updateCNCSValues(): void {
     this.selectedCategory = this.editUseCaseForm.get('cncsClass')?.value || '';
     this.selectedCategoryValues =
-      this.taxonomiaCNCS.find((entry: { [x: string]: any }) => entry[this.selectedCategory])?.[this.selectedCategory] || [];
+      this.taxonomiaCNCS.find(
+        (entry: { [x: string]: any }) => entry[this.selectedCategory],
+      )?.[this.selectedCategory] || [];
   }
 
   onFileSelected(event: Event): void {
@@ -306,15 +323,19 @@ export class EditUseCaseComponent implements OnInit {
       useCaseData.append('playbook', this.selectedFile);
     }
 
-    const formattedTactics = (formVal.tactics || []).map(
-      (t: any) => (typeof t === 'string' ? t : t.value || t.display || t),
+    const formattedTactics = (formVal.tactics || []).map((t: any) =>
+      typeof t === 'string' ? t : t.value || t.display || t,
     );
     useCaseData.append('tactics', `{${formattedTactics.join(',')}}`);
 
     const formattedMitreTechniques = (formVal.mitreTechniques || []).map(
-      (mt: any) => (typeof mt === 'string' ? mt : mt.value || mt.id || mt.display || mt),
+      (mt: any) =>
+        typeof mt === 'string' ? mt : mt.value || mt.id || mt.display || mt,
     );
-    useCaseData.append('mitreTechniques', `{${formattedMitreTechniques.join(',')}}`);
+    useCaseData.append(
+      'mitreTechniques',
+      `{${formattedMitreTechniques.join(',')}}`,
+    );
 
     useCaseData.append('rules', '{}');
     useCaseData.append(
@@ -336,7 +357,9 @@ export class EditUseCaseComponent implements OnInit {
         this.errorMessage =
           error.error?.detail ||
           error.error?.error ||
-          (typeof error.error === 'object' ? JSON.stringify(error.error) : 'Erro ao atualizar o Use Case.');
+          (typeof error.error === 'object'
+            ? JSON.stringify(error.error)
+            : 'Erro ao atualizar o Use Case.');
       },
     });
   }

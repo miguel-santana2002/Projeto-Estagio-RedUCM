@@ -34,9 +34,13 @@ export class EditClientComponent implements OnInit {
   errorMessage: string = '';
   isLoading: boolean = true;
 
+  // Controlo de permissões
+  isAdmin: boolean = true;
+  isOperator: boolean = false;
+
   editClientForm = new FormGroup({
     name: new FormControl('', [Validators.required]),
-    siem: new FormControl('', [Validators.required]), // Adicionado o campo SIEM
+    siem: new FormControl('', [Validators.required]),
     logsources: new FormControl<any>(null, [Validators.required]),
   });
 
@@ -49,8 +53,26 @@ export class EditClientComponent implements OnInit {
 
   ngOnInit(): void {
     this.clientId = Number(this.route.snapshot.paramMap.get('id'));
+    this.checkUserRole();
+  }
 
-    // 1. Extração correta do nome das log sources via API
+  checkUserRole(): void {
+    this.authService.loggedInInfo().subscribe({
+      next: (res: any) => {
+        if (res && res.is_admin !== undefined) {
+          this.isAdmin = Boolean(res.is_admin);
+          this.isOperator = !this.isAdmin;
+        }
+        this.loadRegisteredLogSources();
+      },
+      error: (err) => {
+        console.error('Erro ao verificar permissões do utilizador:', err);
+        this.loadRegisteredLogSources();
+      }
+    });
+  }
+
+  loadRegisteredLogSources(): void {
     this.rulesService.getRegisteredLogSources().subscribe({
       next: (data: any) => {
         this.registeredLogsources = data.map(
@@ -60,7 +82,7 @@ export class EditClientComponent implements OnInit {
       },
       error: (err) => {
         console.error('Erro ao obter log sources:', err);
-        this.isLoading = false;
+        this.loadClientData(); // Tenta carregar o cliente mesmo se as logsources falharem
       },
     });
   }
@@ -68,7 +90,6 @@ export class EditClientComponent implements OnInit {
   loadClientData(): void {
     this.authService.getClientById(this.clientId).subscribe({
       next: (client: any) => {
-        // 2. Converte as strings que vêm da BD no formato de objeto { display, value } exigido pelo ngx-chips
         const formattedLogs = (client.logsources || []).map((log: string) => ({
           display: log,
           value: log,
@@ -76,7 +97,7 @@ export class EditClientComponent implements OnInit {
 
         this.editClientForm.patchValue({
           name: client.name,
-          siem: client.siem || '', // Preenche o SIEM existente do cliente
+          siem: client.siem || '',
           logsources: formattedLogs,
         });
 
@@ -91,13 +112,12 @@ export class EditClientComponent implements OnInit {
   }
 
   updateClient(): void {
-    if (this.editClientForm.invalid) {
+    if (!this.isAdmin || this.editClientForm.invalid) {
       return;
     }
 
     this.errorMessage = '';
 
-    // 3. Desempacota o valor das tags da mesma forma que fazes no createClient
     const logsourcesArray: any = this.editClientForm.get('logsources')?.value;
     const logsources = logsourcesArray?.map((item: any) =>
       typeof item === 'string' ? item : item.value,
@@ -105,7 +125,7 @@ export class EditClientComponent implements OnInit {
 
     const payload = {
       name: this.editClientForm.get('name')?.value,
-      siem: this.editClientForm.get('siem')?.value, // Envia o SIEM atualizado
+      siem: this.editClientForm.get('siem')?.value,
       logsources: logsources,
     };
 

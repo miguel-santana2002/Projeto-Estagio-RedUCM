@@ -1,7 +1,8 @@
 from rest_framework import serializers
 from rules.models import RegisteredLogSource, Rule, RuleModel
-from usecases.models import UseCase
 
+# Se precisares mesmo de usar o UseCase neste ficheiro mais tarde, 
+# a importação correta seria: from usecases.models import UseCase
 
 SUPPORTED_TARGET_SYNTAXES = [
     "SPL (Splunk)",
@@ -10,10 +11,7 @@ SUPPORTED_TARGET_SYNTAXES = [
     "EQL (Elastic)",
     "CQL (CrowdStrike)",
     "Sigma Rule",
-    "CQL (CrowdStrike)",
 ]
-
-
 
 class ConvertRuleSerializer(serializers.Serializer):
     source_query = serializers.CharField(
@@ -29,7 +27,6 @@ class ConvertRuleSerializer(serializers.Serializer):
         choices=SUPPORTED_TARGET_SYNTAXES,
         required=True
     )
-
 
 class ConvertRuleResponseSerializer(serializers.Serializer):
     sigma_rule = serializers.CharField()
@@ -48,7 +45,7 @@ class RuleSerializer(serializers.ModelSerializer):
         fields = '__all__'
         extra_kwargs = {
             'client': {'required': False, 'allow_null': True},
-            'ruleModel': {'required': True},
+            'ruleModel': {'required': False, 'allow_null': True},
             'status': {'required': False, 'allow_blank': True, 'allow_null': True},
         }
 
@@ -66,13 +63,14 @@ class RuleSerializer(serializers.ModelSerializer):
             data['client'] = None
 
         # Expande dados essenciais do modelo associado
-        if instance.ruleModel:
+        if getattr(instance, 'ruleModel', None):
             data['ruleModel'] = {
                 'id': instance.ruleModel.id,
                 'title': instance.ruleModel.title,
                 'type': getattr(instance.ruleModel, 'type', None),
                 'syntax': getattr(instance.ruleModel, 'syntax', None),
                 'useCaseId': getattr(instance.ruleModel, 'useCaseId', None),
+                'logsources': getattr(instance.ruleModel, 'logsources', []),
             }
         else:
             data['ruleModel'] = None

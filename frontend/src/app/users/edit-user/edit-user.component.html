@@ -2,7 +2,7 @@
 
 <app-titlebanner title="Editar Utilizador" image="./assets/bannercover.jpg"></app-titlebanner>
 
-<div class="max-w-6xl mx-auto px-6 py-10 space-y-8">
+<div class="page-container px-4 py-16">
 
     <!-- BLOCO 1: Tipo de Perfil & Permissões -->
     <div
@@ -183,15 +183,6 @@
 
                 <!-- Ações de Gestão de Conta & Segurança (Direita) -->
                 <div class="flex flex-wrap items-center gap-3">
-                    <button type="button" (click)="toggleResetTotp()"
-                        class="w-full sm:w-auto py-2.5 px-4 text-sm font-medium rounded-lg border transition flex items-center justify-center gap-2"
-                        [ngClass]="forceTotpReset 
-                            ? 'bg-red-50 dark:bg-redshift-red/20 text-redshift-red border-redshift-red shadow-sm' 
-                            : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600'">
-                        <i class="fas fa-qrcode text-xs"></i>
-                        <span>{{ forceTotpReset ? 'QR Code Forçado no Login' : 'Forçar Novo QR Code' }}</span>
-                    </button>
-
                     <button type="button" (click)="openChangePasswordModal()"
                         class="w-full sm:w-auto py-2.5 px-4 text-gray-700 dark:text-gray-200 font-medium bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 border border-gray-300 dark:border-gray-600 rounded-lg transition duration-150 flex items-center justify-center gap-2 text-sm">
                         <i class="fas fa-key text-xs"></i>

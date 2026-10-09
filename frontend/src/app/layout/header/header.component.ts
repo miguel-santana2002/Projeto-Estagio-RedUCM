@@ -99,4 +99,9 @@ export class HeaderComponent implements OnInit, OnDestroy {
   get isAdmin(): boolean {
     return Boolean(this.user?.is_superuser || this.user?.is_admin);
   }
+
+  get isOperator(): boolean {
+    // Se estiver logado e não for admin, consideramo-lo operador
+    return this.isLoggedIn && !this.isAdmin;
+  }
 }

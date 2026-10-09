@@ -42,12 +42,20 @@ export class RuleDetailsComponent implements OnInit {
 
     this.rulesService.getRuleById(id).subscribe({
       next: (data: any) => {
+        const directLogs = Array.isArray(data.logsources)
+          ? data.logsources.filter((l: string) => Boolean(l))
+          : [];
+        const modelLogs = Array.isArray(data.ruleModel?.logsources)
+          ? data.ruleModel.logsources.filter((l: string) => Boolean(l))
+          : [];
+        const effectiveLogs = directLogs.length > 0 ? directLogs : modelLogs;
+
         // Sanitiza o cliente para garantir que o template nunca encontra null
         this.rule = {
           ...data,
           client: data.client || { name: 'Sem Cliente' },
           status: data.status || '',
-          logsources: Array.isArray(data.logsources) ? data.logsources : [],
+          logsources: effectiveLogs,
         };
         this.code = this.rule.ruleCode || '';
 
@@ -61,6 +69,14 @@ export class RuleDetailsComponent implements OnInit {
           this.rulesService.getRuleModelById(data.ruleModel).subscribe({
             next: (modelData: any) => {
               this.rule.ruleModel = modelData;
+              if (
+                (!this.rule.logsources || this.rule.logsources.length === 0) &&
+                Array.isArray(modelData?.logsources)
+              ) {
+                this.rule.logsources = modelData.logsources.filter(
+                  (l: string) => Boolean(l),
+                );
+              }
               if (modelData.useCaseId) {
                 this.loadUseCase(modelData.useCaseId);
               }
@@ -104,5 +120,10 @@ export class RuleDetailsComponent implements OnInit {
         console.error('Erro ao atualizar código da regra:', err);
       },
     });
+  }
+
+  getTechniqueId(tech: string): string {
+    if (!tech) return '';
+    return tech.split(' - ')[0].trim();
   }
 }

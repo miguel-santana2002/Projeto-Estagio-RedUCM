@@ -1,9 +1,11 @@
 <app-header></app-header>
-<app-titlebanner title="Edição de Clientes" image="./assets/bannercover.jpg"></app-titlebanner>
+<app-titlebanner [title]="isAdmin ? 'Edição de Clientes' : 'Acesso Restrito'"
+  image="./assets/bannercover.jpg"></app-titlebanner>
 
-<div class="container mx-auto px-4 sm:px-8 py-8">
-  <div class="max-w-xl mx-auto bg-white dark:bg-gray-700 p-6 rounded-lg shadow-md">
+<div class="page-container px-4 py-16">
 
+  <!-- SE FOR ADMIN: Mostra o formulário de edição normal -->
+  <div *ngIf="isAdmin" class="max-w-xl mx-auto bg-white dark:bg-gray-700 p-6 rounded-lg shadow-md">
     <div class="flex items-center mb-6 border-b pb-4 dark:border-gray-600">
       <i class="fas fa-building mr-3 text-redshift-red text-xl"></i>
       <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
@@ -16,7 +18,7 @@
       <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-redshift-red"></div>
     </div>
 
-    <!-- Formulário -->
+    <!-- Formulário de Edição -->
     <form *ngIf="!isLoading" [formGroup]="editClientForm" (ngSubmit)="updateClient()">
       <div class="grid gap-4 mb-4 grid-cols-2">
 
@@ -30,7 +32,7 @@
             placeholder="Insira o nome da empresa">
         </div>
 
-        <!-- SIEM (Adicionado aqui) -->
+        <!-- SIEM -->
         <div class="col-span-2">
           <label for="siem" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
             SIEM <span class="text-red-500">*</span>
@@ -68,17 +70,33 @@
 
       <!-- Botões -->
       <div class="flex justify-end gap-3 pt-4 border-t dark:border-gray-600">
-        <button type="button" (click)="cancel()"
-          class="text-gray-500 bg-white hover:bg-gray-100 rounded-lg border border-gray-200 text-sm px-4 py-2">
-          Cancelar
-        </button>
         <button type="submit" [disabled]="editClientForm.invalid"
           class="text-white items-center bg-redshift-red hover:bg-redshift-hover focus:ring-4 focus:outline-none font-medium rounded-lg text-sm px-5 py-2.5 text-center disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
           <i class="fas fa-save"></i>
           <span>Guardar Alterações</span>
         </button>
+        <button type="button" (click)="cancel()"
+          class="w-full sm:w-auto py-2.5 px-6 text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-lg border border-gray-300 dark:border-gray-600 text-sm font-medium transition text-center">
+          Cancelar
+        </button>
       </div>
     </form>
-
   </div>
+
+  <!-- SE NÃO FOR ADMIN (É Operador): Mostra mensagem de acesso negado -->
+  <div *ngIf="!isAdmin"
+    class="max-w-md mx-auto bg-white dark:bg-gray-800 p-8 rounded-lg shadow-md text-center border border-gray-200 dark:border-gray-700">
+    <div class="text-red-500 mb-4">
+      <i class="fas fa-ban text-5xl"></i>
+    </div>
+    <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2">Acesso Restrito</h3>
+    <p class="text-gray-600 dark:text-gray-400 text-sm mb-6">
+      Não tens permissões de administrador para aceder a esta página de edição.
+    </p>
+    <button type="button" (click)="cancel()"
+      class="bg-redshift-red text-white hover:bg-redshift-hover px-5 py-2.5 rounded-lg text-sm font-medium transition">
+      Voltar
+    </button>
+  </div>
+
 </div>

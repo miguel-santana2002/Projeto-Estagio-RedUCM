@@ -1,7 +1,7 @@
-<app-header></app-header>
+﻿<app-header></app-header>
 <app-titlebanner title="RedUC{{usecase.id | number:'2.0'}}" image="./assets/bannercover.jpg"></app-titlebanner>
 
-<div class="px-20 pt-6 dark:text-white">
+<div class="page-container px-4 py-16">
   <div class="flex items-center">
     <h1 class="font-inter font-semibold text-2xl text-gray-700 dark:text-white">{{usecase.title}}</h1>
     <button [routerLink]="'/edit-usecase/'+usecase.id"
@@ -14,7 +14,8 @@
   <div class="flex ml-4 mt-6 flex-wrap gap-y-6">
     <!-- Bloco 1: Técnicas Mitre (Topo) com Ícone e Dropdown -->
     <div class="flex items-start">
-      <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-2 flex items-center justify-center size-12 shadow-sm">
+      <div
+        class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-2 flex items-center justify-center size-12 shadow-sm">
         <img src="./assets/mitrelogo.png" class="object-contain h-6" alt="MITRE Logo">
       </div>
       <div class="ml-4 flex flex-col">
@@ -29,68 +30,52 @@
             Nenhuma
           </span>
         </div>
-        <a routerLink="/techniqueDetails" class="text-[11px] font-semibold text-gray-500 dark:text-gray-400 hover:text-redshift-red dark:hover:text-redshift-red transition cursor-pointer flex items-center gap-1">
-          Técnicas Mitre Associadas <i class="fas fa-external-link-alt text-[9px]"></i>
-        </a>
+        <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 mt-1">Técnicas Mitre Associadas</p>
       </div>
     </div>
 
     <!-- Bloco 2: Táticas Mitre (NOVO - Ao lado das Técnicas) -->
     <div class="flex items-start ml-12">
-      <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-2 flex items-center justify-center size-12 shadow-sm">
+      <div
+        class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-2 flex items-center justify-center size-12 shadow-sm">
         <i class="fas fa-shield-alt text-gray-600 dark:text-gray-300 text-lg"></i>
       </div>
       <div class="ml-4 flex flex-col">
         <div class="flex flex-wrap gap-1 max-w-[250px] mb-1">
           <!-- Mostrar apenas as 2 primeiras táticas por questões de espaço -->
           <div *ngFor="let tactic of usecase.tactics | slice:0:2"
-            class="bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 text-[11px] font-bold rounded px-2 py-1 border border-gray-200 dark:border-gray-600 truncate max-w-[120px]"
+            class="bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 text-xs font-bold rounded px-2 py-1 border border-gray-200 dark:border-gray-600 truncate max-w-[120px]"
             [title]="tactic">
             {{ tactic }}
           </div>
-          <!-- Contador se houver mais de 2 táticas -->
-          <span *ngIf="usecase.tactics && usecase.tactics.length > 2"
-            class="text-[10px] font-bold text-gray-500 dark:text-gray-400 py-1">
+          <!-- Contador se houver mais de 2 táticas (Com Tooltip Hover adicionado) -->
+          <span *ngIf="usecase.tactics && usecase.tactics.length > 2" [title]="usecase.tactics.slice(2).join(', ')"
+            class="text-xs font-bold text-gray-500 dark:text-gray-400 py-1 cursor-help">
             +{{usecase.tactics.length - 2}}
           </span>
           <span *ngIf="!usecase.tactics || usecase.tactics.length === 0"
-            class="text-[11px] font-semibold text-gray-800 dark:text-gray-200 py-1">
+            class="text-xs font-semibold text-gray-800 dark:text-gray-200 py-1">
             N/A
           </span>
         </div>
-        <p class="text-[11px] font-semibold text-gray-500 dark:text-gray-400 mt-1">Táticas (MITRE ATT&CK)</p>
+        <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 mt-1">Táticas (MITRE ATT&CK)</p>
       </div>
     </div>
 
     <!-- Bloco 3: Classificação CNCS -->
     <div class="flex items-start ml-12">
-      <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-2 flex items-center justify-center size-12 shadow-sm">
+      <div
+        class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-2 flex items-center justify-center size-12 shadow-sm">
         <img src="./assets/cncslogo.png" class="object-contain h-6" alt="CNCS Logo">
       </div>
       <div class="ml-4 flex flex-col max-w-[200px]">
-        <h1 class="font-inter font-bold text-[13px] text-gray-900 dark:text-white pt-1 leading-tight" 
-            [title]="usecase.cncsType">
+        <h1 class="font-inter font-bold text-sm text-gray-900 dark:text-white pt-1 leading-tight"
+          [title]="usecase.cncsType">
           {{usecase.cncsType || 'N/A'}}
         </h1>
-        <p class="text-[11px] font-semibold text-gray-500 dark:text-gray-400 mt-1 truncate" [title]="usecase.cncsClass">
+        <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 mt-1 truncate" [title]="usecase.cncsClass">
           {{usecase.cncsClass || 'Classificação CNCS'}}
         </p>
-      </div>
-    </div>
-
-    <!-- Bloco 4: Playbook -->
-    <div class="flex items-start ml-12">
-      <div (click)="selectImage()" class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-2 flex items-center justify-center size-12 shadow-sm cursor-pointer hover:bg-gray-50 transition">
-        <i class="fas fa-sitemap text-gray-600 dark:text-gray-300 text-lg"></i>
-      </div>
-      <div class="ml-4 flex flex-col justify-center cursor-pointer" (click)="selectImage()">
-        <h1 class="font-inter font-bold text-sm text-gray-900 dark:text-white flex items-center gap-1.5 pt-1 hover:text-redshift-red transition">
-          Diagrama Playbook <i class="fas fa-angle-right text-[10px]"></i>
-        </h1>
-        <span *ngIf="!usecase.playbook || usecase.playbook.endsWith('/null')"
-          class="text-[10px] text-gray-400 font-medium italic block mt-1">
-          (Diagrama padrão)
-        </span>
       </div>
     </div>
   </div>
@@ -99,15 +84,14 @@
     <!-- Coluna Esquerda: Descrição e Mitigação -->
     <div class="md:w-[80%]">
       <div class="mb-6">
-        <!-- Alterado de text-2xl para text-lg -->
         <h1 class="font-inter font-bold text-lg text-gray-800 dark:text-white mb-2">Descrição</h1>
         <p class="text-gray-700 dark:text-gray-300 leading-relaxed text-sm" style="white-space: pre-line">
           {{usecase.description}}</p>
       </div>
       <div class="my-6">
-        <!-- Alterado de text-2xl para text-lg -->
         <h1 class="font-inter font-bold text-lg text-gray-800 dark:text-white mb-2">Mitigação</h1>
-        <p class="text-gray-700 dark:text-gray-300 leading-relaxed text-sm" style="white-space: pre-line">{{usecase.mitigation}}
+        <p class="text-gray-700 dark:text-gray-300 leading-relaxed text-sm" style="white-space: pre-line">
+          {{usecase.mitigation}}
         </p>
       </div>
     </div>
@@ -143,8 +127,8 @@
       </div>
 
       <div>
-        <h3 class="text-xs uppercase font-semibold text-gray-500 dark:text-gray-400">Número de regras associadas</h3>
-        <p class="text-sm font-semibold text-gray-800 dark:text-gray-200">{{ruleModels.length || 0}}</p>
+        <h3 class="text-xs uppercase font-semibold text-gray-500 dark:text-gray-400">Regras e Sigmas associados</h3>
+        <p class="text-sm font-semibold text-gray-800 dark:text-gray-200">{{ (regras.length + sigmas.length) || 0 }}</p>
       </div>
 
       <div>
@@ -158,281 +142,86 @@
       </div>
 
       <div>
-        <h3 class="text-xs uppercase font-semibold text-gray-500 dark:text-gray-400">Vetores de Ataque</h3>
-        <p class="text-sm text-gray-800 dark:text-gray-200">{{usecase.attackVectors || 'N/A'}}</p>
+        <h3 class="text-xs uppercase font-semibold text-gray-500 dark:text-gray-400">Táticas (MITRE ATT&CK)</h3>
+        <p class="text-sm text-gray-800 dark:text-gray-200">{{usecase.tactics?.join(', ') || 'N/A'}}</p>
       </div>
     </div>
   </div>
 
-  <!-- Tabela de Modelos de Regras Associadas -->
+    <!-- Regras associadas -->
   <div class="mb-8 mt-6">
-    <h1 class="font-inter font-semibold text-2xl text-gray-700 dark:text-white">Modelos de Regras Associadas</h1>
-    <p class="text-sm text-gray-500 dark:text-gray-400">Armazenadas no sistema RedUCM</p>
-
+    <h1 class="font-inter font-semibold text-2xl text-gray-700 dark:text-white">Regras Associadas</h1>
+    <p class="text-sm text-gray-500 dark:text-gray-400">Regras nativas do SIEM (SPL, EQL, AQL, KQL, CQL...)</p>
     <div class="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden mt-3 shadow-sm">
-      <table class="min-w-full leading-normal text-sm divide-y divide-gray-200 dark:divide-gray-700">
-        <thead class="bg-gray-100 dark:bg-gray-700 text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase">
+      <table class="min-w-full text-sm divide-y divide-gray-200 dark:divide-gray-700">
+        <thead class="bg-gray-100 dark:bg-gray-700 font-semibold text-gray-700 dark:text-gray-300 uppercase">
           <tr>
             <th class="w-24 px-5 py-3 text-left">ID</th>
             <th class="px-5 py-3 text-left">Título</th>
-            <th class="w-36 px-5 py-3 text-left">Tipo</th>
-            <th class="w-48 px-5 py-3 text-left">Sintaxe</th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
-          <tr *ngFor="let rule of ruleModels; let i = index" [routerLink]="'/ruleModel-Details/' + rule.id"
-            [ngClass]="i % 2 === 0 ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-900'"
-            class="hover:bg-gray-100 dark:hover:bg-gray-700 transition cursor-pointer h-14">
-            <td class="px-5 py-3 font-semibold text-gray-700 dark:text-gray-300">
-              RedModel{{ rule.id }}
-            </td>
-            <td class="px-5 py-3 font-medium text-gray-900 dark:text-white">
-              {{ rule.title }}
-            </td>
-            <td class="px-5 py-3 text-gray-800 dark:text-gray-200">
-              {{ rule.type }}
-            </td>
-            <!-- Sintaxe (Modelos) -->
-            <td class="px-5 py-3">
-              <span
-                class="inline-flex items-center gap-1.5 text-xs font-semibold text-gray-800 dark:text-gray-200 bg-gray-100 dark:bg-gray-700/60 px-2.5 py-1 rounded border border-gray-200 dark:border-gray-600">
-                <i class="fas fa-code text-[11px] text-redshift-red"></i>
-                {{ rule.syntax || 'N/D' }}
-              </span>
-            </td>
-          </tr>
-
-          <!-- Empty State quando não existem modelos -->
-          <tr *ngIf="!ruleModels || ruleModels.length === 0">
-            <td colspan="4" class="py-8 text-center text-sm text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-800">
-              <i class="fas fa-inbox text-2xl mb-2 block opacity-40"></i>
-              Nenhum modelo de regra associado a este Use Case.
-            </td>
-          </tr>
-
-        </tbody>
-      </table>
-    </div>
-  </div>
-
-  <!-- Tabela de Regras Associadas -->
-  <div class="mb-8 mt-6">
-    <div class="flex items-center justify-between">
-      <div>
-        <h1 class="font-inter font-semibold text-2xl text-gray-700 dark:text-white">Regras Associadas</h1>
-        <p class="text-sm text-gray-500 dark:text-gray-400">Instâncias ativas criadas a partir dos modelos deste Use
-          Case
-        </p>
-      </div>
-      <span
-        class="text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700">
-        {{ rules.length || 0 }} regra(s)
-      </span>
-    </div>
-
-    <div class="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden mt-3 shadow-sm">
-      <table class="min-w-full leading-normal text-sm divide-y divide-gray-200 dark:divide-gray-700">
-        <thead class="bg-gray-100 dark:bg-gray-700 text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase">
-          <tr>
-            <th class="w-24 px-5 py-3 text-left">ID</th>
-            <th class="w-48 px-5 py-3 text-left">Cliente</th>
-            <th class="px-5 py-3 text-left">Modelo Base</th>
             <th class="w-44 px-5 py-3 text-left">Sintaxe</th>
             <th class="w-64 px-5 py-3 text-left">LogSources</th>
           </tr>
         </thead>
         <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
-          <tr *ngFor="let r of rules; let i = index" [routerLink]="'/rule-Details/' + r.id"
+          <tr *ngFor="let r of regras; let i = index" [routerLink]="'/ruleModel-Details/' + r.id"
             [ngClass]="i % 2 === 0 ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-900'"
-            class="hover:bg-gray-100 dark:hover:bg-gray-700 transition cursor-pointer h-14">
-
-            <!-- ID Regra -->
-            <td class="px-5 py-3 font-mono font-bold text-xs text-redshift-red dark:text-red-400">
-              #{{ r.id }}
-            </td>
-
-            <!-- Cliente -->
-            <td class="px-5 py-3 text-gray-900 dark:text-white font-medium">
-              <span class="inline-flex items-center gap-1.5">
-                <i class="fas" [ngClass]="r.client?.name ? 'fa-building text-gray-400' : 'fa-globe text-gray-400'"></i>
-                <span class="truncate max-w-[170px]" [title]="r.client?.name || 'Geral (Sem Cliente)'">
-                  {{ r.client?.name || 'Geral (Sem Cliente)' }}
-                </span>
+            class="hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer h-14">
+            <td class="px-5 py-3 font-mono font-bold text-redshift-red">#{{ r.id }}</td>
+            <td class="px-5 py-3 font-medium text-gray-900 dark:text-white">{{ r.title }}</td>
+            <td class="px-5 py-3">
+              <span class="inline-flex items-center gap-1 text-xs font-semibold bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded border border-gray-200 dark:border-gray-600">
+                <i class="fas fa-code text-redshift-red"></i> {{ r.syntax || 'N/D' }}
               </span>
             </td>
-
-            <!-- Modelo Base -->
-            <td class="px-5 py-3 font-medium text-gray-700 dark:text-gray-300">
-              {{ r.ruleModel?.title || ('RedModel ' + (r.ruleModel?.id || r.ruleModel)) }}
-            </td>
-
-            <!-- Sintaxe -->
-            <td class="px-5 py-3">
-              <span
-                class="inline-flex items-center gap-1 text-xs font-semibold text-gray-800 dark:text-gray-200 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded border border-gray-200 dark:border-gray-600">
-                <i class="fas fa-code text-[10px] text-redshift-red"></i>
-                {{ r.syntax || 'N/D' }}
-              </span>
-            </td>
-
-            <!-- Logsources -->
-            <td class="px-5 py-3">
-              <div class="flex items-center gap-1 max-w-[240px] truncate" [title]="r.logsources?.join(', ') || 'N/D'">
-                <span *ngFor="let log of r.logsources?.slice(0, 2)"
-                  class="bg-[#0d2f52] text-white text-[11px] px-2 py-0.5 rounded font-medium truncate">
-                  {{ log }}
-                </span>
-                <span *ngIf="r.logsources?.length > 2"
-                  class="bg-[#0d2f52] text-white text-[10px] px-1.5 py-0.5 rounded font-bold">
-                  +{{ r.logsources.length - 2 }}
-                </span>
-                <span *ngIf="!r.logsources?.length" class="text-xs text-gray-400 italic">N/D</span>
-              </div>
-            </td>
+            <td class="px-5 py-3 text-xs text-gray-600 dark:text-gray-300">{{ r.logsources?.join(', ') || 'N/D' }}</td>
           </tr>
-
-          <!-- Empty State -->
-          <tr *ngIf="rules.length === 0">
-            <td colspan="5" class="py-8 text-center text-sm text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-800">
-              <i class="fas fa-inbox text-2xl mb-2 block opacity-40"></i>
-              Nenhuma regra instanciada para este Use Case.
-            </td>
+          <tr *ngIf="regras.length === 0">
+            <td colspan="4" class="py-8 text-center text-sm text-gray-500 bg-white dark:bg-gray-800">Nenhuma regra associada a este Use Case.</td>
           </tr>
         </tbody>
       </table>
     </div>
   </div>
 
-  <!-- Tarefas Associadas (Fases NIST) -->
-  <div>
-    <h1 class="font-inter font-semibold text-2xl text-gray-700 dark:text-white">Tarefas Associadas</h1>
-    <p class="text-sm text-gray-500 dark:text-gray-400">Segundo as fases NIST</p>
-    <div class="flex justify-start py-6 space-x-6 overflow-x-auto text-gray-700 dark:text-gray-300">
-      <div *ngFor="let phase of usecase.phaseTasks"
-        class="flex-shrink-0 w-64 bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg shadow-sm">
-        <div
-          class="flex items-center justify-between h-11 px-3 border-b border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-700 rounded-t-lg">
-          <span class="text-xs font-bold text-gray-900 dark:text-white uppercase tracking-wider">{{ phase['phase']
-            }}</span>
-          <button (click)="openTaskModal(phase['phase'])"
-            class="flex items-center justify-center w-6 h-6 text-gray-500 hover:text-redshift-red transition">
-            <i class="fas fa-plus text-xs"></i>
-          </button>
-        </div>
-        <div class="flex flex-col p-2 space-y-2 max-h-96 overflow-y-auto">
-          <div *ngFor="let task of phase['tasks']" (click)="clickTask(task)"
-            class="p-3 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-700/60 hover:border-redshift-red hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer rounded-lg shadow-sm transition">
-            <h3 class="text-xs font-medium text-gray-900 dark:text-gray-200 leading-snug">{{ task.title }}</h3>
-          </div>
-        </div>
-      </div>
+  <!-- Sigmas associados -->
+  <div class="mb-8 mt-6">
+    <h1 class="font-inter font-semibold text-2xl text-gray-700 dark:text-white">Sigmas Associados</h1>
+    <p class="text-sm text-gray-500 dark:text-gray-400">Versão Sigma, gerada automaticamente ou criada à mão. A partir dela converte-se para qualquer SIEM.</p>
+    <div class="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden mt-3 shadow-sm">
+      <table class="min-w-full text-sm divide-y divide-gray-200 dark:divide-gray-700">
+        <thead class="bg-gray-100 dark:bg-gray-700 font-semibold text-gray-700 dark:text-gray-300 uppercase">
+          <tr>
+            <th class="w-24 px-5 py-3 text-left">ID</th>
+            <th class="px-5 py-3 text-left">Título</th>
+            <th class="w-56 px-5 py-3 text-left">Estado</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+          <tr *ngFor="let r of sigmas; let i = index" [routerLink]="'/ruleModel-Details/' + r.id"
+            [ngClass]="i % 2 === 0 ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-900'"
+            class="hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer h-14">
+            <td class="px-5 py-3 font-mono font-bold text-redshift-red">#{{ r.id }}</td>
+            <td class="px-5 py-3 font-medium text-gray-900 dark:text-white">{{ r.title }}</td>
+            <td class="px-5 py-3 text-xs font-semibold">
+              <span *ngIf="r.generationStatus === 'pending'" class="text-amber-600">
+                <i class="fas fa-spinner fa-spin mr-1"></i>A gerar Sigma...
+              </span>
+              <span *ngIf="r.generationStatus === 'failed'" class="text-red-600" [title]="r.generationNote || ''">
+                <i class="fas fa-circle-exclamation mr-1"></i>Falhou
+              </span>
+              <span *ngIf="r.generationStatus !== 'pending' && r.generationStatus !== 'failed'"
+                [ngClass]="r.status === 'Regra validada' ? 'text-green-600' : 'text-gray-500 dark:text-gray-400'">
+                {{ r.status === 'Regra validada' ? 'Validada' : (r.generated ? 'Gerado, a rever' : 'Não validada') }}
+              </span>
+            </td>
+          </tr>
+          <tr *ngIf="sigmas.length === 0">
+            <td colspan="3" class="py-8 text-center text-sm text-gray-500 bg-white dark:bg-gray-800">Nenhum Sigma associado a este Use Case.</td>
+          </tr>
+        </tbody>
+      </table>
     </div>
   </div>
-
-  <!-- Modal Detalhes Tarefa -->
-  <div *ngIf="showTaskDetails"
-    class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-    <div
-      class="relative bg-white dark:bg-gray-800 p-6 rounded-xl shadow-xl w-full max-w-2xl max-h-[85vh] overflow-y-auto border border-gray-200 dark:border-gray-700">
-      <div *ngIf="!isEditing">
-        <div class="flex items-center justify-between border-b border-gray-200 dark:border-gray-700 pb-3">
-          <h2 class="font-bold text-xl text-gray-900 dark:text-white">{{selectedTask.title}}</h2>
-          <button (click)="enableEdit()"
-            class="text-xs bg-redshift-red hover:bg-redshift-hover text-white px-3 py-1.5 rounded-md transition flex items-center gap-1.5">
-            <i class="fas fa-pen text-[10px]"></i> Editar
-          </button>
-        </div>
-        <div class="mt-3 flex gap-4 text-xs text-gray-500 dark:text-gray-400">
-          <span>Criado em: <strong>{{selectedTask.datecreated | date: 'dd/MM/yyyy'}}</strong></span>
-          <span>Autor: <strong>{{selectedTask.author}}</strong></span>
-        </div>
-        <p class="text-sm text-gray-700 dark:text-gray-300 mt-4 whitespace-pre-line leading-relaxed">
-          {{selectedTask.description}}</p>
-        <button (click)="closeTaskDetails()"
-          class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-white text-lg">
-          <i class="fas fa-times"></i>
-        </button>
-      </div>
-
-      <!-- Modo Edição da Tarefa -->
-      <div *ngIf="isEditing" class="space-y-4">
-        <h2 class="font-bold text-xl text-gray-900 dark:text-white">Editar Tarefa</h2>
-        <div>
-          <label class="block text-xs font-semibold uppercase text-gray-600 dark:text-gray-300 mb-1">Título</label>
-          <input [(ngModel)]="selectedTask.title"
-            class="w-full text-sm border border-gray-300 dark:border-gray-600 rounded-lg p-2.5 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-redshift-red" />
-        </div>
-        <div>
-          <label class="block text-xs font-semibold uppercase text-gray-600 dark:text-gray-300 mb-1">Descrição</label>
-          <textarea [(ngModel)]="selectedTask.description" rows="8"
-            class="w-full text-sm border border-gray-300 dark:border-gray-600 rounded-lg p-2.5 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-redshift-red"></textarea>
-        </div>
-        <div class="flex gap-3 justify-end pt-2">
-          <button (click)="saveTask()"
-            class="bg-green-600 hover:bg-green-700 text-white text-sm px-4 py-2 rounded-lg font-medium transition">Salvar</button>
-          <button (click)="cancelEdit()"
-            class="bg-gray-300 dark:bg-gray-600 text-gray-800 dark:text-white text-sm px-4 py-2 rounded-lg font-medium transition">Cancelar</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Modal Imagem Playbook -->
-  <div *ngIf="showModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4"
-    (click)="closeModal()">
-    <div class="relative bg-white dark:bg-gray-800 p-2 rounded-xl shadow-2xl max-w-4xl max-h-[90vh] overflow-hidden"
-      (click)="$event.stopPropagation()">
-      <img [src]="getPlaybookUrl()" class="w-full h-auto max-h-[85vh] object-contain rounded" alt="Diagrama Playbook">
-      <button (click)="closeModal()"
-        class="absolute top-3 right-3 bg-black/60 text-white rounded-full w-8 h-8 flex items-center justify-center hover:bg-black/90 transition">
-        <i class="fas fa-times text-sm"></i>
-      </button>
-    </div>
-  </div>
-
-  <!-- Modal Criar Tarefa Flowbite (Contém o #modal necessário para o ViewChild) -->
-  <div id="crud-modal" tabindex="-1" aria-hidden="true"
-    class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full"
-    #modal>
-    <div class="relative p-4 w-full max-w-2xl max-h-full">
-      <div class="relative bg-white rounded-lg shadow dark:bg-gray-700">
-        <div class="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-600">
-          <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
-            Criar Nova Tarefa
-          </h3>
-          <button type="button" (click)="closeTaskModal()"
-            class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white">
-            <i class="fas fa-times text-base" aria-hidden="true"></i>
-            <span class="sr-only">Fechar modal</span>
-          </button>
-        </div>
-
-        <form class="p-4 md:p-5" [formGroup]="createTaskForm">
-          <div class="grid gap-4 mb-4 grid-cols-2">
-            <div class="col-span-2">
-              <label for="title" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Título de
-                Tarefa</label>
-              <input type="text" formControlName="title" name="title" id="title"
-                class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-redshift-red focus:border-redshift-red block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white"
-                placeholder="Insira o título da tarefa" required="">
-            </div>
-
-            <div class="col-span-2">
-              <label for="description" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Descrição de
-                Tarefa</label>
-              <textarea id="description" formControlName="description" rows="8"
-                class="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-redshift-red focus:border-redshift-red dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white"
-                placeholder="Escreva a descrição da tarefa, passos a serem tomados, entre outros"></textarea>
-            </div>
-          </div>
-          <button (click)="createTask()"
-            class="text-white inline-flex items-center bg-redshift-red hover:bg-redshift-hover font-medium rounded-lg text-sm px-5 py-2.5 text-center transition">
-            <i class="fas fa-plus mr-2 text-xs"></i>
-            Adicionar nova tarefa
-          </button>
-        </form>
-      </div>
-    </div>
-  </div>
-
 </div>
+
+

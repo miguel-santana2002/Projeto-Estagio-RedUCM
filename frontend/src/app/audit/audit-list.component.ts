@@ -6,6 +6,7 @@ import { AuditLog } from './audit-log.model';
 import { AuditService } from './audit.service';
 import { HeaderComponent } from '../layout/header/header.component';
 import { TitlebannerComponent } from '../layout/titlebanner/titlebanner.component';
+import { smartMatch } from '../helper/search-utils';
 
 @Component({
   selector: 'app-audit-list',
@@ -152,16 +153,35 @@ export class AuditListComponent implements OnInit {
 
   // Filtragem Reativa
   get filteredLogs(): AuditLog[] {
-    const term = this.searchTerm.trim().toLowerCase();
-
     return this.logs.filter((log: any) => {
-      // 1. Pesquisa por ID, objeto_repr, model_name ou ator
-      const matchesSearch =
-        !term ||
-        String(log.id).includes(term) ||
-        (log.object_repr && log.object_repr.toLowerCase().includes(term)) ||
-        (log.model_name && log.model_name.toLowerCase().includes(term)) ||
-        (log.actor && log.actor.toLowerCase().includes(term));
+      // 1. Pesquisa Inteligente Multi-campo
+      const actionLabels: Record<string, string> = {
+        CREATE: 'Criação Criar Adicionar',
+        UPDATE: 'Alteração Editar Modificar Atualização',
+        DELETE: 'Remoção Apagar Eliminar Exclusão',
+        LOGIN: 'Login Sessão Entrada',
+        LOGOUT: 'Logout Saída',
+      };
+      const extraAction = actionLabels[log.action] || '';
+      const changesStr =
+        log.changes && typeof log.changes === 'object'
+          ? JSON.stringify(log.changes)
+          : String(log.changes || '');
+
+      const matchesSearch = smartMatch(
+        [
+          log.id,
+          `#${log.id}`,
+          log.action,
+          extraAction,
+          log.object_repr,
+          log.model_name,
+          log.actor || 'Sistema',
+          log.timestamp,
+          changesStr,
+        ],
+        this.searchTerm
+      );
 
       // 2. Filtro Ação
       const matchesAction =

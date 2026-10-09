@@ -14,6 +14,7 @@ import { HeaderComponent } from '../../layout/header/header.component';
 import { TitlebannerComponent } from '../../layout/titlebanner/titlebanner.component';
 import { AuthService } from '../../services/auth.service';
 import { RulesService } from '../../services/rules.service';
+import { smartMatch } from '../../helper/search-utils';
 
 @Component({
   selector: 'app-manage-clients',
@@ -40,6 +41,11 @@ export class ManageClientsComponent implements OnInit {
   errorMessage: string = '';
   clients: any[] = [];
   registeredLogsources: string[] = [];
+  
+  // Controlo de operador e admin
+  isOperator: boolean = false;
+  isAdmin: boolean = true;
+  userCompanies: any[] = []; // Guarda as empresas/clientes associados ao utilizador logado
 
   // Paginação
   page: number = 1;
@@ -52,7 +58,7 @@ export class ManageClientsComponent implements OnInit {
   uniqueLogsources: string[] = [];
 
   selectedSiems: string[] = [];
-  uniqueSiems: string[] = []; // Inicializa vazio para ser preenchido dinamicamente pelos clientes reais
+  uniqueSiems: string[] = [];
 
   // Modais
   isCreateModalOpen: boolean = false;
@@ -76,14 +82,51 @@ export class ManageClientsComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.loadClients();
+    this.checkUserRole();
     this.loadRegisteredLogSources();
+  }
+
+  checkUserRole(): void {
+    this.authService.loggedInInfo().subscribe({
+      next: (res: any) => {
+        if (res) {
+          if (res.is_admin !== undefined) {
+            this.isAdmin = Boolean(res.is_admin);
+            this.isOperator = !this.isAdmin;
+          }
+          // Recolhe as empresas associadas ao utilizador (podem vir como IDs ou nomes/objetos)
+          this.userCompanies = res.companies || res.company_ids || [];
+        }
+        this.loadClients();
+      },
+      error: (err) => {
+        console.error('Erro ao verificar permissões do utilizador:', err);
+        this.loadClients();
+      }
+    });
   }
 
   loadClients(): void {
     this.authService.getClients().subscribe({
       next: (data: any) => {
-        this.clients = Array.isArray(data) ? data : [];
+        const allClients = Array.isArray(data) ? data : [];
+        
+        // Se for operador, filtra apenas os clientes associados na sessão
+        if (this.isOperator) {
+          this.clients = allClients.filter((client: any) => {
+            return this.userCompanies.some((uc: any) => {
+              // Compara por ID (pk/id) ou por Nome consoante o que a API devolver em user.companies
+              if (typeof uc === 'object' && uc !== null) {
+                return uc.pk === client.pk || uc.id === client.pk || uc.name === client.name;
+              }
+              return uc === client.pk || uc === client.name;
+            });
+          });
+        } else {
+          // Admin vê tudo
+          this.clients = allClients;
+        }
+
         this.startFilters();
       },
       error: (err) => console.error('Erro ao carregar clientes:', err),
@@ -102,7 +145,6 @@ export class ManageClientsComponent implements OnInit {
   }
 
   startFilters(): void {
-    // Extrair Logsources únicas
     this.uniqueLogsources = Array.from(
       new Set(
         this.clients
@@ -111,7 +153,6 @@ export class ManageClientsComponent implements OnInit {
       ),
     ).sort();
 
-    // Extrair estritamente os SIEMs que já estão guardados nos clientes existentes
     this.uniqueSiems = Array.from(
       new Set(
         this.clients
@@ -121,7 +162,6 @@ export class ManageClientsComponent implements OnInit {
     ).sort();
   }
 
-  // Toggles de Filtro Logsource
   toggleLogsource(log: string): void {
     this.page = 1;
     if (this.selectedLogsources.includes(log)) {
@@ -135,7 +175,6 @@ export class ManageClientsComponent implements OnInit {
     return this.selectedLogsources.includes(log);
   }
 
-  // Toggles de Filtro SIEM
   toggleSiem(siem: string): void {
     this.page = 1;
     if (this.selectedSiems.includes(siem)) {
@@ -159,28 +198,32 @@ export class ManageClientsComponent implements OnInit {
     this.page = 1;
   }
 
-  // Filtragem Reativa (Nome + Logsources + SIEM)
   get filteredClients(): any[] {
-    const term = this.nameSearch.trim().toLowerCase();
-
     return this.clients.filter((c: any) => {
-      const matchesName =
-        !term || (c.name && c.name.toLowerCase().includes(term));
+      // 1. Pesquisa inteligente dinâmica em todos os campos relevantes
+      const clientLogs = Array.isArray(c.logsources) ? c.logsources.join(' ') : '';
+      const matchesSearch = smartMatch(
+        [c.name, c.pk, c.id, c.siem, clientLogs],
+        this.nameSearch,
+      );
+
+      // 2. Filtro Log Sources
       const matchesLogs =
         this.selectedLogsources.length === 0 ||
         (Array.isArray(c.logsources) &&
           c.logsources.some((log: string) =>
             this.selectedLogsources.includes(log),
           ));
+
+      // 3. Filtro SIEM
       const matchesSiem =
         this.selectedSiems.length === 0 ||
         (c.siem && this.selectedSiems.includes(c.siem));
 
-      return matchesName && matchesLogs && matchesSiem;
+      return matchesSearch && matchesLogs && matchesSiem;
     });
   }
 
-  // Segmentação Paginada
   get pagedClients(): any[] {
     const start = (this.page - 1) * this.pageSize;
     return this.filteredClients.slice(start, start + this.pageSize);
@@ -201,7 +244,6 @@ export class ManageClientsComponent implements OnInit {
     this.page = 1;
   }
 
-  // Ordenação (suporta ordenação por 'siem' agora)
   sortTable(column: string): void {
     if (this.sortType === column) {
       this.sortReverse = !this.sortReverse;
@@ -228,8 +270,8 @@ export class ManageClientsComponent implements OnInit {
     });
   }
 
-  // Modais
   openModal(): void {
+    if (!this.isAdmin) return;
     this.modal.nativeElement.classList.remove('hidden');
     this.modal.nativeElement.classList.add('flex');
   }
@@ -240,6 +282,7 @@ export class ManageClientsComponent implements OnInit {
   }
 
   openCreateModal(): void {
+    if (!this.isAdmin) return;
     this.isCreateModalOpen = true;
   }
 
@@ -262,11 +305,13 @@ export class ManageClientsComponent implements OnInit {
   }
 
   editClient(client: any): void {
+    if (!this.isAdmin) return;
     this.closeDetailsModal();
     this.router.navigate(['/edit-client', client.pk]);
   }
 
   createClient(): void {
+    if (!this.isAdmin) return;
     this.errorMessage = '';
     const logsourcesArray: any = this.createClientForm.get('logsources')?.value;
     const logsources = Array.isArray(logsourcesArray)
@@ -295,6 +340,7 @@ export class ManageClientsComponent implements OnInit {
   }
 
   deleteClient(): void {
+    if (!this.isAdmin) return;
     this.authService.deleteCompany(this.selectDelete).subscribe({
       next: () => {
         this.loadClients();
@@ -307,6 +353,7 @@ export class ManageClientsComponent implements OnInit {
   }
 
   updateSelectDelete(id: number): void {
+    if (!this.isAdmin) return;
     this.selectDelete = id;
   }
 }
