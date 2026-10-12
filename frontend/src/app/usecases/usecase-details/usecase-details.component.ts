@@ -4,6 +4,7 @@ import {
   OnInit,
   ViewChild,
   AfterViewInit,
+  OnDestroy,
 } from '@angular/core';
 import { HeaderComponent } from '../../layout/header/header.component';
 import { TitlebannerComponent } from '../../layout/titlebanner/titlebanner.component';
@@ -35,7 +36,7 @@ import { RulesService } from '../../services/rules.service';
     FormsModule,
   ],
 })
-export class UsecaseDetailsComponent implements OnInit, AfterViewInit {
+export class UsecaseDetailsComponent implements OnInit, AfterViewInit, OnDestroy {
   createTaskForm = new FormGroup({
     title: new FormControl(''),
     description: new FormControl(''),
@@ -44,8 +45,9 @@ export class UsecaseDetailsComponent implements OnInit, AfterViewInit {
   @ViewChild('modal') modal!: ElementRef<HTMLElement>;
   modalFlowbite!: Modal;
 
-  ruleModels: any[] = [];
-  rules: any[] = []; // Instâncias de regras associadas a este Use Case
+  regras: any[] = [];
+  sigmas: any[] = [];
+  private pollTimer: any = null;
 
   user: any = { username: '', companies: [] };
 
@@ -87,19 +89,10 @@ export class UsecaseDetailsComponent implements OnInit, AfterViewInit {
 
     const id = Number(this.route.snapshot.params['id']);
 
-    this.usecasesService.getUseCaseById(id).subscribe({
+        this.usecasesService.getUseCaseById(id).subscribe({
       next: (data: any) => {
         this.usecase = data;
-
-        // 1. Carrega os modelos deste Use Case
-        this.rulesService.getRuleModelsByUseCase(this.usecase.id).subscribe({
-          next: (ruleData: any) => {
-            this.ruleModels = ruleData;
-            // 2. Carrega as instâncias de regras logo após termos os modelos disponíveis
-            this.loadAssociatedRules(this.usecase.id);
-          },
-          error: (err) => console.error('Erro ao obter rule models:', err),
-        });
+        this.loadAssociatedRules(this.usecase.id);
       },
       error: (err) => console.error('Erro ao obter Use Case:', err),
     });
@@ -114,21 +107,31 @@ export class UsecaseDetailsComponent implements OnInit, AfterViewInit {
   /**
    * Obtém todas as regras da aplicação e filtra as que pertencem a este Use Case.
    */
-  loadAssociatedRules(useCaseId: number): void {
+    loadAssociatedRules(useCaseId: number): void {
     this.rulesService.getRules().subscribe({
       next: (allRules: any[]) => {
-        this.rules = allRules.filter((r: any) => {
-          // Correspondência direta via campo expandido no ruleModel
-          const directMatch = Number(r.ruleModel?.useCaseId) === useCaseId;
-          // Correspondência cruzada com a lista de modelos deste Use Case
-          const modelMatch = this.ruleModels.some(
-            (rm: any) => rm.id === (r.ruleModel?.id || r.ruleModel),
-          );
-          return directMatch || modelMatch;
-        });
+        const mine = allRules.filter(
+          (r: any) => Number(r.useCaseId) === useCaseId && !r.client,
+        );
+        this.sigmas = mine.filter((r: any) => r.syntax === 'Sigma Rule');
+        this.regras = mine.filter((r: any) => r.syntax !== 'Sigma Rule');
+        this.managePolling(mine.some((r: any) => r.generationStatus === 'pending'));
       },
       error: (err) => console.error('Erro ao obter regras associadas:', err),
     });
+  }
+
+  private managePolling(pending: boolean): void {
+    if (pending && !this.pollTimer) {
+      this.pollTimer = setInterval(() => this.loadAssociatedRules(this.usecase.id), 10000);
+    } else if (!pending && this.pollTimer) {
+      clearInterval(this.pollTimer);
+      this.pollTimer = null;
+    }
+  }
+
+  ngOnDestroy(): void {
+    if (this.pollTimer) clearInterval(this.pollTimer);
   }
 
   openTaskModal(phase: string): void {
@@ -211,6 +214,16 @@ export class UsecaseDetailsComponent implements OnInit, AfterViewInit {
         },
         error: (err) => console.error('Erro ao criar tarefa:', err),
       });
+  }
+
+  copiedMessage: string = '';
+
+  copyUseCaseId(): void {
+    if (this.usecase?.id) {
+      navigator.clipboard.writeText(`RedUC${this.usecase.id}`);
+      this.copiedMessage = 'ID copiado!';
+      setTimeout(() => (this.copiedMessage = ''), 3000);
+    }
   }
 
   getTechniqueId(technique: any): string {

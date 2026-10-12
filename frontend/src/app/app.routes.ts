@@ -13,8 +13,6 @@ import { ManageUseCasesComponent } from './usecases/manage-use-cases/manage-use-
 import { UsecaseDetailsComponent } from './usecases/usecase-details/usecase-details.component';
 import { CreateRuleModelComponent } from './rules/rule-models/create-rule-model/create-rule-model.component';
 import { TechniqueDetailsComponent } from './techniques/technique-details/technique-details.component';
-import { ManageRuleModelsComponent } from './rules/rule-models/manage-rule-models/manage-rule-models.component';
-import { RuleModelDetailsComponent } from './rules/rule-models/rule-model-details/rule-model-details.component';
 import { ManageRulesComponent } from './rules/instances/manage-rules/manage-rules.component';
 import { RuleDetailsComponent } from './rules/instances/rule-details/rule-details.component';
 import { StatisticsPageComponent } from './statistics/statistics-page/statistics-page.component';
@@ -27,6 +25,7 @@ import { EditRuleModelComponent } from './rules/rule-models/edit-rule-model/edit
 import { numericIdGuard } from './guards/numeric-id.guard';
 import { AuditListComponent } from './audit/audit-list.component';
 import { EditRuleComponent } from './rules/instances/edit-rule/edit-rule.component';
+import { CreateRuleComponent } from './rules/instances/create-rule/create-rule.component';
 
 export const routes: Routes = [
   { path: '', component: LandingpageComponent, pathMatch: 'full' },
@@ -58,18 +57,21 @@ export const routes: Routes = [
     canActivate: [numericIdGuard],
   },
   {
+    path: 'create-rule',
+    component: CreateRuleComponent,
+  },
+  {
     path: 'create-rule-model',
     component: CreateRuleModelComponent,
   },
-  { path: 'techniqueDetails/:id', component: TechniqueDetailsComponent },
-  {
-    path: 'manage-rule-models',
-    component: ManageRuleModelsComponent,
-  },
   {
     path: 'ruleModel-Details/:id',
-    component: RuleModelDetailsComponent,
+    component: RuleDetailsComponent,
     canActivate: [numericIdGuard],
+  },
+  {
+    path: 'techniqueDetails/:id',
+    component: TechniqueDetailsComponent,
   },
   {
     path: 'manage-rules',

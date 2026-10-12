@@ -14,8 +14,22 @@ from rest_framework.decorators import api_view
 from django.http import JsonResponse
 from drf_spectacular.utils import extend_schema
 from drf_spectacular.utils import OpenApiResponse
+from usecases.mitre_manager import (
+    get_attack_instance,
+    get_techniques,
+    get_technique_tactics_map,
+    check_and_update_if_expired,
+)
 
-attack = enterpriseattack.Attack()
+
+class _AttackProxy:
+    """Proxy lazy para o singleton enterpriseattack."""
+    def __getattr__(self, name):
+        return getattr(get_attack_instance(), name)
+
+
+attack = _AttackProxy()
+
 
 @extend_schema(description='Get technique by ID',
                responses={
@@ -25,39 +39,43 @@ attack = enterpriseattack.Attack()
 @api_view(['GET'])
 def getTechniqueById(request, id):
     if request.method == 'GET':
-
+        selected_technique = None
         for technique in attack.techniques:
             if technique.id == id:
                 selected_technique = technique
-        return JsonResponse(selected_technique.to_json(), safe=False)
+                break
+        if selected_technique:
+            return JsonResponse(selected_technique.to_json(), safe=False)
+        return JsonResponse({'error': 'Technique not found'}, status=404)
     else:
-        return JsonResponse({'error': 'Invalid request method'})
-    
+        return JsonResponse({'error': 'Invalid request method'}, status=400)
 
 
 def getTechniqueTacticById(request, id):
-    for technique in attack.techniques:
-        if technique.id == id:
-            tactics = [tactic.name for tactic in technique.tactics]
-            return JsonResponse(tactics, safe=False)
-    return None    
+    tech_map = get_technique_tactics_map()
+    clean_id = (id or '').strip()
+    tactics = tech_map.get(clean_id) or tech_map.get(clean_id.upper()) or []
+    return JsonResponse(tactics, safe=False)
+
 
 def getTechniqueTacticBasedOnListIds(request):
-    ids = request.GET.get('ids', '').split(',')
+    raw_ids = request.GET.get('ids', '')
+    if not raw_ids:
+        return JsonResponse([], safe=False)
+
+    tech_map = get_technique_tactics_map()
     tactic_counts = {}
-    for id in ids:
-        for technique in attack.techniques:
-            if technique.id == id:
-                for tactic in technique.tactics:
-                    if tactic.name in tactic_counts:
-                        tactic_counts[tactic.name] += 1
-                    else:
-                        tactic_counts[tactic.name] = 1
-                break
-    
+
+    for item in raw_ids.split(','):
+        clean_item = item.strip()
+        if not clean_item:
+            continue
+        tactics = tech_map.get(clean_item) or tech_map.get(clean_item.upper()) or tech_map.get(clean_item.lower()) or []
+        for tactic in tactics:
+            tactic_counts[tactic] = tactic_counts.get(tactic, 0) + 1
+
     # Converter o dicionário de contagens em uma lista de pares (tática, contagem)
     tactic_list = [{"tactic": tactic, "count": count} for tactic, count in tactic_counts.items()]
-    
     return JsonResponse(tactic_list, safe=False)
 
 @extend_schema(
@@ -73,6 +91,9 @@ def getTechniqueTacticBasedOnListIds(request):
 def createUseCase(request):
     if request.method == 'POST':
         try:
+            # Valida há quanto tempo o ficheiro local MITRE foi atualizado (regra das 24h)
+            check_and_update_if_expired()
+
             data = request.data
 
             # 1. Parsing seguro dos arrays JSON
@@ -316,13 +337,7 @@ def updateUseCase(request, id):
 @api_view(['GET'])
 def getAllTechniques(request):
     if request.method == 'GET':
-        techniques_list = []
-        for technique in attack.techniques:
-            techniques_list.append({
-                'id': technique.id,
-                'name': technique.name,
-                'tactics': [tactic.name for tactic in technique.tactics],
-            })
+        techniques_list = get_techniques()
         return JsonResponse(techniques_list, safe=False)
     else:
         return JsonResponse({'error': 'Invalid request method'}, status=400)

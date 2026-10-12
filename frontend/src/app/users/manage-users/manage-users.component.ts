@@ -13,6 +13,7 @@ import { Modal } from 'flowbite';
 import { HeaderComponent } from '../../layout/header/header.component';
 import { TitlebannerComponent } from '../../layout/titlebanner/titlebanner.component';
 import { AuthService } from '../../services/auth.service';
+import { smartMatch } from '../../helper/search-utils';
 
 @Component({
   selector: 'app-manage-users',
@@ -59,6 +60,12 @@ export class ManageUsersComponent implements OnInit, AfterViewInit {
   roles: string[] = ['Administrador', 'Operador'];
   selectedClients: string[] = [];
   selectedRoles: string[] = [];
+
+  // Flag para controlo do reset manual de TOTP e estado de bloqueio
+  forceTotpReset: boolean = false;
+  isUserBlocked: boolean = false;
+  isUpdatingTotp: boolean = false;
+  isUpdatingBlockStatus: boolean = false;
 
   constructor(private authService: AuthService) {}
 
@@ -152,14 +159,32 @@ export class ManageUsersComponent implements OnInit, AfterViewInit {
 
   // Filtragem Reativa Completa
   get filteredUsers(): any[] {
-    const term = this.nameSearch.trim().toLowerCase();
-
     return this.users.filter((user: any) => {
-      // 1. Pesquisa por Nome de Utilizador ou Email
-      const matchesSearch =
-        !term ||
-        (user.username && user.username.toLowerCase().includes(term)) ||
-        (user.email && user.email.toLowerCase().includes(term));
+      const userCompanies = Array.isArray(user.companies)
+        ? user.companies.join(' ')
+        : '';
+      const isAdminUser = Boolean(user.is_superuser || user.is_admin);
+      const roleLabel = isAdminUser
+        ? 'Administrador Admin Superuser'
+        : 'Operador Operator';
+      const statusLabel = user.is_active
+        ? 'Ativo Active'
+        : 'Bloqueado Inativo Inactive';
+
+      // 1. Pesquisa Inteligente Multi-campo
+      const matchesSearch = smartMatch(
+        [
+          user.pk,
+          user.id,
+          user.username,
+          user.email,
+          roleLabel,
+          statusLabel,
+          userCompanies,
+          user.otpMethod,
+        ],
+        this.nameSearch
+      );
 
       // 2. Filtro por Clientes Atribuídos
       const matchesClients =
@@ -169,7 +194,6 @@ export class ManageUsersComponent implements OnInit, AfterViewInit {
 
       // 3. Filtro por Role real (Flags booleanas da API)
       let matchesRole = true;
-      const isAdminUser = Boolean(user.is_superuser || user.is_admin);
 
       if (
         this.selectedRoles.length > 0 &&
@@ -277,6 +301,8 @@ export class ManageUsersComponent implements OnInit, AfterViewInit {
   // Modal Detalhes
   openModalDetails(user: any): void {
     this.selectedUser = user;
+    this.forceTotpReset = Boolean(user.showTotp);
+    this.isUserBlocked = user.is_active === false;
     this.modalDetailsFlowbite?.show();
   }
 
@@ -286,5 +312,58 @@ export class ManageUsersComponent implements OnInit, AfterViewInit {
 
   toggleCompanies(): void {
     this.showAllCompanies = !this.showAllCompanies;
+  }
+
+  // Controlo do botão de forçar QR Code
+  toggleResetTotp(): void {
+    if (!this.selectedUser || this.isUpdatingTotp) return;
+
+    this.isUpdatingTotp = true;
+    const newForceState = !this.forceTotpReset;
+
+    this.authService.resetTotp(this.selectedUser.pk, newForceState).subscribe({
+      next: (res: any) => {
+        this.forceTotpReset = Boolean(res.showTotp);
+        this.selectedUser.showTotp = this.forceTotpReset;
+
+        const foundUser = this.users.find((u) => u.pk === this.selectedUser.pk);
+        if (foundUser) {
+          foundUser.showTotp = this.forceTotpReset;
+        }
+        this.isUpdatingTotp = false;
+      },
+      error: (err) => {
+        console.error('Erro ao atualizar QR Code:', err);
+        this.isUpdatingTotp = false;
+      },
+    });
+  }
+
+  // Controlo da checkbox de bloqueio do utilizador
+  toggleUserBlock(): void {
+    if (!this.selectedUser || this.isUpdatingBlockStatus) return;
+
+    this.isUpdatingBlockStatus = true;
+    const newBlockedState = !this.isUserBlocked;
+
+    this.authService
+      .toggleUserStatus(this.selectedUser.pk, newBlockedState)
+      .subscribe({
+        next: (res: any) => {
+          this.isUserBlocked = Boolean(res.is_blocked);
+          const newIsActive = !this.isUserBlocked;
+          this.selectedUser.is_active = newIsActive;
+
+          const foundUser = this.users.find((u) => u.pk === this.selectedUser.pk);
+          if (foundUser) {
+            foundUser.is_active = newIsActive;
+          }
+          this.isUpdatingBlockStatus = false;
+        },
+        error: (err) => {
+          console.error('Erro ao atualizar estado de bloqueio:', err);
+          this.isUpdatingBlockStatus = false;
+        },
+      });
   }
 }

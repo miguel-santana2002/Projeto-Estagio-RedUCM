@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+﻿import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import {
@@ -143,7 +143,7 @@ export class RuleModelDetailsComponent implements OnInit {
   ngOnInit(): void {
     const id = Number(this.route.snapshot.params['id']);
 
-    this.rulesService.getRuleModelById(id).subscribe((data: any) => {
+    this.rulesService.getRuleById(id).subscribe((data: any) => {
       this.ruleModel = data;
 
       const initialSyntax =
@@ -183,7 +183,7 @@ export class RuleModelDetailsComponent implements OnInit {
 
           this.rulesService.getRules().subscribe((rulesData: any) => {
             this.ruleInstances = rulesData.filter(
-              (rule: any) => rule.ruleModel?.id === this.ruleModel.id,
+              (rule: any) => rule.parent === this.ruleModel.id,
             );
 
             this.authService.loggedInInfo().subscribe((userInfo: any) => {
@@ -237,7 +237,7 @@ export class RuleModelDetailsComponent implements OnInit {
     const newSyntax = this.ruleModel.syntax;
 
     this.rulesService
-      .updateRuleModelCode(newCode, this.ruleModel.id, newSyntax)
+      .updateRuleCode(newCode, this.ruleModel.id)
       .subscribe({
         next: (data: any) => {
           this.message = data.message || 'Regra atualizada com sucesso!';
@@ -440,7 +440,7 @@ export class RuleModelDetailsComponent implements OnInit {
     }
 
     const rulePayload = {
-      ruleModel: this.ruleModel.id,
+      parent: this.ruleModel.id,
       ruleCode: formVals.modalCode,
       logsources: formVals.logsources,
       client: clientId || null,
@@ -463,3 +463,4 @@ export class RuleModelDetailsComponent implements OnInit {
     });
   }
 }
+

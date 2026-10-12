@@ -14,6 +14,7 @@ from django.urls import reverse
 from rest_framework.views import APIView
 from django.core.mail import send_mail
 from django.conf import settings
+from django.core.cache import cache
 import pyotp
 
 # Create your views here.
@@ -100,11 +101,9 @@ def getUsers(request):
     if request.method == 'GET':
         users = User.objects.all()
         serializer = UserSerializer(users, many=True)
-        user_list = serializers.serialize('json', users, indent=2)
-        
         return JsonResponse(serializer.data, safe=False)
     else:
-        return JsonResponse({'error': 'Invalid request method'})
+        return JsonResponse({'error': 'Invalid request method'}, status=400)
     
 @extend_schema(description=' Endpoint to get a list of all clients.',
                responses={
@@ -186,30 +185,99 @@ def updateUserInfo(request, id):
     except User.DoesNotExist:
         return JsonResponse({'error': 'Utilizador não encontrado.'}, status=status.HTTP_404_NOT_FOUND)
 
-    user.username = request.data.get('username')
-    user.email = request.data.get('email')
-    user.otpMethod = request.data.get('otpMethod', user.otpMethod)
+    if 'username' in request.data and request.data.get('username') is not None:
+        user.username = request.data.get('username')
+    if 'email' in request.data and request.data.get('email') is not None:
+        user.email = request.data.get('email')
+    if 'otpMethod' in request.data and request.data.get('otpMethod') is not None:
+        user.otpMethod = request.data.get('otpMethod')
     
-    companies = request.data.get('companies', [])
-    user.companies = companies
+    if 'companies' in request.data:
+        companies = request.data.get('companies', [])
+        user.companies = companies
 
-    # Sincronização de Roles
-    if not companies:
-        user.is_admin = True
-        user.is_superuser = True
-        user.is_staff = True
-    else:
-        user.is_admin = False
-        user.is_superuser = False
-        user.is_staff = True
+        # Sincronização de Roles
+        if not companies:
+            user.is_admin = True
+            user.is_superuser = True
+            user.is_staff = True
+        else:
+            user.is_admin = False
+            user.is_superuser = False
+            user.is_staff = True
+
+    if 'is_active' in request.data:
+        user.is_active = bool(request.data.get('is_active'))
+
+    if user.is_active:
+        cache.delete(f"failed_login_attempts_{user.pk}")
+        cache.delete(f"failed_otp_attempts_{user.pk}")
 
     # Forçar reconfiguração do QR Code se solicitado
     if request.data.get('resetTotp', False):
         user.showTotp = True
         user.totp_secret = pyotp.random_base32()
+        user.otpMethod = 'totp'
+    elif 'showTotp' in request.data:
+        user.showTotp = bool(request.data.get('showTotp'))
 
     user.save()
-    return JsonResponse({'success': 'User updated successfully'}, status=status.HTTP_200_OK)
+    return JsonResponse({
+        'success': 'User updated successfully',
+        'is_active': user.is_active,
+        'showTotp': user.showTotp
+    }, status=status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+def resetTotp(request, id):
+    try:
+        user = User.objects.get(id=id)
+    except User.DoesNotExist:
+        return JsonResponse({'error': 'Utilizador não encontrado.'}, status=status.HTTP_404_NOT_FOUND)
+
+    force = request.data.get('force', None)
+    if force is not None:
+        user.showTotp = bool(force)
+    else:
+        user.showTotp = not user.showTotp
+
+    if user.showTotp:
+        user.totp_secret = pyotp.random_base32()
+        user.otpMethod = 'totp'
+
+    user.save()
+    return JsonResponse({
+        'success': 'Estado do QR Code atualizado com sucesso.',
+        'showTotp': user.showTotp
+    }, status=status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+def toggleUserStatus(request, id):
+    try:
+        user = User.objects.get(id=id)
+    except User.DoesNotExist:
+        return JsonResponse({'error': 'Utilizador não encontrado.'}, status=status.HTTP_404_NOT_FOUND)
+
+    if 'is_active' in request.data:
+        user.is_active = bool(request.data.get('is_active'))
+    elif 'is_blocked' in request.data:
+        user.is_active = not bool(request.data.get('is_blocked'))
+    else:
+        user.is_active = not user.is_active
+
+    if user.is_active:
+        cache.delete(f"failed_login_attempts_{user.pk}")
+        cache.delete(f"failed_otp_attempts_{user.pk}")
+
+    user.save()
+    return JsonResponse({
+        'success': 'Estado do utilizador atualizado com sucesso.',
+        'is_active': user.is_active,
+        'is_blocked': not user.is_active
+    }, status=status.HTTP_200_OK)
+
 class ChangePasswordView(APIView):
     permission_classes = [IsAuthenticated]
 

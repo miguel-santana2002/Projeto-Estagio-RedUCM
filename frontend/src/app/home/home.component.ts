@@ -8,6 +8,8 @@ import { UsecasesService } from '../services/usecases.service';
 import { RulesService } from '../services/rules.service';
 import { RouterModule } from '@angular/router';
 
+import { forkJoin } from 'rxjs';
+
 @Component({
   selector: 'app-home',
   standalone: true,
@@ -24,7 +26,7 @@ export class HomeComponent implements OnInit {
   ) {}
   numberOfUseCases: number = 0;
   numberOfRules: number = 0;
-  numberOfRuleModels: number = 0;
+  numberOfClients: number = 0;
 
   ngOnInit() {
     this.authService.loggedInInfo().subscribe((value) => {
@@ -32,17 +34,22 @@ export class HomeComponent implements OnInit {
       if (this.user.companies == null) {
         this.user.companies = [];
       }
-      this.useCasesService.getUseCases().subscribe((value) => {
-        this.numberOfUseCases = value.length;
+    });
 
-        this.rulesService.getRules().subscribe((value) => {
-          this.numberOfRules = (value as any).length;
-
-          this.rulesService.getRuleModels().subscribe((value) => {
-            this.numberOfRuleModels = (value as any).length;
-          });
-        });
-      });
+    // Carregar todas as contagens em paralelo
+    forkJoin({
+      useCases: this.useCasesService.getUseCases(),
+      rules: this.rulesService.getRules(),
+      clients: this.authService.getClients(),
+    }).subscribe({
+      next: ({ useCases, rules, clients }) => {
+        this.numberOfUseCases = Array.isArray(useCases) ? useCases.length : 0;
+        this.numberOfRules = Array.isArray(rules) ? rules.length : 0;
+        this.numberOfClients = Array.isArray(clients) ? clients.length : 0;
+      },
+      error: (err) => {
+        console.error('Erro ao carregar métricas da home:', err);
+      },
     });
   }
 

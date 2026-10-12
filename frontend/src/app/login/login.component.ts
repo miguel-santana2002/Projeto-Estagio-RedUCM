@@ -85,8 +85,9 @@ export class LoginComponent {
             this.router.navigate(['/home']);
           }
         },
-        error: () => {
-          this.errorMessage = 'Credenciais inválidas para início de sessão';
+        error: (err: any) => {
+          this.errorMessage =
+            err?.message || 'Credenciais inválidas para início de sessão';
         },
       });
     }
@@ -103,8 +104,9 @@ export class LoginComponent {
             this.router.navigate(['/home']);
           }
         },
-        (error) => {
-          this.errorMessage = 'Código de Verificação Inválido';
+        (err: any) => {
+          this.errorMessage =
+            err?.message || 'Código de Verificação Inválido';
         },
       );
     }

@@ -5,6 +5,7 @@ import {
   ViewChild,
   OnInit,
   AfterViewInit,
+  HostListener,
 } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -14,6 +15,8 @@ import { TitlebannerComponent } from '../../../layout/titlebanner/titlebanner.co
 import { HeaderComponent } from '../../../layout/header/header.component';
 import { AuthService } from '../../../services/auth.service';
 import { RulesService } from '../../../services/rules.service';
+import { smartMatch } from '../../../helper/search-utils';
+import { exportRuleFormatted, ExportFormat } from '../../../shared/utils/rule-export.util';
 
 @Component({
   selector: 'app-manage-rules',
@@ -57,14 +60,12 @@ export class ManageRulesComponent implements OnInit, AfterViewInit {
 
   selectedTypes: string[] = [];
   selectedSintaxes: string[] = [];
-  selectedUseCases: (string | number)[] = [];
-  selectedClients: string[] = [];
+  selectedLogSources: string[] = [];
   selectedStatus: string[] = [];
 
   uniqueTypes: string[] = [];
   uniqueSintaxes: string[] = [];
-  uniqueUseCases: (string | number)[] = [];
-  uniqueClients: string[] = [];
+  uniqueLogSources: string[] = [];
 
   constructor(
     private authService: AuthService,
@@ -111,18 +112,10 @@ export class ManageRulesComponent implements OnInit, AfterViewInit {
   }
 
   startFilters(): void {
-    this.uniqueClients = Array.from(
-      new Set(
-        this.rules
-          .map((item: any) => item.client?.name)
-          .filter((name): name is string => Boolean(name)),
-      ),
-    ).sort();
-
     this.uniqueTypes = Array.from(
       new Set(
         this.rules
-          .map((item: any) => item.ruleModel?.type)
+          .map((item: any) => item.type || item.ruleModel?.type)
           .filter((type): type is string => Boolean(type)),
       ),
     ).sort();
@@ -130,20 +123,18 @@ export class ManageRulesComponent implements OnInit, AfterViewInit {
     this.uniqueSintaxes = Array.from(
       new Set(
         this.rules
-          .map((item: any) => item.ruleModel?.syntax || item.syntax)
+          .map((item: any) => item.syntax || item.ruleModel?.syntax)
           .filter((syntax): syntax is string => Boolean(syntax)),
       ),
     ).sort();
 
-    this.uniqueUseCases = Array.from(
+    this.uniqueLogSources = Array.from(
       new Set(
         this.rules
-          .map((item: any) => item.ruleModel?.useCaseId)
-          .filter(
-            (uc): uc is number | string => uc !== null && uc !== undefined,
-          ),
+          .flatMap((item: any) => this.getRuleLogSources(item))
+          .filter((log): log is string => Boolean(log)),
       ),
-    ).sort((a: any, b: any) => Number(a) - Number(b));
+    ).sort();
   }
 
   getStatusClasses(status: string): string {
@@ -186,11 +177,15 @@ export class ManageRulesComponent implements OnInit, AfterViewInit {
     });
   }
 
-  toggleClient(client: string): void {
+  toggleLogSource(logSource: string): void {
     this.page = 1;
-    this.selectedClients = this.selectedClients.includes(client)
-      ? this.selectedClients.filter((c) => c !== client)
-      : [...this.selectedClients, client];
+    this.selectedLogSources = this.selectedLogSources.includes(logSource)
+      ? this.selectedLogSources.filter((l) => l !== logSource)
+      : [...this.selectedLogSources, logSource];
+  }
+
+  isLogSourceSelected(logSource: string): boolean {
+    return this.selectedLogSources.includes(logSource);
   }
 
   toggleType(type: string): void {
@@ -207,13 +202,6 @@ export class ManageRulesComponent implements OnInit, AfterViewInit {
       : [...this.selectedSintaxes, syntax];
   }
 
-  toggleUseCase(uc: string | number): void {
-    this.page = 1;
-    this.selectedUseCases = this.selectedUseCases.includes(uc)
-      ? this.selectedUseCases.filter((u) => u !== uc)
-      : [...this.selectedUseCases, uc];
-  }
-
   toggleStatus(status: string): void {
     this.page = 1;
     this.selectedStatus = this.selectedStatus.includes(status)
@@ -223,16 +211,28 @@ export class ManageRulesComponent implements OnInit, AfterViewInit {
 
   clearAllFilters(): void {
     this.page = 1;
-    this.selectedClients = [];
+    this.selectedLogSources = [];
     this.selectedTypes = [];
     this.selectedSintaxes = [];
-    this.selectedUseCases = [];
     this.selectedStatus = [];
     this.nameSearch = '';
   }
 
   onSearchChange(): void {
     this.page = 1;
+  }
+
+  getRuleLogSources(rule: any): string[] {
+    const directLogs = Array.isArray(rule?.logsources)
+      ? rule.logsources.filter((l: string) => Boolean(l))
+      : [];
+    if (directLogs.length > 0) {
+      return directLogs;
+    }
+    const modelLogs = Array.isArray(rule?.ruleModel?.logsources)
+      ? rule.ruleModel.logsources.filter((l: string) => Boolean(l))
+      : [];
+    return modelLogs;
   }
 
   sortTable(column: string): void {
@@ -250,20 +250,16 @@ export class ManageRulesComponent implements OnInit, AfterViewInit {
       switch (column) {
         case 'title':
         case 'ruleModel':
-          valA = a.ruleModel?.title || '';
-          valB = b.ruleModel?.title || '';
+          valA = a.title || a.ruleModel?.title || '';
+          valB = b.title || b.ruleModel?.title || '';
           break;
-        case 'client':
-          valA = a.client?.name || '';
-          valB = b.client?.name || '';
-          break;
-        case 'useCaseId':
-          valA = a.ruleModel?.useCaseId ?? 0;
-          valB = b.ruleModel?.useCaseId ?? 0;
+        case 'logsources':
+          valA = this.getRuleLogSources(a).join(', ');
+          valB = this.getRuleLogSources(b).join(', ');
           break;
         case 'type':
-          valA = a.ruleModel?.type || '';
-          valB = b.ruleModel?.type || '';
+          valA = a.type || a.ruleModel?.type || '';
+          valB = b.type || b.ruleModel?.type || '';
           break;
         case 'syntax':
           valA = a.syntax || a.ruleModel?.syntax || '';
@@ -298,43 +294,61 @@ export class ManageRulesComponent implements OnInit, AfterViewInit {
   }
 
   get filteredRules(): any[] {
-    const term = this.nameSearch.trim().toLowerCase();
-
     return this.rules.filter((rule: any) => {
-      const ruleTitle = rule.ruleModel?.title?.toLowerCase() || '';
-      const ruleCode = rule.ruleCode?.toLowerCase() || '';
-      const matchesName =
-        !term || ruleTitle.includes(term) || ruleCode.includes(term);
+      const ruleTitle = rule.title || rule.ruleModel?.title || '';
+      const ruleCode = rule.ruleCode || '';
+      const ruleType = rule.type || rule.ruleModel?.type || '';
+      const currentSyntax = rule.syntax || rule.ruleModel?.syntax || '';
+      const ruleLogs = this.getRuleLogSources(rule).join(' ');
+      const clientName =
+        typeof rule.client === 'object' && rule.client?.name
+          ? rule.client.name
+          : typeof rule.client === 'string'
+            ? rule.client
+            : '';
+      const modelId = rule.ruleModel?.id ? `RedModel${rule.ruleModel.id}` : '';
+      const ruleIdStr = rule.id ? `RedRule${rule.id}` : '';
+
+      const matchesSearch = smartMatch(
+        [
+          rule.id,
+          ruleIdStr,
+          modelId,
+          ruleTitle,
+          ruleCode,
+          ruleType,
+          currentSyntax,
+          ruleLogs,
+          clientName,
+          rule.status,
+          rule.generationStatus,
+        ],
+        this.nameSearch
+      );
 
       const matchesType =
         this.selectedTypes.length === 0 ||
         (rule.ruleModel?.type &&
           this.selectedTypes.includes(rule.ruleModel.type));
 
-      const currentSyntax = rule.syntax || rule.ruleModel?.syntax;
       const matchesSyntax =
         this.selectedSintaxes.length === 0 ||
         (currentSyntax && this.selectedSintaxes.includes(currentSyntax));
 
-      const matchesUseCase =
-        this.selectedUseCases.length === 0 ||
-        (rule.ruleModel?.useCaseId != null &&
-          this.selectedUseCases.includes(rule.ruleModel.useCaseId));
-
-      const matchesClient =
-        this.selectedClients.length === 0 ||
-        (rule.client?.name && this.selectedClients.includes(rule.client.name));
+      const ruleLogList = this.getRuleLogSources(rule);
+      const matchesLogSources =
+        this.selectedLogSources.length === 0 ||
+        ruleLogList.some((log: string) => this.selectedLogSources.includes(log));
 
       const matchesStatus =
         this.selectedStatus.length === 0 ||
         (rule.status && this.selectedStatus.includes(rule.status));
 
       return (
-        matchesName &&
+        matchesSearch &&
         matchesType &&
         matchesSyntax &&
-        matchesUseCase &&
-        matchesClient &&
+        matchesLogSources &&
         matchesStatus
       );
     });
@@ -390,38 +404,31 @@ export class ManageRulesComponent implements OnInit, AfterViewInit {
     });
   }
 
-  exportSigmaRule(event: Event, rule: any): void {
+  activeExportMenuRuleId: number | null = null;
+
+  toggleExportMenu(event: Event, ruleId: number): void {
     event.stopPropagation();
+    this.activeExportMenuRuleId =
+      this.activeExportMenuRuleId === ruleId ? null : ruleId;
+  }
 
-    const yamlContent = rule.ruleCode;
-    if (!yamlContent) {
-      console.warn(
-        `A regra ID ${rule.id} não possui conteúdo no campo ruleCode.`,
-      );
-      return;
-    }
+  @HostListener('document:click')
+  closeExportMenu(): void {
+    this.activeExportMenuRuleId = null;
+  }
 
-    const rawTitle = rule.ruleModel?.title || 'rule';
-    const sanitizedTitle = rawTitle
-      .trim()
-      .replace(/\s*-\s*/g, '-')
-      .replace(/\s+/g, '_')
-      .replace(/[^a-zA-Z0-9_-]/g, '')
-      .replace(/_+/g, '_');
+  exportRule(event: Event, rule: any, format: ExportFormat = 'yml'): void {
+    event.stopPropagation();
+    this.activeExportMenuRuleId = null;
+    exportRuleFormatted(
+      rule.id,
+      rule.title || rule.ruleModel?.title || 'rule',
+      rule.ruleCode,
+      format
+    );
+  }
 
-    const dateStr = new Date().toISOString().split('T')[0];
-    const filename = `RedRule${rule.id}_${sanitizedTitle}_${dateStr}.yml`;
-
-    const blob = new Blob([yamlContent], { type: 'text/yaml;charset=utf-8' });
-    const downloadUrl = window.URL.createObjectURL(blob);
-    const anchor = document.createElement('a');
-
-    anchor.href = downloadUrl;
-    anchor.download = filename;
-    document.body.appendChild(anchor);
-    anchor.click();
-
-    document.body.removeChild(anchor);
-    window.URL.revokeObjectURL(downloadUrl);
+  exportSigmaRule(event: Event, rule: any): void {
+    this.exportRule(event, rule, 'yml');
   }
 }

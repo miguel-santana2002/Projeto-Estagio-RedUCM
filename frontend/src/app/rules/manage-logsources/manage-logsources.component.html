@@ -24,8 +24,13 @@
             <i
               class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400 dark:text-gray-500 fas fa-search pointer-events-none"></i>
             <input type="text" [(ngModel)]="searchTerm" name="search"
-              class="pl-10 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-redshift-red transition text-sm"
-              placeholder="Procurar por nome ou descrição" />
+              class="pl-10 pr-9 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-redshift-red transition text-sm"
+              placeholder="Pesquisa (nome, tipo, recolha, descrição...)" />
+            <button *ngIf="searchTerm" (click)="searchTerm = ''" type="button"
+              class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition"
+              title="Limpar pesquisa">
+              <i class="fas fa-times-circle text-sm"></i>
+            </button>
           </div>
         </div>
 

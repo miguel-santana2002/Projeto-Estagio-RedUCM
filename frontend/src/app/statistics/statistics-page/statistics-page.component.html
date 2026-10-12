@@ -62,7 +62,7 @@
       </div>
 
       <div class="flex flex-wrap gap-2 max-h-40 overflow-y-auto pr-1">
-        <button *ngFor="let client of uniqueClientsName" type="button" (click)="toggleClient(client)" [ngClass]="{
+        <button *ngFor="let client of uniqueClientsName; trackBy: trackByClient" type="button" (click)="toggleClient(client)" [ngClass]="{
             'bg-redshift-red text-white border-redshift-red shadow-sm': isClientSelected(client),
             'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-700 hover:border-redshift-red dark:hover:border-redshift-red': !isClientSelected(client)
           }" class="px-3 py-1.5 rounded-lg border text-xs font-medium transition flex items-center gap-2 select-none">
@@ -88,7 +88,8 @@
         <i class="fas fa-user text-xl"></i>
       </div>
       <div>
-        <span class="block text-xl font-bold text-gray-900 dark:text-white">{{ users.length || 0 }}</span>
+        <span *ngIf="!isLoading" class="block text-xl font-bold text-gray-900 dark:text-white">{{ users.length }}</span>
+        <span *ngIf="isLoading" class="block h-6 w-12 bg-gray-200 dark:bg-gray-700 rounded animate-pulse my-1"></span>
         <span class="block text-gray-500 dark:text-gray-400 text-sm">Utilizadores Registados</span>
       </div>
     </div>
@@ -101,7 +102,8 @@
         <i class="fas fa-building text-xl"></i>
       </div>
       <div>
-        <span class="block text-xl font-bold text-gray-900 dark:text-white">{{ clientsFromBd.length || 0 }}</span>
+        <span *ngIf="!isLoading" class="block text-xl font-bold text-gray-900 dark:text-white">{{ clientsFromBd.length }}</span>
+        <span *ngIf="isLoading" class="block h-6 w-12 bg-gray-200 dark:bg-gray-700 rounded animate-pulse my-1"></span>
         <span class="block text-gray-500 dark:text-gray-400 text-sm">Clientes Registados</span>
       </div>
     </div>
@@ -114,25 +116,13 @@
         <i class="fas fa-file text-xl"></i>
       </div>
       <div>
-        <span class="block text-xl font-bold text-gray-900 dark:text-white">{{ useCases.length || 0 }}</span>
+        <span *ngIf="!isLoading" class="block text-xl font-bold text-gray-900 dark:text-white">{{ useCases.length }}</span>
+        <span *ngIf="isLoading" class="block h-6 w-12 bg-gray-200 dark:bg-gray-700 rounded animate-pulse my-1"></span>
         <span class="block text-gray-500 dark:text-gray-400 text-sm">Use Cases Registados</span>
       </div>
     </div>
 
-    <!-- Modelos de Regra -->
-    <div
-      class="flex items-center p-6 bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 shadow-md rounded-lg hover:shadow-xl transition duration-300 h-28 w-72">
-      <div
-        class="inline-flex flex-shrink-0 items-center justify-center h-14 w-14 text-redshift-red bg-red-100 dark:bg-red-950/40 dark:text-red-400 rounded-full mr-4">
-        <i class="fas fa-list-ul text-xl"></i>
-      </div>
-      <div>
-        <span class="block text-xl font-bold text-gray-900 dark:text-white">{{ ruleModels.length || 0 }}</span>
-        <span class="block text-gray-500 dark:text-gray-400 text-sm">Modelos de Regra</span>
-      </div>
-    </div>
-
-    <!-- Regras Atribuídas -->
+    <!-- Regras Registadas -->
     <div
       class="flex items-center p-6 bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 shadow-md rounded-lg hover:shadow-xl transition duration-300 h-28 w-72">
       <div
@@ -140,22 +130,29 @@
         <i class="fas fa-handshake text-xl"></i>
       </div>
       <div>
-        <span class="block text-xl font-bold text-gray-900 dark:text-white">{{ filteredRules.length || 0 }}</span>
-        <span class="block text-gray-500 dark:text-gray-400 text-sm">Regras Atribuídas</span>
+        <span *ngIf="!isLoading" class="block text-xl font-bold text-gray-900 dark:text-white">{{ filteredRules.length }}</span>
+        <span *ngIf="isLoading" class="block h-6 w-12 bg-gray-200 dark:bg-gray-700 rounded animate-pulse my-1"></span>
+        <span class="block text-gray-500 dark:text-gray-400 text-sm">Regras Registadas</span>
       </div>
     </div>
 
   </div>
 
+  <!-- Loading State dos Gráficos -->
+  <div *ngIf="isLoading" class="flex flex-col items-center justify-center py-24 space-y-4">
+    <div class="w-10 h-10 border-4 border-redshift-red/20 border-t-redshift-red rounded-full animate-spin"></div>
+    <span class="text-sm font-medium text-gray-500 dark:text-gray-400">A processar dados e a gerar gráficos...</span>
+  </div>
+
   <!-- Gráficos Secundários -->
-  <div *ngIf="(filteredRules?.length ?? 0) > 0" class="flex justify-center space-x-12 my-12">
+  <div *ngIf="!isLoading && (filteredRules?.length ?? 0) > 0" class="flex justify-center space-x-12 my-12">
     <app-rules-per-syntax [rules]="filteredRules"></app-rules-per-syntax>
     <app-rules-per-logsource [rules]="filteredRules"></app-rules-per-logsource>
     <app-rules-per-type [rules]="filteredRules"></app-rules-per-type>
   </div>
 
   <!-- Painéis Informativos e Gráficos -->
-  <div *ngIf="(filteredRules?.length ?? 0) > 0" class="flex justify-center space-x-8 my-12 min-h-80">
+  <div *ngIf="!isLoading && (filteredRules?.length ?? 0) > 0" class="flex justify-center space-x-8 my-12 min-h-80">
 
     <!-- Painel 1: Use Cases por Técnica -->
     <div
@@ -166,7 +163,7 @@
       <div class="max-h-60 overflow-y-auto pr-1">
         <table class="w-full text-sm text-left text-gray-600 dark:text-gray-300">
           <tbody>
-            <tr *ngFor="let technique of mitreTechniques; let i = index"
+            <tr *ngFor="let technique of mitreTechniques; let i = index; trackBy: trackByTechnique"
               class="border-b border-gray-100 dark:border-gray-700/60 hover:bg-gray-50 dark:hover:bg-gray-700/50">
               <td class="p-2 font-bold break-words text-gray-800 dark:text-gray-200">{{ technique }}</td>
               <td class="p-2 break-words text-right text-gray-600 dark:text-gray-400">{{ mitreTechniquesCount[i] }}</td>
@@ -185,7 +182,7 @@
       <div class="max-h-60 overflow-y-auto pr-1">
         <table class="w-full text-sm text-left text-gray-600 dark:text-gray-300">
           <tbody>
-            <tr *ngFor="let client of clients; let i = index"
+            <tr *ngFor="let client of clients; let i = index; trackBy: trackByClient"
               class="border-b border-gray-100 dark:border-gray-700/60 hover:bg-gray-50 dark:hover:bg-gray-700/50">
               <td class="p-2 font-bold text-gray-800 dark:text-gray-200">{{ client }}</td>
               <td class="p-2 text-right text-gray-600 dark:text-gray-400">{{ clientsCount[i] }}</td>
@@ -200,7 +197,7 @@
       class="max-w-sm w-full bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-lg shadow p-4 md:p-6 transition">
       <h5 class="text-xl font-bold leading-none text-gray-900 dark:text-white">Táticas por UseCases</h5>
       <hr class="mb-4 mt-4 border-gray-200 dark:border-gray-700">
-      <app-radar-tactics class="mt-0 pt-0 max-h-96"></app-radar-tactics>
+      <app-radar-tactics [useCases]="useCases" class="mt-0 pt-0 max-h-96"></app-radar-tactics>
     </div>
 
   </div>

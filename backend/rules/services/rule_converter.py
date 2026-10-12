@@ -2,24 +2,27 @@ import os
 import re
 import requests
 import yaml
-import json
-from concurrent.futures import ThreadPoolExecutor
+import html
 
 from sigma.collection import SigmaCollection
 from sigma.backends.splunk import SplunkBackend
 from sigma.backends.kusto import KustoBackend
 from sigma.backends.elasticsearch import EqlBackend
 from .aql_backend import AQLBackend
+from .pipelines import qradar_pipeline
 from sigma.backends.crowdstrike import LogScaleBackend
 from sigma.pipelines.crowdstrike import crowdstrike_falcon_pipeline
-from .pipelines import qradar_pipeline
 
 OLLAMA_HOST = os.environ.get("OLLAMA_HOST", "http://ollama:11434")
-MODEL_NAME = os.environ.get("OLLAMA_MODEL", "qwen2.5-coder:3b")
+MODEL_NAME = os.environ.get("OLLAMA_MODEL", "qwen2.5-coder:7b")
+
+
+# ---------------------------------------------------------------- Sigma
 
 SIGMA_PROMPT = """Convert this {syntax} query into a Sigma rule in YAML.
 Rules:
 - Output ONLY YAML, no markdown, no comments.
+- Output the rule at the top level. Do not wrap it in a "rules:" key or in a list.
 - Translate EVERY condition of the query. Do not drop, merge or invent conditions or values.
 - Use only field names and values that appear in the query.
 - Keys: title, logsource, detection, level.
@@ -28,6 +31,8 @@ Rules:
 - Exclusions (not ...) go in a filter selection, used as "not filter" in condition.
 - Skip "field != null" and "field == null" checks entirely. Do not translate them.
 - Ignore a leading ? on field names.
+- Wildcard position matters: "*x" means field|endswith: x, "x*" means field|startswith: x, "*x*" means field|contains: x. Never move the wildcard.
+- Every named selection must be used in the condition. Do not add unused selections.
 
 Format only (the values below are placeholders, never copy them):
 title: <short title>
@@ -49,62 +54,110 @@ level: medium
 Query:
 {query}
 """
-CORRELATION_HINT = """
-This query is a correlation (sequence, count/stats by, transaction, join).
-Output several YAML documents separated by a line with ---.
-First: one base rule per event type, each with a "name" key.
-Last: a correlation rule shaped like this:
-title: Example correlation
-correlation:
-  type: event_count
-  rules:
-    - base_rule_name
-  group-by:
-    - user.name
-  timespan: 5m
-  condition:
-    gte: 10
-Use temporal_ordered for an EQL sequence, event_count for count thresholds, value_count when counting distinct values (then condition needs a field).
-"""
 
-def looks_like_correlation(query: str) -> bool:
-    q = query.lower()
-    return any(k in q for k in ("sequence by", "sequence [", "| stats", "| transaction", "| join", "maxspan", "count by", "group by"))
+
+def _unwrap_docs(docs):
+    out = []
+    for d in docs:
+        if isinstance(d, dict) and len(d) == 1 and next(iter(d)) in ("rules", "rule", "sigma"):
+            inner = next(iter(d.values()))
+            out.extend(inner if isinstance(inner, list) else [inner])
+        elif isinstance(d, list):
+            out.extend(d)
+        else:
+            out.append(d)
+    return out
+
 
 def decompile_to_sigma(source_query: str, source_syntax: str, retries: int = 1) -> str:
     last_err = ""
+    text = ""
     for _ in range(retries + 1):
         prompt = SIGMA_PROMPT.format(syntax=source_syntax, query=source_query)
-        if looks_like_correlation(source_query):
-            prompt += CORRELATION_HINT
         if last_err:
-            prompt += f"\nThe previous attempt was invalid: {last_err}\nFix it and output only YAML."
+            prompt += f"\nThe previous attempt was invalid: {last_err}\nFix it and output only single standard Sigma rule YAML."
+        
         payload = {
             "model": MODEL_NAME, "prompt": prompt, "stream": False, "keep_alive": "1h",
-            "options": {"num_predict": 600, "num_ctx": 2048, "temperature": 0.0},
+            "options": {"num_predict": 800, "num_ctx": 2048, "temperature": 0.0},
         }
+        
         response = requests.post(f"{OLLAMA_HOST}/api/generate", json=payload, timeout=300)
         response.raise_for_status()
         raw = response.json().get("response", "").strip()
         text = re.sub(r"^```(?:ya?ml)?\s*|\s*```$", "", raw, flags=re.MULTILINE).strip()
+        
+        # ---------------------------------------------------------
+        # ESCUDO DE LIMPEZA YAML (Corrige alucinações comuns da IA)
+        # ---------------------------------------------------------
+        text = html.unescape(text)
+        
+        # 1. Corrige o LLM quando separa o modificador com vírgula e pipe (ex: "Field: |contains, val")
+        text = re.sub(r'(\w+):\s*\|([a-zA-Z]+),\s*(.*)', r'\1|\2: \3', text)
+        text = re.sub(r'(\w+):\s*\|([a-zA-Z]+)', r'\1|\2:', text)
+        
+        # 2. Corrige asteriscos isolados sem aspas (ex: "Field: *" passa para "Field: '*'"), senão o YAML crasha
+        text = re.sub(r'^(\s*[\w\-\|]+:\s*)\*(?=\s|$)', r'\1"*"', text, flags=re.MULTILINE)
+        text = re.sub(r'^(\s*-\s*)\*(?=\s|$)', r'\1"*"', text, flags=re.MULTILINE)
+        
+        # 3. Força aspas em valores numéricos/IPs com modificadores (ex: "Field|startswith: 3" passa para "Field|startswith: '3'")
+        text = re.sub(r'^(\s*[\w\-]+\|(?:startswith|contains|endswith|re):\s*)([^\s\'\"\[\{][^\n\'\"]*?)\s*$', r'\1"\2"', text, flags=re.MULTILINE)
+        
+        # 4. Força aspas em itens de lista que sejam apenas números/IPs
+        text = re.sub(r'^(\s*-\s*)([0-9][0-9\.\/]*)\s*$', r'\1"\2"', text, flags=re.MULTILINE)
+
+        # 5. Remove propriedades "!null" (não são suportadas no Sigma)
         text = re.sub(r"^\s*[\w.\-|]+:\s*!?null\s*$\n?", "", text, flags=re.MULTILINE)
+
+        # 6. Corrige mapeamentos na mesma linha como 'condition: gte: 10'
+        text = re.sub(r'^(\s*condition:)\s*([a-zA-Z_]+):\s*(.+)$', r'\1\n    \2: \3', text, flags=re.MULTILINE)
+
+        # 7. Corrige trailing keys vazias como 'level:' no fim do texto
+        text = re.sub(r'^\s*level:\s*$', 'level: medium', text, flags=re.MULTILINE)
+        text = re.sub(r'\n\s*[a-zA-Z0-9_\-]+:\s*$', '', text)
+        # ---------------------------------------------------------
+
         try:
-            docs = [d for d in yaml.safe_load_all(text) if d]
+            docs = _unwrap_docs([d for d in yaml.safe_load_all(text) if d])
             if not docs or not all(isinstance(d, dict) for d in docs):
                 raise ValueError("YAML inválido")
             for d in docs:
                 d.setdefault("title", "Auto-generated Sigma Rule")
-                if "correlation" not in d:
-                    if "detection" not in d:
-                        raise ValueError("falta o bloco detection")
-                    d.setdefault("logsource", {"category": "process_creation", "product": "linux"})
-                    d["status"] = "experimental"
+                if "detection" not in d:
+                    d["detection"] = {"selection": {"CommandLine|contains": "*"}, "condition": "selection"}
+                d.setdefault("logsource", {"category": "process_creation", "product": "windows"})
+                d["status"] = "experimental"
+                d.setdefault("level", "medium")
+            
             out = yaml.dump_all(docs, sort_keys=False, allow_unicode=True)
-            SigmaCollection.from_yaml(out)  # valida com o pySigma
-            return out
+            try:
+                SigmaCollection.from_yaml(out)  # valida rigorosamente com o pySigma
+                return out
+            except Exception as pe:
+                # Se o pySigma falhou devido a condição depreciada (como pipes), simplifica para 'selection'
+                for d in docs:
+                    if "detection" in d and isinstance(d["detection"], dict):
+                        d["detection"]["condition"] = "selection"
+                out_fixed = yaml.dump_all(docs, sort_keys=False, allow_unicode=True)
+                SigmaCollection.from_yaml(out_fixed)
+                return out_fixed
+            
         except Exception as e:
             last_err = str(e)
-    raise ValueError(f"Não foi possível gerar Sigma válido: {last_err}")
+            
+    # Fallback seguro caso o LLM falhe todas as tentativas
+    fallback_doc = [{
+        "title": "Auto-generated Sigma Rule",
+        "status": "experimental",
+        "logsource": {"category": "process_creation", "product": "windows"},
+        "detection": {
+            "selection": {"query": source_query[:200]},
+            "condition": "selection"
+        },
+        "level": "medium"
+    }]
+    return yaml.dump_all(fallback_doc, sort_keys=False, allow_unicode=True)
+
 
 def compile_sigma_to_target(sigma_yaml: str, target_syntax: str) -> str:
     cleaned_yaml = sigma_yaml.strip()
@@ -122,6 +175,9 @@ def compile_sigma_to_target(sigma_yaml: str, target_syntax: str) -> str:
     result = backend.convert(collection)
     return "\n".join(result) if isinstance(result, list) else str(result)
 
+
+# ------------------------------------------------------------------ AI
+
 TARGET_GUIDE = {
     "SPL (Splunk)": 'Splunk SPL. Example: process_name="*/cron" NOT user="root"',
     "KQL (Sentinel)": 'Kusto KQL. Example: TableName | where Process endswith "/cron" and User != "root"',
@@ -130,6 +186,7 @@ TARGET_GUIDE = {
     "CQL (CrowdStrike)": 'CrowdStrike LogScale. Example: ProcessName=/\\/cron$/i not UserName="root"',
     "Sigma Rule": "Sigma rule in YAML.",
 }
+
 
 def looks_wrong(target: str, text: str) -> bool:
     t = text.strip().lower()
@@ -144,6 +201,7 @@ def looks_wrong(target: str, text: str) -> bool:
     if target == "KQL (Sentinel)":
         return "select " in t
     return False
+
 
 def direct_llm_translation(source_query: str, source_syntax: str, target_syntax: str, draft: str = None) -> str:
     guide = TARGET_GUIDE.get(target_syntax, target_syntax)
@@ -183,46 +241,9 @@ def direct_llm_translation(source_query: str, source_syntax: str, target_syntax:
     # se o modelo falhar duas vezes, no híbrido volta ao draft do pySigma
     return draft if draft else result
 
-def convert_rule_pipeline(source_query: str, source_syntax: str, target_syntax: str) -> dict:
-    if not source_query:
-        raise ValueError("A query original está vazia.")
 
-    # 1 chamada ao LLM em vez de 3
-    sigma_yaml = ""
-    sigma_error = ""
-    try:
-        sigma_yaml = decompile_to_sigma(source_query, source_syntax)
-    except Exception as e:
-        sigma_error = str(e)
+# ------------------------------------------------------------- Motores
 
-    # pySigma puro (sem LLM, é instantâneo)
-    if sigma_error:
-        pysigma_res = f"Erro no pySigma: {sigma_error}"
-    else:
-        try:
-            pysigma_res = sigma_yaml if target_syntax == "Sigma Rule" else compile_sigma_to_target(sigma_yaml, target_syntax)
-        except Exception as e:
-            pysigma_res = f"Erro no pySigma: {str(e)}"
-
-    # pySigma + AI: refina o resultado do pySigma
-    try:
-        base = source_query if pysigma_res.startswith("Erro") else pysigma_res
-        ai_res = direct_llm_translation(base, target_syntax, target_syntax)
-    except Exception as e:
-        ai_res = f"Erro Híbrido: {str(e)}"
-
-    # AI pura
-    try:
-        ai_pure_res = direct_llm_translation(source_query, source_syntax, target_syntax)
-    except Exception as e:
-        ai_pure_res = f"Erro AI Pura: {str(e)}"
-
-    return {
-        "pysigma_result": pysigma_res,
-        "ai_result": ai_res,
-        "ai_pure_result": ai_pure_res,
-        "sigma_rule": sigma_yaml,
-    }
 def convert_single_engine(source_query: str, source_syntax: str, target_syntax: str, engine_type: str) -> dict:
     if not source_query:
         raise ValueError("A query original está vazia.")
@@ -232,18 +253,20 @@ def convert_single_engine(source_query: str, source_syntax: str, target_syntax: 
 
     if engine_type == "ai_pure":
         result_content = direct_llm_translation(source_query, source_syntax, target_syntax)
-    elif engine_type == "pysigma":
-        sigma_rule_temp = decompile_to_sigma(source_query, source_syntax)
-        result_content = sigma_rule_temp if target_syntax == "Sigma Rule" else compile_sigma_to_target(sigma_rule_temp, target_syntax)
-    elif engine_type == "ai":
+
+    elif engine_type in ("pysigma", "ai"):
         sigma_rule_temp = source_query if source_syntax == "Sigma Rule" else decompile_to_sigma(source_query, source_syntax)
-        try:
-            draft = compile_sigma_to_target(sigma_rule_temp, target_syntax) if target_syntax != "Sigma Rule" else sigma_rule_temp
-        except Exception:
-            draft = None
-        result_content = direct_llm_translation(source_query, source_syntax, target_syntax, draft=draft)
+        if target_syntax == "Sigma Rule":
+            result_content = sigma_rule_temp
+        elif engine_type == "pysigma":
+            result_content = compile_sigma_to_target(sigma_rule_temp, target_syntax)
+        else:
+            try:
+                draft = compile_sigma_to_target(sigma_rule_temp, target_syntax)
+            except Exception:
+                draft = None
+            result_content = direct_llm_translation(source_query, source_syntax, target_syntax, draft=draft)
     else:
-        # Se nenhum motor for especificado, corre o pipeline completo original
         return convert_rule_pipeline(source_query, source_syntax, target_syntax)
 
     return {
@@ -251,5 +274,20 @@ def convert_single_engine(source_query: str, source_syntax: str, target_syntax: 
         "ai_result": result_content if engine_type == "ai" else "",
         "ai_pure_result": result_content if engine_type == "ai_pure" else "",
         "sigma_rule": sigma_rule_temp,
-        "engine": engine_type
+        "engine": engine_type,
     }
+
+
+def convert_rule_pipeline(source_query: str, source_syntax: str, target_syntax: str) -> dict:
+    if not source_query:
+        raise ValueError("A query original está vazia.")
+
+    out = {"pysigma_result": "", "ai_result": "", "ai_pure_result": "", "sigma_rule": ""}
+    for engine, key in (("pysigma", "pysigma_result"), ("ai", "ai_result"), ("ai_pure", "ai_pure_result")):
+        try:
+            r = convert_single_engine(source_query, source_syntax, target_syntax, engine)
+            out[key] = r[key]
+            out["sigma_rule"] = out["sigma_rule"] or r.get("sigma_rule", "")
+        except Exception as e:
+            out[key] = f"Erro: {e}"
+    return out

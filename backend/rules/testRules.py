@@ -30,7 +30,7 @@ class RuleModelTests(APITestCase):
 
     def test_create_rule_model(self):
         response = self.client.post(self.rule_model_url, self.rule_model_data, format='json')
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(RuleModel.objects.count(), 1)
         self.assertEqual(RuleModel.objects.get().title, 'Test Rule Model')
 
@@ -67,6 +67,9 @@ class RuleTests(APITestCase):
         self.rule_url = reverse('createRule')
         self.rule_data = {
             'ruleModel': self.rule_model.id,
+            'title': 'Test Rule Direct Title',
+            'useCaseId': 1,
+            'type': 'SIEM',
             'logsources': ['Test Log Source'],
             'ruleCode': 'Test Code',
             'syntax': 'Test Syntax',
@@ -75,9 +78,25 @@ class RuleTests(APITestCase):
 
     def test_create_rule(self):
         response = self.client.post(self.rule_url, self.rule_data, format='json')
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Rule.objects.count(), 1)
         self.assertEqual(Rule.objects.get().ruleCode, 'Test Code')
+        self.assertEqual(Rule.objects.get().title, 'Test Rule Direct Title')
+
+    def test_get_rules_by_use_case(self):
+        rule_data = {
+            'title': 'Rule for UC 1',
+            'useCaseId': 1,
+            'logsources': ['Test Log Source'],
+            'ruleCode': 'Test Code',
+            'syntax': 'Test Syntax',
+            'client': self.company
+        }
+        Rule.objects.create(**rule_data)
+        response = self.client.get(reverse('getRulesByUseCase', args=[1]))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.json()), 1)
+        self.assertEqual(response.json()[0]['title'], 'Rule for UC 1')
 
     def test_get_rules(self):
         rule_data = {

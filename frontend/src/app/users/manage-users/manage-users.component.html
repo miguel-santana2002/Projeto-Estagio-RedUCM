@@ -16,8 +16,13 @@
             <span class="fas fa-search text-sm"></span>
           </i>
           <input type="text" id="nameSearch" [(ngModel)]="nameSearch" (ngModelChange)="onSearchChange()"
-            placeholder="Procurar por nome ou email"
-            class="pl-10 px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-redshift-red transition text-sm">
+            placeholder="Pesquisa (nome, email, cliente, role, estado...)"
+            class="pl-10 pr-9 px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-redshift-red transition text-sm">
+          <button *ngIf="nameSearch" (click)="nameSearch = ''; onSearchChange()"
+            class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition"
+            title="Limpar pesquisa">
+            <i class="fas fa-times text-sm"></i>
+          </button>
         </div>
 
         <div class="flex items-center gap-4 w-full md:w-auto justify-end">
@@ -193,8 +198,13 @@
 
               <!-- Nome -->
               <td (click)="openModalDetails(u)" class="px-5 py-3 text-left truncate" [title]="u.username">
-                <span class="text-base font-semibold text-gray-900 dark:text-white truncate block">{{ u.username
-                  }}</span>
+                <div class="flex items-center gap-2">
+                  <span class="text-base font-semibold text-gray-900 dark:text-white truncate block">{{ u.username }}</span>
+                  <span *ngIf="u.is_active === false"
+                    class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 border border-red-200 dark:border-red-800">
+                    Bloqueado
+                  </span>
+                </div>
               </td>
 
               <!-- Role -->
@@ -361,14 +371,25 @@
       <!-- Corpo do Modal -->
       <div class="p-4 md:p-5 space-y-6">
         <div class="flex items-center justify-between">
-          <h4 class="text-sm font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Detalhes do Registo
+          <h4 class="text-sm font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+            Detalhes do Registo
           </h4>
 
-          <button [routerLink]="'/edit-user/' + selectedUser?.pk" (click)="closeModalDetails()"
-            class="bg-redshift-red hover:bg-redshift-hover text-sm font-medium text-white px-3.5 py-1.5 rounded-lg transition flex items-center gap-1.5 shadow-sm">
-            <span>Editar</span>
-            <i class="fas fa-pen text-xs"></i>
-          </button>
+          <div class="flex items-center gap-2">
+            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold"
+              [ngClass]="!isUserBlocked 
+                ? 'bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-300 border border-green-200 dark:border-green-800' 
+                : 'bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-300 border border-red-200 dark:border-red-800'">
+              <i [class]="!isUserBlocked ? 'fas fa-circle-check text-[10px]' : 'fas fa-ban text-[10px]'"></i>
+              <span>{{ !isUserBlocked ? 'Ativo' : 'Bloqueado' }}</span>
+            </span>
+
+            <button [routerLink]="'/edit-user/' + selectedUser?.pk" (click)="closeModalDetails()"
+              class="bg-redshift-red hover:bg-redshift-hover text-sm font-medium text-white px-3.5 py-1.5 rounded-lg transition flex items-center gap-1.5 shadow-sm">
+              <span>Editar</span>
+              <i class="fas fa-pen text-xs"></i>
+            </button>
+          </div>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
@@ -386,19 +407,23 @@
           </div>
           <div>
             <span class="text-xs text-gray-400 dark:text-gray-500 block uppercase font-semibold">Data de Registo</span>
-            <span class="text-gray-900 dark:text-white font-medium">{{ selectedUser?.date_joined | date: 'dd/MM/yyyy
-              HH:mm' }}</span>
+            <span class="text-gray-900 dark:text-white font-medium">{{ selectedUser?.date_joined | date: 'dd/MM/yyyy HH:mm' }}</span>
           </div>
           <div>
             <span class="text-xs text-gray-400 dark:text-gray-500 block uppercase font-semibold">Role</span>
-
             <span class="text-gray-900 dark:text-white font-medium">
               {{ (selectedUser?.is_superuser || selectedUser?.is_admin) ? 'Administrador' : 'Operador' }}
             </span>
           </div>
           <div>
-            <span class="text-xs text-gray-400 dark:text-gray-500 block uppercase font-semibold">Clientes
-              Atribuídos</span>
+            <span class="text-xs text-gray-400 dark:text-gray-500 block uppercase font-semibold">Método 2FA</span>
+            <span class="text-gray-900 dark:text-white font-medium flex items-center gap-1.5">
+              <i [class]="selectedUser?.otpMethod === 'email' ? 'fas fa-envelope text-xs text-gray-500' : 'fas fa-mobile-screen text-xs text-gray-500'"></i>
+              <span>{{ selectedUser?.otpMethod === 'email' ? 'Email' : 'TOTP (Aplicação)' }}</span>
+            </span>
+          </div>
+          <div class="col-span-1 md:col-span-2">
+            <span class="text-xs text-gray-400 dark:text-gray-500 block uppercase font-semibold">Clientes Atribuídos</span>
             <div class="flex flex-wrap gap-1.5 mt-1 max-h-32 overflow-y-auto">
               <span *ngFor="let company of selectedUser?.companies"
                 class="bg-[#0d2f52] text-white text-xs px-2.5 py-0.5 rounded-md">
@@ -414,11 +439,34 @@
       </div>
 
       <!-- Footer do Modal -->
-      <div class="flex justify-end p-4 md:p-5 border-t border-gray-200 dark:border-gray-700 rounded-b">
-        <button (click)="closeModalDetails()" type="button"
-          class="text-gray-500 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-100 rounded-lg border border-gray-200 dark:border-gray-600 text-sm px-4 py-2 transition">
-          Fechar
-        </button>
+      <div class="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 md:p-5 border-t border-gray-200 dark:border-gray-700 rounded-b bg-gray-50/50 dark:bg-gray-800/50">
+        <!-- Checkbox de Bloqueio -->
+        <label class="inline-flex items-center gap-2.5 cursor-pointer select-none">
+          <input type="checkbox" [checked]="isUserBlocked" (change)="toggleUserBlock()" [disabled]="isUpdatingBlockStatus"
+            class="w-4 h-4 text-redshift-red bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 rounded focus:ring-redshift-red dark:focus:ring-redshift-red focus:ring-2 cursor-pointer transition disabled:opacity-50">
+          <span class="text-sm font-medium flex items-center gap-2"
+            [ngClass]="isUserBlocked ? 'text-red-600 dark:text-red-400 font-semibold' : 'text-gray-700 dark:text-gray-300'">
+            <span>Utilizador Bloqueado</span>
+            <i *ngIf="isUpdatingBlockStatus" class="fas fa-circle-notch fa-spin text-xs text-gray-400"></i>
+          </span>
+        </label>
+
+        <!-- Botões de Ação -->
+        <div class="flex items-center gap-2.5 w-full sm:w-auto justify-end">
+          <button type="button" (click)="toggleResetTotp()" [disabled]="isUpdatingTotp"
+            class="w-full sm:w-auto py-2.5 px-4 text-sm font-medium rounded-lg border transition-all duration-150 flex items-center justify-center gap-2 shadow-sm disabled:opacity-50"
+            [ngClass]="forceTotpReset 
+              ? 'bg-red-50 dark:bg-redshift-red/20 text-redshift-red border-redshift-red hover:bg-red-100 dark:hover:bg-redshift-red/30' 
+              : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600'">
+            <i class="fas fa-qrcode text-xs"></i>
+            <span>{{ forceTotpReset ? 'QR Code Forçado no Login' : 'Forçar Novo QR Code' }}</span>
+            <i *ngIf="isUpdatingTotp" class="fas fa-circle-notch fa-spin text-xs"></i>
+          </button>
+          <button (click)="closeModalDetails()" type="button"
+            class="w-full sm:w-auto text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-lg border border-gray-300 dark:border-gray-600 text-sm font-medium px-4 py-2.5 transition shadow-sm">
+            Fechar
+          </button>
+        </div>
       </div>
 
     </div>

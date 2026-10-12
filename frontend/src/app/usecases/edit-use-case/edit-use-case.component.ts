@@ -17,6 +17,7 @@ import { MatIconModule } from '@angular/material/icon';
 
 import { MitreService } from '../../services/mitre.service';
 import { UsecasesService } from '../../services/usecases.service';
+import { TagComboboxComponent } from '../../shared/components/tag-combobox/tag-combobox.component';
 
 @Component({
   selector: 'app-edit-use-case',
@@ -26,6 +27,7 @@ import { UsecasesService } from '../../services/usecases.service';
   imports: [
     TitlebannerComponent,
     HeaderComponent,
+    TagComboboxComponent,
     TagInputModule,
     MatFormFieldModule,
     MatSelectModule,

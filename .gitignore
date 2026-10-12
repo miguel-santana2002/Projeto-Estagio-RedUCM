@@ -24,3 +24,7 @@ mediafiles/images/*
 .DS_Store
 .idea/
 .vscode/
+
+# MITRE data files (large dataset)
+backend/usecases/data/enterprise-attack.json
+backend/usecases/data/*.tmp

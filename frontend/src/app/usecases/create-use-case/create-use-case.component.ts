@@ -17,6 +17,7 @@ import { TitlebannerComponent } from '../../layout/titlebanner/titlebanner.compo
 import { HeaderComponent } from '../../layout/header/header.component';
 import { MitreService } from '../../services/mitre.service';
 import { UsecasesService } from '../../services/usecases.service';
+import { TagComboboxComponent } from '../../shared/components/tag-combobox/tag-combobox.component';
 
 @Component({
   selector: 'app-create-use-case',
@@ -26,6 +27,7 @@ import { UsecasesService } from '../../services/usecases.service';
   imports: [
     TitlebannerComponent,
     HeaderComponent,
+    TagComboboxComponent,
     MatFormFieldModule,
     MatSelectModule,
     MatIconModule,
@@ -162,7 +164,6 @@ export class CreateUseCaseComponent implements OnInit {
         });
 
         this.allTacticsList = Array.from(tacticSet).sort();
-        console.log('EXEMPLO TECNICA:', this.rawMitreData[0]);
         this.mitreAutocompleteList = this.rawMitreData.map(
           (t: any) => `${t.id} - ${t.name}`,
         );
@@ -265,16 +266,26 @@ export class CreateUseCaseComponent implements OnInit {
       return;
     }
 
-    this.filteredTechniquesList = this.mitreAutocompleteList.filter((label) => {
+    const matched = this.mitreAutocompleteList.filter((label) => {
       const techTactics = this.tacticsByTechnique.get(this.techId(label)) || [];
       return techTactics.some((t) => selTactics.includes(t));
     });
 
-    // Remover da seleção as técnicas que já não pertencem a nenhuma tática ativa
     const techCtrl = this.createUseCaseForm.get('mitreTechniques');
     const selTechs: string[] = techCtrl?.value || [];
+
+    // Manter as técnicas selecionadas visíveis na lista
+    this.filteredTechniquesList = Array.from(
+      new Set([...selTechs, ...matched]),
+    );
+
+    // Remover da seleção apenas técnicas do catálogo MITRE que deixaram de pertencer a uma tática ativa,
+    // PRESERVANDO técnicas personalizadas escritas manualmente pelo utilizador.
     const validTechs = selTechs.filter((t) => {
-      const techTactics = this.tacticsByTechnique.get(this.techId(t)) || [];
+      const techTactics = this.tacticsByTechnique.get(this.techId(t));
+      if (!techTactics || techTactics.length === 0) {
+        return true; // Técnica personalizada: preservar!
+      }
       return techTactics.some((x) => selTactics.includes(x));
     });
     if (validTechs.length !== selTechs.length) {
