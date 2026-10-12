@@ -130,6 +130,14 @@ export class UsecaseDetailsComponent implements OnInit, AfterViewInit, OnDestroy
     }
   }
 
+  get countPrincipal(): number {
+    return [...this.regras, ...this.sigmas].filter((r: any) => !r.parent && r.parent !== 0).length;
+  }
+
+  get countChild(): number {
+    return [...this.regras, ...this.sigmas].filter((r: any) => Boolean(r.parent || r.parent === 0)).length;
+  }
+
   ngOnDestroy(): void {
     if (this.pollTimer) clearInterval(this.pollTimer);
   }

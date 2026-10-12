@@ -58,6 +58,8 @@ export class ManageRulesComponent implements OnInit, AfterViewInit {
     { value: 'Regra não validada', label: 'Regra não validada' },
   ];
 
+  selectedHierarchy: string = 'all'; // 'all' | 'principal' | 'child'
+
   selectedTypes: string[] = [];
   selectedSintaxes: string[] = [];
   selectedLogSources: string[] = [];
@@ -66,6 +68,19 @@ export class ManageRulesComponent implements OnInit, AfterViewInit {
   uniqueTypes: string[] = [];
   uniqueSintaxes: string[] = [];
   uniqueLogSources: string[] = [];
+
+  get countPrincipal(): number {
+    return this.rules.filter((r: any) => !r.parent && r.parent !== 0).length;
+  }
+
+  get countChild(): number {
+    return this.rules.filter((r: any) => Boolean(r.parent || r.parent === 0)).length;
+  }
+
+  setHierarchyFilter(type: string): void {
+    this.selectedHierarchy = type;
+    this.page = 1;
+  }
 
   constructor(
     private authService: AuthService,
@@ -211,6 +226,7 @@ export class ManageRulesComponent implements OnInit, AfterViewInit {
 
   clearAllFilters(): void {
     this.page = 1;
+    this.selectedHierarchy = 'all';
     this.selectedLogSources = [];
     this.selectedTypes = [];
     this.selectedSintaxes = [];
@@ -309,6 +325,10 @@ export class ManageRulesComponent implements OnInit, AfterViewInit {
       const modelId = rule.ruleModel?.id ? `RedModel${rule.ruleModel.id}` : '';
       const ruleIdStr = rule.id ? `RedRule${rule.id}` : '';
 
+      const isPrincipal = !rule.parent && rule.parent !== 0;
+      const parentIdStr = rule.parent ? `RedRule${rule.parent}` : '';
+      const hierarchyText = isPrincipal ? 'principal matriz' : `secundaria secundária filho child ${parentIdStr}`;
+
       const matchesSearch = smartMatch(
         [
           rule.id,
@@ -322,9 +342,16 @@ export class ManageRulesComponent implements OnInit, AfterViewInit {
           clientName,
           rule.status,
           rule.generationStatus,
+          hierarchyText,
+          parentIdStr,
         ],
         this.nameSearch
       );
+
+      const matchesHierarchy =
+        this.selectedHierarchy === 'all' ||
+        (this.selectedHierarchy === 'principal' && isPrincipal) ||
+        (this.selectedHierarchy === 'child' && !isPrincipal);
 
       const matchesType =
         this.selectedTypes.length === 0 ||
@@ -346,6 +373,7 @@ export class ManageRulesComponent implements OnInit, AfterViewInit {
 
       return (
         matchesSearch &&
+        matchesHierarchy &&
         matchesType &&
         matchesSyntax &&
         matchesLogSources &&

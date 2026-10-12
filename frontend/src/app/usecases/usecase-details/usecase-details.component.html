@@ -151,6 +151,13 @@
           Ações
         </h3>
 
+        <!-- Copiar ID -->
+        <button type="button" (click)="copyUseCaseId()"
+          class="flex items-center w-full px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 hover:text-redshift-red dark:hover:text-white shadow-sm transition gap-3">
+          <i class="fas fa-copy w-5 text-center text-gray-500 dark:text-gray-400"></i>
+          <span>{{ copiedMessage || 'Copiar RedUC ID' }}</span>
+        </button>
+
         <!-- Adicionar Regra SIEM -->
         <a [routerLink]="['/create-rule']" [queryParams]="{ useCaseId: usecase.id }"
           class="flex items-center w-full px-4 py-2.5 text-sm font-medium text-white bg-redshift-red rounded-lg hover:bg-redshift-hover shadow-sm transition gap-3 justify-center">
@@ -158,12 +165,7 @@
           <span>Adicionar Regra</span>
         </a>
 
-        <!-- Copiar ID -->
-        <button type="button" (click)="copyUseCaseId()"
-          class="flex items-center w-full px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 hover:text-redshift-red dark:hover:text-white shadow-sm transition gap-3">
-          <i class="fas fa-copy w-5 text-center text-gray-500 dark:text-gray-400"></i>
-          <span>{{ copiedMessage || 'Copiar RedUC ID' }}</span>
-        </button>
+
       </div>
 
       <!-- Painel de Resumo & Cobertura -->
@@ -175,16 +177,35 @@
         </h2>
 
         <!-- Estatísticas de Regras -->
-        <div class="grid grid-cols-2 gap-3">
+        <div class="grid grid-cols-2 gap-2.5">
           <div
-            class="bg-white dark:bg-gray-700/60 p-3 rounded-lg border border-gray-200/80 dark:border-gray-600 text-center">
-            <span class="text-xs text-gray-400 block mb-0.5">Regras SIEM</span>
-            <span class="text-lg font-bold text-gray-900 dark:text-white font-mono">{{ regras.length }}</span>
+            class="bg-white dark:bg-gray-700/60 p-2.5 rounded-lg border border-gray-200/80 dark:border-gray-600 text-center">
+            <span
+              class="text-[11px] text-blue-600 dark:text-blue-400 block mb-0.5 font-semibold flex items-center justify-center gap-1">
+              <i class="fas fa-crown text-[9px] text-amber-500"></i> Principal
+            </span>
+            <span class="text-base font-bold text-gray-900 dark:text-white font-mono">{{ countPrincipal }}</span>
           </div>
           <div
-            class="bg-white dark:bg-gray-700/60 p-3 rounded-lg border border-gray-200/80 dark:border-gray-600 text-center">
-            <span class="text-xs text-gray-400 block mb-0.5">Regras Sigma</span>
-            <span class="text-lg font-bold text-redshift-red font-mono">{{ sigmas.length }}</span>
+            class="bg-white dark:bg-gray-700/60 p-2.5 rounded-lg border border-gray-200/80 dark:border-gray-600 text-center">
+            <span
+              class="text-[11px] text-purple-600 dark:text-purple-400 block mb-0.5 font-semibold flex items-center justify-center gap-1">
+              <i class="fas fa-code-fork text-[9px]"></i> Secundárias
+            </span>
+            <span class="text-base font-bold text-purple-700 dark:text-purple-300 font-mono">{{ countChild }}</span>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2.5">
+          <div
+            class="bg-white dark:bg-gray-700/60 p-2.5 rounded-lg border border-gray-200/80 dark:border-gray-600 text-center">
+            <span class="text-[11px] text-gray-400 block mb-0.5">SIEM Nativas</span>
+            <span class="text-base font-bold text-gray-900 dark:text-white font-mono">{{ regras.length }}</span>
+          </div>
+          <div
+            class="bg-white dark:bg-gray-700/60 p-2.5 rounded-lg border border-gray-200/80 dark:border-gray-600 text-center">
+            <span class="text-[11px] text-gray-400 block mb-0.5">Sigma Rules</span>
+            <span class="text-base font-bold text-redshift-red font-mono">{{ sigmas.length }}</span>
           </div>
         </div>
 
@@ -240,7 +261,20 @@
             [ngClass]="i % 2 === 0 ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-900'"
             class="hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer h-14 transition">
             <td class="px-5 py-3 font-mono font-bold text-redshift-red">#{{ r.id }}</td>
-            <td class="px-5 py-3 font-medium text-gray-900 dark:text-white">{{ r.title }}</td>
+            <td class="px-5 py-3">
+              <span class="font-medium text-gray-900 dark:text-white block">{{ r.title }}</span>
+              <div class="flex items-center gap-1.5 mt-1 flex-wrap">
+                <span *ngIf="!r.parent && r.parent !== 0"
+                  class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300 border border-blue-200 dark:border-blue-700">
+                  <i class="fas fa-crown text-[8px] text-amber-500"></i> Principal
+                </span>
+                <span *ngIf="r.parent || r.parent === 0"
+                  class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-300 border border-purple-200 dark:border-purple-700"
+                  [title]="'Regra secundária/convertida a partir da Regra Principal RedRule' + (r.parent?.id ?? r.parent)">
+                  <i class="fas fa-code-fork text-[8px]"></i> Filho (RedRule{{ r.parent?.id ?? r.parent }})
+                </span>
+              </div>
+            </td>
             <td class="px-5 py-3">
               <span
                 class="inline-flex items-center gap-1.5 text-xs font-semibold bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded border border-gray-200 dark:border-gray-600">
@@ -287,7 +321,20 @@
             [ngClass]="i % 2 === 0 ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-900'"
             class="hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer h-14 transition">
             <td class="px-5 py-3 font-mono font-bold text-redshift-red">#{{ r.id }}</td>
-            <td class="px-5 py-3 font-medium text-gray-900 dark:text-white">{{ r.title }}</td>
+            <td class="px-5 py-3">
+              <span class="font-medium text-gray-900 dark:text-white block">{{ r.title }}</span>
+              <div class="flex items-center gap-1.5 mt-1 flex-wrap">
+                <span *ngIf="!r.parent && r.parent !== 0"
+                  class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300 border border-blue-200 dark:border-blue-700">
+                  <i class="fas fa-crown text-[8px] text-amber-500"></i> Principal
+                </span>
+                <span *ngIf="r.parent || r.parent === 0"
+                  class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-300 border border-purple-200 dark:border-purple-700"
+                  [title]="'Regra secundária/convertida a partir da Regra Principal RedRule' + (r.parent?.id ?? r.parent)">
+                  <i class="fas fa-code-fork text-[8px]"></i> Filho (RedRule{{ r.parent?.id ?? r.parent }})
+                </span>
+              </div>
+            </td>
             <td class="px-5 py-3 text-xs font-semibold">
               <span *ngIf="r.generationStatus === 'pending'"
                 class="inline-flex items-center gap-1.5 text-amber-600 bg-amber-50 dark:bg-amber-900/30 px-2 py-0.5 rounded border border-amber-200 dark:border-amber-800">
