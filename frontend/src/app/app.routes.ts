@@ -25,6 +25,7 @@ import { EditRuleModelComponent } from './rules/rule-models/edit-rule-model/edit
 import { numericIdGuard } from './guards/numeric-id.guard';
 import { AuditListComponent } from './audit/audit-list.component';
 import { EditRuleComponent } from './rules/instances/edit-rule/edit-rule.component';
+import { CreateRuleComponent } from './rules/instances/create-rule/create-rule.component';
 
 export const routes: Routes = [
   { path: '', component: LandingpageComponent, pathMatch: 'full' },
@@ -56,8 +57,17 @@ export const routes: Routes = [
     canActivate: [numericIdGuard],
   },
   {
+    path: 'create-rule',
+    component: CreateRuleComponent,
+  },
+  {
     path: 'create-rule-model',
     component: CreateRuleModelComponent,
+  },
+  {
+    path: 'ruleModel-Details/:id',
+    component: RuleDetailsComponent,
+    canActivate: [numericIdGuard],
   },
   {
     path: 'techniqueDetails/:id',

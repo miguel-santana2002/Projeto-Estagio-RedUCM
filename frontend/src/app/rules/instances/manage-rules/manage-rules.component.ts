@@ -5,6 +5,7 @@ import {
   ViewChild,
   OnInit,
   AfterViewInit,
+  HostListener,
 } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -15,6 +16,7 @@ import { HeaderComponent } from '../../../layout/header/header.component';
 import { AuthService } from '../../../services/auth.service';
 import { RulesService } from '../../../services/rules.service';
 import { smartMatch } from '../../../helper/search-utils';
+import { exportRuleFormatted, ExportFormat } from '../../../shared/utils/rule-export.util';
 
 @Component({
   selector: 'app-manage-rules',
@@ -113,7 +115,7 @@ export class ManageRulesComponent implements OnInit, AfterViewInit {
     this.uniqueTypes = Array.from(
       new Set(
         this.rules
-          .map((item: any) => item.ruleModel?.type)
+          .map((item: any) => item.type || item.ruleModel?.type)
           .filter((type): type is string => Boolean(type)),
       ),
     ).sort();
@@ -121,7 +123,7 @@ export class ManageRulesComponent implements OnInit, AfterViewInit {
     this.uniqueSintaxes = Array.from(
       new Set(
         this.rules
-          .map((item: any) => item.ruleModel?.syntax || item.syntax)
+          .map((item: any) => item.syntax || item.ruleModel?.syntax)
           .filter((syntax): syntax is string => Boolean(syntax)),
       ),
     ).sort();
@@ -248,16 +250,16 @@ export class ManageRulesComponent implements OnInit, AfterViewInit {
       switch (column) {
         case 'title':
         case 'ruleModel':
-          valA = a.ruleModel?.title || '';
-          valB = b.ruleModel?.title || '';
+          valA = a.title || a.ruleModel?.title || '';
+          valB = b.title || b.ruleModel?.title || '';
           break;
         case 'logsources':
           valA = this.getRuleLogSources(a).join(', ');
           valB = this.getRuleLogSources(b).join(', ');
           break;
         case 'type':
-          valA = a.ruleModel?.type || '';
-          valB = b.ruleModel?.type || '';
+          valA = a.type || a.ruleModel?.type || '';
+          valB = b.type || b.ruleModel?.type || '';
           break;
         case 'syntax':
           valA = a.syntax || a.ruleModel?.syntax || '';
@@ -293,9 +295,9 @@ export class ManageRulesComponent implements OnInit, AfterViewInit {
 
   get filteredRules(): any[] {
     return this.rules.filter((rule: any) => {
-      const ruleTitle = rule.ruleModel?.title || rule.title || '';
+      const ruleTitle = rule.title || rule.ruleModel?.title || '';
       const ruleCode = rule.ruleCode || '';
-      const ruleType = rule.ruleModel?.type || rule.type || '';
+      const ruleType = rule.type || rule.ruleModel?.type || '';
       const currentSyntax = rule.syntax || rule.ruleModel?.syntax || '';
       const ruleLogs = this.getRuleLogSources(rule).join(' ');
       const clientName =
@@ -402,38 +404,31 @@ export class ManageRulesComponent implements OnInit, AfterViewInit {
     });
   }
 
-  exportSigmaRule(event: Event, rule: any): void {
+  activeExportMenuRuleId: number | null = null;
+
+  toggleExportMenu(event: Event, ruleId: number): void {
     event.stopPropagation();
+    this.activeExportMenuRuleId =
+      this.activeExportMenuRuleId === ruleId ? null : ruleId;
+  }
 
-    const yamlContent = rule.ruleCode;
-    if (!yamlContent) {
-      console.warn(
-        `A regra ID ${rule.id} não possui conteúdo no campo ruleCode.`,
-      );
-      return;
-    }
+  @HostListener('document:click')
+  closeExportMenu(): void {
+    this.activeExportMenuRuleId = null;
+  }
 
-    const rawTitle = rule.ruleModel?.title || 'rule';
-    const sanitizedTitle = rawTitle
-      .trim()
-      .replace(/\s*-\s*/g, '-')
-      .replace(/\s+/g, '_')
-      .replace(/[^a-zA-Z0-9_-]/g, '')
-      .replace(/_+/g, '_');
+  exportRule(event: Event, rule: any, format: ExportFormat = 'yml'): void {
+    event.stopPropagation();
+    this.activeExportMenuRuleId = null;
+    exportRuleFormatted(
+      rule.id,
+      rule.title || rule.ruleModel?.title || 'rule',
+      rule.ruleCode,
+      format
+    );
+  }
 
-    const dateStr = new Date().toISOString().split('T')[0];
-    const filename = `RedRule${rule.id}_${sanitizedTitle}_${dateStr}.yml`;
-
-    const blob = new Blob([yamlContent], { type: 'text/yaml;charset=utf-8' });
-    const downloadUrl = window.URL.createObjectURL(blob);
-    const anchor = document.createElement('a');
-
-    anchor.href = downloadUrl;
-    anchor.download = filename;
-    document.body.appendChild(anchor);
-    anchor.click();
-
-    document.body.removeChild(anchor);
-    window.URL.revokeObjectURL(downloadUrl);
+  exportSigmaRule(event: Event, rule: any): void {
+    this.exportRule(event, rule, 'yml');
   }
 }

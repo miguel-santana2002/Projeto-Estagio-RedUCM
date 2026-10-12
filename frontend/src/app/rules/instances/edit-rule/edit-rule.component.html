@@ -1,5 +1,5 @@
 <app-header></app-header>
-<app-titlebanner [title]="'Editar Regra #' + ruleId + (rule?.ruleModel?.title ? ' - ' + rule.ruleModel.title : '')"
+<app-titlebanner [title]="'Editar Regra #' + ruleId + (rule?.title ? ' - ' + rule.title : (rule?.ruleModel?.title ? ' - ' + rule.ruleModel.title : ''))"
     image="./assets/bannercover.jpg">
 </app-titlebanner>
 
@@ -15,8 +15,26 @@
     <form *ngIf="!isLoading" class="grid grid-cols-1 md:grid-cols-2 gap-8 dark:text-white" (ngSubmit)="updateRule()"
         [formGroup]="editRuleForm">
 
-        <!-- 1. Linha Superior: Cliente, Estado, Tipo e Sintaxe -->
+        <!-- 1. Linha Superior: Use Case, Cliente e Estado -->
         <div class="col-span-1 md:col-span-2 grid grid-cols-1 md:grid-cols-12 gap-6">
+
+            <!-- Use Case Associado (5 colunas) -->
+            <div class="space-y-2 md:col-span-5">
+                <label for="selectedUseCase" class="block text-sm font-semibold text-gray-900 dark:text-white">
+                    Use Case Associado <span class="text-redshift-red">*</span>
+                </label>
+                <select id="selectedUseCase" formControlName="selectedUseCase"
+                    class="block w-full py-2.5 px-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 dark:text-white rounded-lg shadow-sm focus:ring-2 focus:ring-redshift-red text-sm transition">
+                    <option value="" disabled class="text-gray-400">Selecione um Use Case</option>
+                    <option *ngFor="let option of usecases" [value]="option.id">
+                        RedUC{{ option.id }} - {{ option.title }}
+                    </option>
+                </select>
+                <div *ngIf="editRuleForm.get('selectedUseCase')?.touched && editRuleForm.get('selectedUseCase')?.invalid"
+                    class="text-red-600 dark:text-red-400 text-xs mt-1">
+                    O Use Case associado é obrigatório.
+                </div>
+            </div>
 
             <!-- Cliente Associado (4 colunas) -->
             <div class="space-y-2 md:col-span-4">
@@ -32,17 +50,20 @@
                 </select>
             </div>
 
-        <!-- Estado (2 colunas) -->
-        <div class="space-y-2 md:col-span-2">
-            <label for="status" class="block text-sm font-semibold text-gray-900 dark:text-white">Estado</label>
-            <select id="status" formControlName="status"
-                class="block w-full py-2.5 px-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 dark:text-white rounded-lg shadow-sm focus:ring-2 focus:ring-redshift-red text-sm transition">
-                <option *ngFor="let opt of statusOptions" [value]="opt.value">{{ opt.label }}</option>
-            </select>
+            <!-- Estado (3 colunas) -->
+            <div class="space-y-2 md:col-span-3">
+                <label for="status" class="block text-sm font-semibold text-gray-900 dark:text-white">Estado</label>
+                <select id="status" formControlName="status"
+                    class="block w-full py-2.5 px-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 dark:text-white rounded-lg shadow-sm focus:ring-2 focus:ring-redshift-red text-sm transition">
+                    <option *ngFor="let opt of statusOptions" [value]="opt.value">{{ opt.label }}</option>
+                </select>
+            </div>
         </div>
 
-            <!-- Tipo (3 colunas) -->
-            <div class="space-y-2 md:col-span-3">
+        <!-- 2. Linha: Tipo e Sintaxe -->
+        <div class="col-span-1 md:col-span-2 grid grid-cols-1 md:grid-cols-12 gap-6">
+            <!-- Tipo (6 colunas) -->
+            <div class="space-y-2 md:col-span-6">
                 <label for="selectedType" class="block text-sm font-semibold text-gray-900 dark:text-white">Tipo</label>
                 <select id="selectedType" formControlName="selectedType" [(ngModel)]="selectedType"
                     (change)="onTypeChange()"
@@ -51,8 +72,8 @@
                 </select>
             </div>
 
-            <!-- Sintaxe (3 colunas) -->
-            <div class="space-y-2 md:col-span-3">
+            <!-- Sintaxe (6 colunas) -->
+            <div class="space-y-2 md:col-span-6">
                 <label for="syntax" class="block text-sm font-semibold text-gray-900 dark:text-white">Sintaxe</label>
                 <select id="syntax" formControlName="syntax" [(ngModel)]="selectedSyntax" (change)="onSyntaxChange()"
                     class="block w-full py-2.5 px-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 dark:text-white rounded-lg shadow-sm focus:ring-2 focus:ring-redshift-red text-sm transition">
@@ -61,29 +82,34 @@
             </div>
         </div>
 
-        <!-- 2. Modelo Base Associado (Apenas Leitura) -->
+        <!-- 3. Nome da Regra -->
         <div class="space-y-2 col-span-1 md:col-span-2">
-            <label class="block text-sm font-semibold text-gray-900 dark:text-white">
-                Modelo de Regra Base
+            <label for="title" class="block text-sm font-semibold text-gray-900 dark:text-white">
+                Nome da Regra <span class="text-redshift-red">*</span>
             </label>
-            <input type="text" [value]="rule?.ruleModel?.title || ('RedModel #' + rule?.ruleModel?.id)" disabled
-                class="block w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2.5 text-gray-500 bg-gray-100 dark:bg-gray-700/60 dark:text-gray-400 shadow-sm text-sm cursor-not-allowed">
+            <input id="title" type="text" formControlName="title"
+                placeholder="ex: Brute Force Detection - SPL para Azure"
+                class="block w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2.5 text-gray-900 bg-white dark:bg-gray-700 dark:text-white shadow-sm focus:ring-2 focus:ring-redshift-red text-sm transition">
+            <div *ngIf="editRuleForm.get('title')?.touched && editRuleForm.get('title')?.invalid"
+                class="text-red-600 dark:text-red-400 text-xs mt-1">
+                O nome da regra é obrigatório.
+            </div>
         </div>
 
-    <!-- 3. LogSources Associadas -->
-    <div class="space-y-2 col-span-1 md:col-span-2">
-        <div class="flex items-center justify-between">
-            <label class="block text-sm font-semibold text-gray-900 dark:text-white">LogSources Associadas</label>
-            <span class="text-xs text-gray-400 font-normal">Opcional</span>
+        <!-- 4. LogSources Associadas -->
+        <div class="space-y-2 col-span-1 md:col-span-2">
+            <div class="flex items-center justify-between">
+                <label class="block text-sm font-semibold text-gray-900 dark:text-white">LogSources Associadas</label>
+                <span class="text-xs text-gray-400 font-normal">Opcional</span>
+            </div>
+            <app-tag-combobox
+                formControlName="logsources"
+                [items]="registeredLogsources"
+                placeholder="Selecione da lista ou escreva uma log source...">
+            </app-tag-combobox>
         </div>
-        <app-tag-combobox
-            formControlName="logsources"
-            [items]="registeredLogsources"
-            placeholder="Selecione da lista ou escreva uma log source...">
-        </app-tag-combobox>
-    </div>
 
-        <!-- 4. Editor de Código -->
+        <!-- 5. Editor de Código -->
         <div class="space-y-3 col-span-1 md:col-span-2">
             <label class="block text-sm font-semibold text-gray-900 dark:text-white mb-0">
                 Regra ({{ selectedSyntax }})
@@ -95,7 +121,7 @@
             </div>
         </div>
 
-        <!-- 5. Ações (Submit e Cancelar) -->
+        <!-- 6. Ações (Submit e Cancelar) -->
         <div class="col-span-1 md:col-span-2 flex items-center gap-4 pt-2">
             <button type="submit" [disabled]="!editRuleForm.valid"
                 class="disabled:opacity-50 disabled:cursor-not-allowed w-full md:w-60 py-2.5 px-5 text-white font-medium bg-redshift-red rounded-lg hover:bg-redshift-hover transition shadow-sm text-sm">

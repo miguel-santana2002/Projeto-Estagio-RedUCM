@@ -75,6 +75,16 @@ class RuleSerializer(serializers.ModelSerializer):
         else:
             data['ruleModel'] = None
 
+        # Fallback seguro caso a regra direta não tenha algum campo mas o modelo legado tenha
+        if not data.get('title') and getattr(instance, 'ruleModel', None):
+            data['title'] = instance.ruleModel.title
+        if not data.get('type') and getattr(instance, 'ruleModel', None):
+            data['type'] = getattr(instance.ruleModel, 'type', None)
+        if not data.get('useCaseId') and getattr(instance, 'ruleModel', None):
+            data['useCaseId'] = getattr(instance.ruleModel, 'useCaseId', None)
+        if (not data.get('logsources') or len(data.get('logsources')) == 0) and getattr(instance, 'ruleModel', None):
+            data['logsources'] = getattr(instance.ruleModel, 'logsources', [])
+
         return data
 
 

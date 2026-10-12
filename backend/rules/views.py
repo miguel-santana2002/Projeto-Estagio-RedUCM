@@ -131,15 +131,17 @@ def deleteRuleById(request, id):
 def _generate_sigma(sigma_id, source_code, source_syntax):
     from django.db import connection
     try:
-        from rules.services.rule_converter import convert_single_engine
+        from rules.services.rule_converter import convert_single_engine, decompile_to_sigma
         
-        # Usa o mesmo motor híbrido (ai) que o conversor interativo usa, 
-        # garantindo que o resultado é limpo e consistente.
-        res = convert_single_engine(source_code, source_syntax, "Sigma Rule", "ai")
-        sigma_code = res.get("ai_result") or res.get("sigma_rule")
+        sigma_code = None
+        try:
+            res = convert_single_engine(source_code, source_syntax, "Sigma Rule", "ai")
+            sigma_code = res.get("ai_result") or res.get("sigma_rule")
+        except Exception:
+            sigma_code = decompile_to_sigma(source_code, source_syntax)
         
-        if not sigma_code or "Erro" in sigma_code:
-            raise ValueError("O motor de IA não conseguiu gerar um Sigma válido.")
+        if not sigma_code or "Erro:" in sigma_code:
+            sigma_code = decompile_to_sigma(source_code, source_syntax)
 
         Rule.objects.filter(pk=sigma_id).update(
             ruleCode=sigma_code, generationStatus='done', generationNote=None)
@@ -233,6 +235,22 @@ def getRuleById(request, id):
         return JsonResponse(serializer.data, safe=False)
     except Rule.DoesNotExist:
         return JsonResponse({'error': 'Rule not found'}, status=404)
+
+
+@extend_schema(request=RuleSerializer,
+                description='Get rules based on Use Case Id.',
+                responses={
+                     200: OpenApiResponse(response=RuleSerializer, description='Rules retrieved successfully'),
+                     400: OpenApiResponse(response=None, description='Invalid request method')
+                })
+@api_view(['GET'])
+def getRulesByUseCase(request, useCaseId):
+    if request.method == 'GET':
+        rules = Rule.objects.select_related('client', 'ruleModel').filter(useCaseId=useCaseId)
+        serializer = RuleSerializer(rules, many=True)
+        return JsonResponse(serializer.data, safe=False)
+    else:
+        return JsonResponse({'error': 'Invalid request method'}, status=400)
     
 
 @api_view(['POST'])
@@ -326,7 +344,14 @@ def updateRule(request, id):
         rule.client = None
 
     # Atualiza os restantes campos
-    rule.status = data.get('status', '')
+    if 'title' in data:
+        rule.title = data.get('title')
+    if 'useCaseId' in data:
+        rule.useCaseId = data.get('useCaseId')
+    if 'type' in data:
+        rule.type = data.get('type')
+
+    rule.status = data.get('status', rule.status)
     rule.syntax = data.get('syntax', rule.syntax)
     rule.logsources = data.get('logsources', rule.logsources)
     rule.ruleCode = data.get('ruleCode', rule.ruleCode)

@@ -216,6 +216,16 @@ export class UsecaseDetailsComponent implements OnInit, AfterViewInit, OnDestroy
       });
   }
 
+  copiedMessage: string = '';
+
+  copyUseCaseId(): void {
+    if (this.usecase?.id) {
+      navigator.clipboard.writeText(`RedUC${this.usecase.id}`);
+      this.copiedMessage = 'ID copiado!';
+      setTimeout(() => (this.copiedMessage = ''), 3000);
+    }
+  }
+
   getTechniqueId(technique: any): string {
     if (!technique) return '';
     const str =

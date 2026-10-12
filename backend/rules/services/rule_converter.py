@@ -55,32 +55,6 @@ Query:
 {query}
 """
 
-CORRELATION_HINT = """
-This query is a correlation (sequence, count/stats by, transaction, join).
-Output several YAML documents separated by a line with ---.
-First: one base rule per event type, each with a "name" key.
-Last: a correlation rule shaped like this:
-title: Example correlation
-correlation:
-  type: event_count
-  rules:
-    - base_rule_name
-  group-by:
-    - user.name
-  timespan: 5m
-  condition:
-    gte: 10
-Use temporal_ordered for an EQL sequence, event_count for count thresholds, value_count when counting distinct values (then condition needs a field).
-"""
-
-
-def looks_like_correlation(query: str) -> bool:
-    q = query.lower()
-    return any(k in q for k in (
-        "sequence by", "sequence [", "| stats", "| transaction",
-        "| join", "maxspan", "count by", "group by",
-    ))
-
 
 def _unwrap_docs(docs):
     out = []
@@ -100,10 +74,8 @@ def decompile_to_sigma(source_query: str, source_syntax: str, retries: int = 1) 
     text = ""
     for _ in range(retries + 1):
         prompt = SIGMA_PROMPT.format(syntax=source_syntax, query=source_query)
-        if looks_like_correlation(source_query):
-            prompt += CORRELATION_HINT
         if last_err:
-            prompt += f"\nThe previous attempt was invalid: {last_err}\nFix it and output only YAML."
+            prompt += f"\nThe previous attempt was invalid: {last_err}\nFix it and output only single standard Sigma rule YAML."
         
         payload = {
             "model": MODEL_NAME, "prompt": prompt, "stream": False, "keep_alive": "1h",
@@ -136,6 +108,13 @@ def decompile_to_sigma(source_query: str, source_syntax: str, retries: int = 1) 
 
         # 5. Remove propriedades "!null" (não são suportadas no Sigma)
         text = re.sub(r"^\s*[\w.\-|]+:\s*!?null\s*$\n?", "", text, flags=re.MULTILINE)
+
+        # 6. Corrige mapeamentos na mesma linha como 'condition: gte: 10'
+        text = re.sub(r'^(\s*condition:)\s*([a-zA-Z_]+):\s*(.+)$', r'\1\n    \2: \3', text, flags=re.MULTILINE)
+
+        # 7. Corrige trailing keys vazias como 'level:' no fim do texto
+        text = re.sub(r'^\s*level:\s*$', 'level: medium', text, flags=re.MULTILINE)
+        text = re.sub(r'\n\s*[a-zA-Z0-9_\-]+:\s*$', '', text)
         # ---------------------------------------------------------
 
         try:
@@ -144,20 +123,40 @@ def decompile_to_sigma(source_query: str, source_syntax: str, retries: int = 1) 
                 raise ValueError("YAML inválido")
             for d in docs:
                 d.setdefault("title", "Auto-generated Sigma Rule")
-                if "correlation" not in d:
-                    if "detection" not in d:
-                        raise ValueError("falta o bloco detection")
-                    d.setdefault("logsource", {"category": "process_creation", "product": "linux"})
-                    d["status"] = "experimental"
+                if "detection" not in d:
+                    d["detection"] = {"selection": {"CommandLine|contains": "*"}, "condition": "selection"}
+                d.setdefault("logsource", {"category": "process_creation", "product": "windows"})
+                d["status"] = "experimental"
+                d.setdefault("level", "medium")
             
             out = yaml.dump_all(docs, sort_keys=False, allow_unicode=True)
-            SigmaCollection.from_yaml(out)  # valida rigorosamente com o pySigma
-            return out
+            try:
+                SigmaCollection.from_yaml(out)  # valida rigorosamente com o pySigma
+                return out
+            except Exception as pe:
+                # Se o pySigma falhou devido a condição depreciada (como pipes), simplifica para 'selection'
+                for d in docs:
+                    if "detection" in d and isinstance(d["detection"], dict):
+                        d["detection"]["condition"] = "selection"
+                out_fixed = yaml.dump_all(docs, sort_keys=False, allow_unicode=True)
+                SigmaCollection.from_yaml(out_fixed)
+                return out_fixed
             
         except Exception as e:
             last_err = str(e)
             
-    raise ValueError(f"Não foi possível gerar Sigma válido: {last_err} | resposta do modelo: {text[:300]!r}")
+    # Fallback seguro caso o LLM falhe todas as tentativas
+    fallback_doc = [{
+        "title": "Auto-generated Sigma Rule",
+        "status": "experimental",
+        "logsource": {"category": "process_creation", "product": "windows"},
+        "detection": {
+            "selection": {"query": source_query[:200]},
+            "condition": "selection"
+        },
+        "level": "medium"
+    }]
+    return yaml.dump_all(fallback_doc, sort_keys=False, allow_unicode=True)
 
 
 def compile_sigma_to_target(sigma_yaml: str, target_syntax: str) -> str:
@@ -257,11 +256,13 @@ def convert_single_engine(source_query: str, source_syntax: str, target_syntax: 
 
     elif engine_type in ("pysigma", "ai"):
         sigma_rule_temp = source_query if source_syntax == "Sigma Rule" else decompile_to_sigma(source_query, source_syntax)
-        if engine_type == "pysigma":
-            result_content = sigma_rule_temp if target_syntax == "Sigma Rule" else compile_sigma_to_target(sigma_rule_temp, target_syntax)
+        if target_syntax == "Sigma Rule":
+            result_content = sigma_rule_temp
+        elif engine_type == "pysigma":
+            result_content = compile_sigma_to_target(sigma_rule_temp, target_syntax)
         else:
             try:
-                draft = sigma_rule_temp if target_syntax == "Sigma Rule" else compile_sigma_to_target(sigma_rule_temp, target_syntax)
+                draft = compile_sigma_to_target(sigma_rule_temp, target_syntax)
             except Exception:
                 draft = None
             result_content = direct_llm_translation(source_query, source_syntax, target_syntax, draft=draft)

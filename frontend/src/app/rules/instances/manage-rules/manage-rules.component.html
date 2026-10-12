@@ -32,16 +32,23 @@
             de <strong class="text-gray-900 dark:text-white font-semibold">{{ rules.length }}</strong>
           </span>
 
+          <!-- Botão Criar Regra -->
+          <a [routerLink]="['/create-rule']"
+            class="h-10 px-4 bg-redshift-red text-white rounded-lg hover:bg-redshift-hover shadow-md flex items-center justify-center gap-2 transition text-sm font-medium flex-shrink-0">
+            <i class="fas fa-plus text-xs"></i>
+            <span>Criar Regra</span>
+          </a>
+
           <!-- Botão Filtros -->
           <button (click)="showFilters = !showFilters"
             [ngClass]="{'ring-2 ring-offset-2 ring-redshift-red': showFilters}"
-            class="h-10 px-4 bg-redshift-red text-white rounded-lg hover:bg-redshift-hover shadow-md flex items-center justify-center gap-2 transition text-sm font-medium flex-shrink-0"
+            class="h-10 px-4 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 shadow-sm flex items-center justify-center gap-2 transition text-sm font-medium flex-shrink-0"
             type="button">
             <i class="fas fa-filter text-xs"></i>
             <span>Filtros</span>
             <span
               *ngIf="selectedLogSources.length > 0 || selectedTypes.length > 0 || selectedSintaxes.length > 0 || selectedStatus.length > 0"
-              class="w-2 h-2 rounded-full bg-white animate-pulse"></span>
+              class="w-2 h-2 rounded-full bg-redshift-red animate-pulse"></span>
           </button>
         </div>
       </div>
@@ -189,17 +196,11 @@
                 <i
                   [class]="sortType === 'id' ? (sortReverse ? 'fas fa-caret-up ml-1' : 'fas fa-caret-down ml-1') : ''"></i>
               </th>
-              <th (click)="sortTable('ruleModel')"
+              <th (click)="sortTable('title')"
                 class="w-64 px-5 py-3.5 bg-gray-100 dark:bg-gray-700 text-left text-xs font-bold text-gray-700 dark:text-gray-200 uppercase tracking-wider cursor-pointer select-none">
-                Baseado no Modelo
+                Nome da Regra
                 <i
-                  [class]="sortType === 'ruleModel' ? (sortReverse ? 'fas fa-caret-up ml-1' : 'fas fa-caret-down ml-1') : ''"></i>
-              </th>
-              <th (click)="sortTable('logsources')"
-                class="w-56 px-5 py-3.5 bg-gray-100 dark:bg-gray-700 text-left text-xs font-bold text-gray-700 dark:text-gray-200 uppercase tracking-wider cursor-pointer select-none">
-                Log Sources
-                <i
-                  [class]="sortType === 'logsources' ? (sortReverse ? 'fas fa-caret-up ml-1' : 'fas fa-caret-down ml-1') : ''"></i>
+                  [class]="(sortType === 'title' || sortType === 'ruleModel') ? (sortReverse ? 'fas fa-caret-up ml-1' : 'fas fa-caret-down ml-1') : ''"></i>
               </th>
               <th (click)="sortTable('type')"
                 class="w-28 px-5 py-3.5 bg-gray-100 dark:bg-gray-700 text-left text-xs font-bold text-gray-700 dark:text-gray-200 uppercase tracking-wider cursor-pointer select-none">
@@ -212,6 +213,12 @@
                 Sintaxe
                 <i
                   [class]="sortType === 'syntax' ? (sortReverse ? 'fas fa-caret-up ml-1' : 'fas fa-caret-down ml-1') : ''"></i>
+              </th>
+              <th (click)="sortTable('logsources')"
+                class="w-56 px-5 py-3.5 bg-gray-100 dark:bg-gray-700 text-left text-xs font-bold text-gray-700 dark:text-gray-200 uppercase tracking-wider cursor-pointer select-none">
+                Log Sources
+                <i
+                  [class]="sortType === 'logsources' ? (sortReverse ? 'fas fa-caret-up ml-1' : 'fas fa-caret-down ml-1') : ''"></i>
               </th>
               <!-- NOVA COLUNA: ESTADO -->
               <th (click)="sortTable('status')"
@@ -239,13 +246,34 @@
                 RedRule{{ u.id }}
               </td>
 
-              <!-- Baseado no Modelo -->
-              <td class="px-5 py-3 text-left truncate" [title]="u.ruleModel?.title || 'Sem Modelo Associado'">
+              <!-- Nome da Regra -->
+              <td class="px-5 py-3 text-left truncate" [title]="u.title || u.ruleModel?.title || 'Sem Título'">
                 <span class="text-sm font-semibold text-gray-900 dark:text-white truncate block">
-                  {{ u.ruleModel?.title || 'Sem Modelo Associado' }}
+                  {{ u.title || u.ruleModel?.title || 'Sem Título' }}
                 </span>
-                <span *ngIf="u.ruleModel?.id" class="text-[11px] text-gray-500 dark:text-gray-400 block truncate">
-                  RedModel{{ u.ruleModel?.id }}
+                <div class="flex items-center gap-2 mt-0.5">
+                  <span *ngIf="u.useCaseId || u.ruleModel?.useCaseId" class="text-[11px] font-medium text-redshift-red dark:text-red-400">
+                    RedUC{{ u.useCaseId || u.ruleModel?.useCaseId }}
+                  </span>
+                  <span *ngIf="u.client?.name" class="text-[10px] px-1.5 py-0.2 rounded bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 truncate max-w-[120px]">
+                    {{ u.client.name }}
+                  </span>
+                </div>
+              </td>
+
+              <!-- Tipo -->
+              <td class="px-5 py-3 text-left text-sm font-medium text-gray-800 dark:text-gray-200">
+                {{ u.type || u.ruleModel?.type || 'N/A' }}
+              </td>
+
+              <!-- Sintaxe -->
+              <td class="px-5 py-3 text-left">
+                <span
+                  class="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-medium bg-gray-100 text-gray-800 border border-gray-200 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600">
+                  <i class="fas fa-code mr-1.5 text-redshift-red text-[10px]"></i>
+                  <span class="truncate max-w-[120px]" [title]="u.syntax || u.ruleModel?.syntax">
+                    {{ u.syntax || u.ruleModel?.syntax || 'N/D' }}
+                  </span>
                 </span>
               </td>
 
@@ -267,22 +295,6 @@
                 </div>
               </td>
 
-              <!-- Tipo -->
-              <td class="px-5 py-3 text-left text-sm font-medium text-gray-800 dark:text-gray-200">
-                {{ u.ruleModel?.type || 'N/A' }}
-              </td>
-
-              <!-- Sintaxe -->
-              <td class="px-5 py-3 text-left">
-                <span
-                  class="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-medium bg-gray-100 text-gray-800 border border-gray-200 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600">
-                  <i class="fas fa-code mr-1.5 text-redshift-red text-[10px]"></i>
-                  <span class="truncate max-w-[120px]" [title]="u.syntax || u.ruleModel?.syntax">
-                    {{ u.syntax || u.ruleModel?.syntax || 'N/D' }}
-                  </span>
-                </span>
-              </td>
-
               <!-- Estado com Dropdown -->
               <td class="px-5 py-3 text-left" (click)="$event.stopPropagation()">
                 <select [(ngModel)]="u.status" (ngModelChange)="updateRuleStatus(u)"
@@ -298,11 +310,36 @@
               <!-- Ações -->
               <td class="px-5 py-3 text-center whitespace-nowrap" (click)="$event.stopPropagation()">
                 <div class="flex items-center justify-end space-x-2">
-                  <button *ngIf="(u.syntax || u.ruleModel?.syntax) === 'Sigma Rule'"
-                    (click)="exportSigmaRule($event, u)" title="Exportar Regra Sigma (.yml)"
-                    class="bg-blue-600 hover:bg-blue-700 text-white w-7 h-7 rounded shadow transition inline-flex items-center justify-center">
-                    <i class="fas fa-download text-xs"></i>
-                  </button>
+                  <!-- Exportar Regra Sigma com Opções Multi-Formato -->
+                  <div class="relative inline-block text-left" *ngIf="(u.syntax || u.ruleModel?.syntax) === 'Sigma Rule'">
+                    <button type="button" (click)="toggleExportMenu($event, u.id)"
+                      title="Exportar Regra Sigma (.yml, .json, .xml)"
+                      class="bg-blue-600 hover:bg-blue-700 text-white w-7 h-7 rounded shadow transition inline-flex items-center justify-center">
+                      <i class="fas fa-download text-xs"></i>
+                    </button>
+
+                    <!-- Dropdown de Formatos -->
+                    <div *ngIf="activeExportMenuRuleId === u.id"
+                      [ngClass]="i < 2 ? 'top-full mt-1.5' : 'bottom-full mb-1.5'"
+                      class="absolute right-0 w-32 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 py-1 z-50 text-left">
+                      <button type="button" (click)="exportRule($event, u, 'yml')"
+                        class="w-full text-left px-3 py-1.5 text-xs text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center justify-between font-medium">
+                        <span>YAML</span>
+                        <span class="text-[10px] font-mono text-gray-400">.yml</span>
+                      </button>
+                      <button type="button" (click)="exportRule($event, u, 'json')"
+                        class="w-full text-left px-3 py-1.5 text-xs text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center justify-between font-medium">
+                        <span>JSON</span>
+                        <span class="text-[10px] font-mono text-gray-400">.json</span>
+                      </button>
+                      <button type="button" (click)="exportRule($event, u, 'xml')"
+                        class="w-full text-left px-3 py-1.5 text-xs text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center justify-between font-medium">
+                        <span>XML</span>
+                        <span class="text-[10px] font-mono text-gray-400">.xml</span>
+                      </button>
+                    </div>
+                  </div>
+
                   <button [routerLink]="'/rule-Details/' + u.id" title="Ver Detalhes"
                     class="bg-gray-400 hover:bg-gray-500 text-white w-7 h-7 rounded shadow transition inline-flex items-center justify-center">
                     <i class="fas fa-right-to-bracket text-[10px]"></i>

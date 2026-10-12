@@ -1,0 +1,165 @@
+<app-header></app-header>
+<app-titlebanner title="Adicionar Regra" image="./assets/bannercover.jpg"></app-titlebanner>
+
+<!-- Toast de Sucesso -->
+<div *ngIf="message"
+    class="fixed top-4 right-4 z-50 flex items-center max-w-sm p-4 text-sm text-gray-800 bg-white dark:bg-gray-800 dark:text-gray-200 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 transition">
+    <i class="fas fa-check-circle text-green-500 text-lg mr-3"></i>
+    <span>{{ message }}</span>
+</div>
+
+<div class="page-container px-4 py-16">
+
+    <form class="grid grid-cols-1 md:grid-cols-2 gap-8 dark:text-white" (ngSubmit)="createRule()"
+        [formGroup]="createRuleForm">
+
+        <!-- 1. Linha Superior: Use Case, Cliente e Estado -->
+        <div class="col-span-1 md:col-span-2 grid grid-cols-1 md:grid-cols-12 gap-6">
+
+            <!-- Use Case Associado (5 colunas) -->
+            <div class="space-y-2 md:col-span-5">
+                <label for="selectedUseCase" class="block text-sm font-semibold text-gray-900 dark:text-white">
+                    Use Case Associado <span class="text-redshift-red">*</span>
+                </label>
+                <select id="selectedUseCase" formControlName="selectedUseCase" [(ngModel)]="selectedUseCase"
+                    (change)="onUseCaseChange()"
+                    class="block w-full py-2.5 px-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 dark:text-white rounded-lg shadow-sm focus:ring-2 focus:ring-redshift-red text-sm transition">
+                    <option value="" disabled selected class="text-gray-400">Selecione um Use Case</option>
+                    <option *ngFor="let option of usecases" [value]="option.id">
+                        RedUC{{ option.id }} - {{ option.title }}
+                    </option>
+                </select>
+                <div *ngIf="createRuleForm.get('selectedUseCase')?.touched && createRuleForm.get('selectedUseCase')?.invalid"
+                    class="text-red-600 dark:text-red-400 text-xs mt-1">
+                    O Use Case associado é obrigatório.
+                </div>
+            </div>
+
+            <!-- Cliente Associado (4 colunas) -->
+            <div class="space-y-2 md:col-span-4">
+                <label for="client" class="block text-sm font-semibold text-gray-900 dark:text-white">
+                    Cliente Associado
+                </label>
+                <select id="client" formControlName="client"
+                    class="block w-full py-2.5 px-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 dark:text-white rounded-lg shadow-sm focus:ring-2 focus:ring-redshift-red text-sm transition">
+                    <option [ngValue]="null">Geral / Sem Cliente</option>
+                    <option *ngFor="let c of clients" [ngValue]="c.id || c.pk">
+                        {{ c.name }}
+                    </option>
+                </select>
+            </div>
+
+            <!-- Estado (3 colunas) -->
+            <div class="space-y-2 md:col-span-3">
+                <label for="status" class="block text-sm font-semibold text-gray-900 dark:text-white">
+                    Estado
+                </label>
+                <select id="status" formControlName="status"
+                    class="block w-full py-2.5 px-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 dark:text-white rounded-lg shadow-sm focus:ring-2 focus:ring-redshift-red text-sm transition">
+                    <option *ngFor="let opt of statusOptions" [value]="opt.value">{{ opt.label }}</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- 2. Linha de Tipo e Sintaxe -->
+        <div class="col-span-1 md:col-span-2 grid grid-cols-1 md:grid-cols-12 gap-6">
+            <!-- Tipo (6 colunas) -->
+            <div class="space-y-2 md:col-span-6">
+                <label for="selectedType" class="block text-sm font-semibold text-gray-900 dark:text-white">Tipo</label>
+                <select id="selectedType" formControlName="selectedType" [(ngModel)]="selectedType"
+                    (change)="onTypeChange()"
+                    class="block w-full py-2.5 px-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 dark:text-white rounded-lg shadow-sm focus:ring-2 focus:ring-redshift-red text-sm transition">
+                    <option *ngFor="let option of typeKeys()" [value]="option">{{ option }}</option>
+                </select>
+            </div>
+
+            <!-- Sintaxe (6 colunas) -->
+            <div class="space-y-2 md:col-span-6">
+                <label for="syntax" class="block text-sm font-semibold text-gray-900 dark:text-white">Sintaxe</label>
+                <select id="syntax" formControlName="syntax" [(ngModel)]="selectedSyntax" (change)="onSyntaxChange()"
+                    class="block w-full py-2.5 px-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 dark:text-white rounded-lg shadow-sm focus:ring-2 focus:ring-redshift-red text-sm transition">
+                    <option *ngFor="let option of getAvailableSyntaxes()" [value]="option">{{ option }}</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- 3. Nome da Regra -->
+        <div class="space-y-2 col-span-1 md:col-span-2">
+            <label for="title" class="block text-sm font-semibold text-gray-900 dark:text-white">
+                Nome da Regra <span class="text-redshift-red">*</span>
+            </label>
+            <input id="title" type="text" formControlName="title"
+                placeholder="ex: Brute Force Detection - SPL para Azure"
+                class="block w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2.5 text-gray-900 bg-white dark:bg-gray-700 dark:text-white shadow-sm focus:ring-2 focus:ring-redshift-red text-sm transition">
+            <div *ngIf="createRuleForm.get('title')?.touched && createRuleForm.get('title')?.invalid"
+                class="text-red-600 dark:text-red-400 text-xs mt-1">
+                O nome da regra é obrigatório.
+            </div>
+        </div>
+
+        <!-- 4. LogSources Associadas -->
+        <div class="space-y-2 col-span-1 md:col-span-2">
+            <div class="flex items-center justify-between">
+                <label class="block text-sm font-semibold text-gray-900 dark:text-white">LogSources Associadas</label>
+                <span class="text-xs text-gray-400 font-normal">Opcional</span>
+            </div>
+            <app-tag-combobox formControlName="logsources" [items]="registeredLogsources"
+                placeholder="Selecione da lista ou escreva uma log source...">
+            </app-tag-combobox>
+        </div>
+
+        <!-- 5. Editor de Código -->
+        <div class="space-y-3 col-span-1 md:col-span-2">
+            <div class="flex items-center gap-3">
+                <label class="block text-sm font-semibold text-gray-900 dark:text-white mb-0">
+                    Código da Regra ({{ selectedSyntax }})
+                </label>
+                <span *ngIf="isExampleCode"
+                    class="bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-[10px] font-bold px-2 py-0.5 rounded border border-gray-300 dark:border-gray-600 uppercase tracking-wide">
+                    Exemplo
+                </span>
+                <span *ngIf="!isExampleCode"
+                    class="bg-green-100 dark:bg-green-950/40 text-green-800 dark:text-green-400 text-[10px] font-bold px-2 py-0.5 rounded border border-green-400 dark:border-green-800 uppercase tracking-wide">
+                    Personalizado
+                </span>
+            </div>
+
+            <div class="w-full border border-gray-300 dark:border-gray-700 rounded-lg overflow-hidden">
+                <app-code-editor [code]="code" [language]="selectedSyntax" height="420px"
+                    (codeChange)="onCodeChanged($event)">
+                </app-code-editor>
+            </div>
+        </div>
+
+        <!-- 6. Checkbox de Auto-Geração de Sigma -->
+        <div *ngIf="selectedSyntax !== 'Sigma Rule'"
+            class="col-span-1 md:col-span-2 flex items-center mb-6 p-4 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg">
+
+            <input type="checkbox" id="generateSigma" [(ngModel)]="generateSigma" [disabled]="forceSigma"
+                [ngModelOptions]="{standalone: true}"
+                class="w-5 h-5 text-redshift-red bg-white border-gray-300 rounded focus:ring-redshift-red focus:ring-2 dark:bg-gray-700 dark:border-gray-600 disabled:opacity-40 cursor-pointer">
+
+            <label for="generateSigma" class="ml-3 text-sm font-medium text-gray-900 dark:text-gray-200"
+                [ngClass]="{'cursor-pointer': !forceSigma}">
+                Converter e associar automaticamente Regra Sigma
+
+                <span *ngIf="forceSigma" class="block text-xs text-redshift-red mt-0.5 font-normal">
+                    * Obrigatório: Este Use Case ainda não possui nenhuma regra associada.
+                </span>
+            </label>
+        </div>
+
+        <!-- 7. Ações -->
+        <div class="col-span-1 md:col-span-2 flex items-center gap-4 pt-2">
+            <button type="submit" [disabled]="!createRuleForm.valid"
+                class="disabled:opacity-50 disabled:cursor-not-allowed w-full md:w-60 py-2.5 px-5 text-white font-medium bg-redshift-red rounded-lg hover:bg-redshift-hover transition shadow-sm text-sm">
+                Registar Regra
+            </button>
+            <a [routerLink]="['/manage-rules']"
+                class="w-full md:w-32 py-2.5 px-4 text-center text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg font-medium transition text-sm">
+                Cancelar
+            </a>
+        </div>
+    </form>
+
+</div>
