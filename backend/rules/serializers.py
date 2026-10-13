@@ -85,6 +85,26 @@ class RuleSerializer(serializers.ModelSerializer):
         if (not data.get('logsources') or len(data.get('logsources')) == 0) and getattr(instance, 'ruleModel', None):
             data['logsources'] = getattr(instance.ruleModel, 'logsources', [])
 
+        # Hierarquia: Regra Principal vs Regra Secundária (Filho)
+        parent_instance = getattr(instance, 'parent', None)
+        if parent_instance:
+            data['is_principal'] = False
+            data['parent'] = parent_instance.id
+            data['parent_info'] = {
+                'id': parent_instance.id,
+                'title': parent_instance.title,
+                'syntax': parent_instance.syntax
+            }
+        else:
+            data['is_principal'] = True
+            data['parent'] = None
+            data['parent_info'] = None
+
+        if hasattr(instance, 'children'):
+            data['children_count'] = len(instance.children.all())
+        else:
+            data['children_count'] = 0
+
         return data
 
 

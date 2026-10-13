@@ -7,11 +7,23 @@
 
 <div class="page-container px-4 py-8 dark:text-white transition">
 
-  <!-- Cabeçalho: Título + Botão Editar -->
-  <div class="flex items-center justify-between mb-4">
-    <h1 class="font-inter font-semibold text-2xl text-gray-700 dark:text-white">
-      {{ rule?.title || rule?.ruleModel?.title || ('Regra #' + rule?.id) }}
-    </h1>
+  <!-- Cabeçalho: Título + Badge de Hierarquia + Botão Editar -->
+  <div class="flex items-center justify-between mb-4 flex-wrap gap-3">
+    <div class="flex items-center gap-3 flex-wrap">
+      <h1 class="font-inter font-semibold text-2xl text-gray-700 dark:text-white">
+        {{ rule?.title || rule?.ruleModel?.title || ('Regra #' + rule?.id) }}
+      </h1>
+      <!-- Badge de Hierarquia: Principal vs Secundária (Filho) -->
+      <span *ngIf="!rule?.parent"
+        class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300 border border-blue-200 dark:border-blue-700 shadow-xs">
+        <i class="fas fa-crown text-[10px] text-amber-500"></i> Regra Principal
+      </span>
+      <span *ngIf="rule?.parent"
+        class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-300 border border-purple-200 dark:border-purple-700 shadow-xs"
+        [title]="'Regra secundária/convertida a partir da Regra Principal RedRule' + (rule.parent?.id ?? rule.parent)">
+        <i class="fas fa-code-fork text-[10px]"></i> Regra Secundária (Filho)
+      </span>
+    </div>
 
     <div class="flex items-center gap-3">
       <a [routerLink]="['/edit-rule', rule?.id]"
@@ -44,11 +56,30 @@
 
     <div class="h-8 w-px bg-gray-200 dark:bg-gray-700 hidden sm:block"></div>
 
+    <!-- Hierarquia -->
+    <div class="flex items-center gap-2.5">
+      <i class="fas fa-sitemap text-gray-400 dark:text-gray-500 text-lg"></i>
+      <div class="flex flex-col">
+        <span *ngIf="!rule?.parent"
+          class="text-xs font-bold text-blue-700 dark:text-blue-400 leading-tight flex items-center gap-1">
+          <i class="fas fa-crown text-amber-500 text-[10px]"></i> Principal
+        </span>
+        <a *ngIf="rule?.parent" [routerLink]="['/rule-Details', rule.parent?.id ?? rule.parent]"
+          class="text-xs font-bold text-purple-700 dark:text-purple-400 leading-tight hover:underline flex items-center gap-1">
+          <i class="fas fa-code-fork text-[10px]"></i> Filho (RedRule{{ rule.parent?.id ?? rule.parent }})
+        </a>
+        <span class="text-[11px] text-gray-400">Hierarquia</span>
+      </div>
+    </div>
+
+    <div class="h-8 w-px bg-gray-200 dark:bg-gray-700 hidden sm:block"></div>
+
     <!-- Cliente -->
     <div class="flex items-center gap-2.5">
       <i class="fas fa-building text-gray-400 dark:text-gray-500 text-lg"></i>
       <div class="flex flex-col">
-        <span class="text-sm font-semibold text-gray-900 dark:text-white leading-tight truncate max-w-[160px]" [title]="rule?.client?.name || 'Geral (Sem Cliente)'">
+        <span class="text-sm font-semibold text-gray-900 dark:text-white leading-tight truncate max-w-[160px]"
+          [title]="rule?.client?.name || 'Geral (Sem Cliente)'">
           {{ rule?.client?.name || 'Geral (Sem Cliente)' }}
         </span>
         <span class="text-[11px] text-gray-400">Cliente</span>
@@ -62,10 +93,12 @@
       <i class="fas fa-code text-redshift-red text-lg"></i>
       <div class="flex flex-col">
         <div class="flex items-center gap-1.5">
-          <span class="text-xs font-bold px-2 py-0.5 rounded bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300">
+          <span
+            class="text-xs font-bold px-2 py-0.5 rounded bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300">
             {{ rule?.type || rule?.ruleModel?.type || 'SIEM' }}
           </span>
-          <span class="text-xs font-semibold text-gray-800 dark:text-gray-200 truncate max-w-[140px]" [title]="rule?.syntax || 'N/D'">
+          <span class="text-xs font-semibold text-gray-800 dark:text-gray-200 truncate max-w-[140px]"
+            [title]="rule?.syntax || 'N/D'">
             {{ rule?.syntax || 'N/D' }}
           </span>
         </div>
@@ -79,7 +112,8 @@
     <div class="flex items-center gap-2.5">
       <i class="fas fa-circle-dot text-gray-400 dark:text-gray-500 text-lg"></i>
       <div class="flex flex-col">
-        <span class="text-xs font-semibold px-2.5 py-0.5 rounded-md border" [ngClass]="getStatusClasses(rule?.status || rule?.state)">
+        <span class="text-xs font-semibold px-2.5 py-0.5 rounded-md border"
+          [ngClass]="getStatusClasses(rule?.status || rule?.state)">
           {{ rule?.status || rule?.state || '-' }}
         </span>
         <span class="text-[11px] text-gray-400">Estado</span>
@@ -120,17 +154,11 @@
     <div class="w-full lg:w-[30%] flex flex-col gap-4">
 
       <!-- Painel de Ações Rápidas -->
-      <div class="bg-gray-100 dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 flex flex-col space-y-2.5 transition">
+      <div
+        class="bg-gray-100 dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 flex flex-col space-y-2.5 transition">
         <h3 class="text-xs uppercase font-semibold text-gray-500 dark:text-gray-400 mb-1">
           Ações
         </h3>
-
-        <!-- Guardar Alterações -->
-        <button type="button" (click)="updateRuleCode()"
-          class="flex items-center w-full px-4 py-2.5 text-sm font-medium text-white bg-redshift-red rounded-lg hover:bg-redshift-hover shadow-sm transition gap-3 justify-center">
-          <i class="fas fa-save w-5 text-center"></i>
-          <span>Guardar Alterações</span>
-        </button>
 
         <!-- Copiar para Clipboard -->
         <button (click)="copyToClipboard()" type="button"
@@ -161,7 +189,8 @@
               <i class="fas fa-download w-5 text-center text-gray-500 dark:text-gray-400"></i>
               <span>Exportar Regra</span>
             </div>
-            <i class="fas fa-chevron-down text-xs text-gray-400 transition-transform" [ngClass]="{'rotate-180': exportMenuOpen}"></i>
+            <i class="fas fa-chevron-down text-xs text-gray-400 transition-transform"
+              [ngClass]="{'rotate-180': exportMenuOpen}"></i>
           </button>
 
           <!-- Dropdown Menu de Formatos -->
@@ -170,20 +199,31 @@
             <button type="button" (click)="exportRule('yml')"
               class="w-full text-left px-4 py-2 text-xs text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center justify-between transition">
               <span class="font-medium">YAML</span>
-              <span class="text-[11px] font-mono px-1.5 py-0.5 rounded bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400">.yml</span>
+              <span
+                class="text-[11px] font-mono px-1.5 py-0.5 rounded bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400">.yml</span>
             </button>
             <button type="button" (click)="exportRule('json')"
               class="w-full text-left px-4 py-2 text-xs text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center justify-between transition">
               <span class="font-medium">JSON</span>
-              <span class="text-[11px] font-mono px-1.5 py-0.5 rounded bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400">.json</span>
+              <span
+                class="text-[11px] font-mono px-1.5 py-0.5 rounded bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400">.json</span>
             </button>
             <button type="button" (click)="exportRule('xml')"
               class="w-full text-left px-4 py-2 text-xs text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center justify-between transition">
               <span class="font-medium">XML</span>
-              <span class="text-[11px] font-mono px-1.5 py-0.5 rounded bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400">.xml</span>
+              <span
+                class="text-[11px] font-mono px-1.5 py-0.5 rounded bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400">.xml</span>
             </button>
           </div>
         </div>
+
+        <!-- Guardar Alterações -->
+        <button type="button" (click)="updateRuleCode()"
+          class="flex items-center w-full px-4 py-2.5 text-sm font-medium text-white bg-redshift-red rounded-lg hover:bg-redshift-hover shadow-sm transition gap-3 justify-center">
+          <i class="fas fa-save w-5 text-center"></i>
+          <span>Guardar Alterações</span>
+        </button>
+
       </div>
 
       <!-- Painel de Log Sources & Contexto da Regra -->
@@ -206,14 +246,33 @@
           </a>
         </div>
 
-        <!-- Regra de Origem (se for derivada) -->
-        <div *ngIf="rule?.parent">
-          <p class="text-[11px] text-gray-400 uppercase font-medium mb-1">Regra de Origem (Pai)</p>
-          <a [routerLink]="['/rule-Details', rule.parent]"
-            class="text-xs font-semibold text-redshift-red hover:underline flex items-center gap-1.5">
-            <i class="fas fa-sitemap text-xs"></i>
-            <span>RedRule{{ rule.parent }}</span>
+        <!-- Painel de Hierarquia da Regra -->
+        <div *ngIf="rule?.parent"
+          class="p-3 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg">
+          <span
+            class="text-[10px] uppercase font-bold text-purple-700 dark:text-purple-300 tracking-wider flex items-center gap-1 mb-1">
+            <i class="fas fa-code-fork text-[10px]"></i> Regra Secundária (Filho)
+          </span>
+          <p class="text-xs text-gray-600 dark:text-gray-300 mb-2">
+            Esta regra foi gerada ou convertida a partir da regra principal.
+          </p>
+          <a [routerLink]="['/rule-Details', rule.parent?.id ?? rule.parent]"
+            class="inline-flex items-center gap-1.5 text-xs font-bold text-redshift-red hover:underline">
+            <i class="fas fa-arrow-left text-[10px]"></i>
+            <span>Ver Regra Principal (RedRule{{ rule.parent?.id ?? rule.parent }})</span>
           </a>
+        </div>
+
+        <div *ngIf="!rule?.parent"
+          class="p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+          <span
+            class="text-[10px] uppercase font-bold text-blue-700 dark:text-blue-300 tracking-wider flex items-center gap-1 mb-1">
+            <i class="fas fa-crown text-amber-500 text-[10px]"></i> Regra Principal
+          </span>
+          <p class="text-xs text-gray-600 dark:text-gray-300">
+            Esta é a regra matriz/principal criada diretamente. Todas as conversões são associadas a ela como regras
+            secundárias (filhos).
+          </p>
         </div>
 
         <!-- LogSources -->
@@ -238,45 +297,63 @@
     </div>
   </div>
 
-  <!-- Regras Derivadas / Instâncias Associadas -->
+  <!-- Regras Secundárias / Convertidas (Filhos) -->
   <div *ngIf="childRules?.length" class="mt-12 mb-8">
-    <div class="flex items-center justify-between mb-4">
+    <div class="flex items-center justify-between mb-4 flex-wrap gap-2">
       <div>
-        <h2 class="font-inter font-semibold text-xl text-gray-700 dark:text-white">
-          Regras Derivadas / Clientes Associados
+        <h2 class="font-inter font-semibold text-xl text-gray-700 dark:text-white flex items-center gap-2">
+          <i class="fas fa-code-fork text-purple-600 dark:text-purple-400 text-lg"></i>
+          <span>{{ !rule?.parent ? 'Regras Secundárias / Convertidas (Filhos)' : 'Outras Regras Secundárias (Filhos da
+            mesma Regra Principal)' }}</span>
         </h2>
         <p class="text-xs text-gray-500 dark:text-gray-400">
-          Regras geradas ou atribuídas a clientes a partir desta regra
+          {{ !rule?.parent ? 'Regras geradas ou convertidas a partir desta regra principal' : 'Regras geradas ou
+          convertidas associadas à mesma regra matriz' }}
         </p>
       </div>
       <span
-        class="text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700">
-        {{ childRules.length }} regra(s)
+        class="text-xs font-semibold px-2.5 py-1 rounded-full bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-700">
+        {{ childRules.length }} regra(s) secundária(s)
       </span>
     </div>
 
     <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
       <div *ngFor="let child of childRules" [routerLink]="['/rule-Details', child.id]"
-        class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-4 rounded-xl shadow-sm cursor-pointer hover:shadow-md hover:border-redshift-red transition duration-200 flex flex-col justify-between">
+        class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-4 rounded-xl shadow-sm cursor-pointer hover:shadow-md hover:border-purple-500 transition duration-200 flex flex-col justify-between">
         <div>
           <div class="flex items-center justify-between gap-2 mb-2">
-            <span class="text-xs font-mono font-bold text-redshift-red">#{{ child.id }}</span>
+            <span class="text-xs font-mono font-bold text-purple-600 dark:text-purple-400">#{{ child.id }}</span>
             <span
-              class="text-[11px] font-semibold px-2 py-0.5 rounded bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-600">
+              class="text-[11px] font-semibold px-2 py-0.5 rounded bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800">
               {{ child.syntax || 'N/D' }}
             </span>
           </div>
           <h3 class="font-inter font-semibold text-sm text-gray-800 dark:text-white truncate"
-            [title]="child.client?.name || child.title || 'Geral'">
-            {{ child.client?.name || child.title || 'Geral' }}
+            [title]="child.title || 'Geral'">
+            {{ child.title || 'Geral' }}
           </h3>
+          <div class="flex items-center gap-1.5 mt-1.5">
+            <span *ngIf="child.client?.name"
+              class="text-[10px] px-1.5 py-0.2 rounded bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 truncate max-w-[140px]">
+              <i class="fas fa-building text-[8px] mr-1"></i>{{ child.client.name }}
+            </span>
+            <span *ngIf="!child.client?.name"
+              class="text-[10px] px-1.5 py-0.2 rounded bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400">
+              Geral (Sem cliente)
+            </span>
+          </div>
         </div>
 
-        <p class="text-gray-500 dark:text-gray-400 text-xs mt-3 truncate"
-          [title]="(child.logsources && child.logsources.length) ? child.logsources.join(', ') : 'Sem LogSources'">
-          <i class="fas fa-network-wired mr-1 text-[10px]"></i>
-          {{ (child.logsources && child.logsources.length) ? child.logsources.join(', ') : 'Sem LogSources' }}
-        </p>
+        <div class="flex items-center justify-between mt-3 pt-2 border-t border-gray-100 dark:border-gray-700/60">
+          <span class="text-[11px] font-medium"
+            [ngClass]="child.status === 'Regra validada' ? 'text-green-600 dark:text-green-400' : 'text-gray-500 dark:text-gray-400'">
+            <i class="fas fa-circle-dot text-[8px] mr-1"></i>{{ child.status || 'Não validada' }}
+          </span>
+          <span class="text-[11px] text-purple-600 dark:text-purple-400 font-semibold flex items-center gap-1">
+            <span>Ver</span>
+            <i class="fas fa-chevron-right text-[9px]"></i>
+          </span>
+        </div>
       </div>
     </div>
   </div>
@@ -286,8 +363,9 @@
 <!-- Modal Atribuir Regra a Cliente -->
 <div *ngIf="showAssignModal"
   class="fixed top-0 left-0 w-full h-full flex items-center justify-center bg-black/60 backdrop-blur-sm z-50 p-4">
-  <div class="relative p-4 w-full max-w-2xl bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 transition">
-    
+  <div
+    class="relative p-4 w-full max-w-2xl bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 transition">
+
     <!-- Header -->
     <div class="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
       <h3 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
@@ -302,7 +380,7 @@
 
     <!-- Formulário -->
     <form class="p-4 space-y-4" [formGroup]="assignRuleForm" (ngSubmit)="createAssignedRule()">
-      
+
       <!-- Seleção de Cliente -->
       <div>
         <label for="assignClient" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">

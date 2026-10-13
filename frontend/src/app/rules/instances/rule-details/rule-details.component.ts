@@ -161,13 +161,31 @@ export class RuleDetailsComponent implements OnInit {
   private loadChildRules(ruleId: number): void {
     this.rulesService.getRules().subscribe({
       next: (allRules: any[]) => {
-        this.childRules = allRules.filter(
-          (r: any) =>
-            r.id !== ruleId &&
-            (r.parent === ruleId || r.parent?.id === ruleId),
-        );
+        const currentId = Number(this.rule?.id || ruleId);
+        const parentVal = this.rule?.parent?.id ?? this.rule?.parent;
+        const parentId = parentVal ? Number(parentVal) : null;
+
+        if (parentId) {
+          // A regra atual é SECUNDÁRIA (tem pai).
+          // Mostramos apenas OUTRAS regras secundárias da mesma regra principal (irmãs).
+          // NUNCA incluir a própria regra aberta no ecrã nem a regra principal raiz.
+          this.childRules = allRules.filter((r: any) => {
+            const rId = Number(r.id);
+            const rParentId = Number(r.parent?.id ?? r.parent);
+            return rId !== currentId && rId !== parentId && rParentId === parentId;
+          });
+        } else {
+          // A regra atual é a REGRA PRINCIPAL.
+          // Mostramos todas as regras secundárias que são filhas desta regra.
+          // NUNCA incluir a própria regra principal.
+          this.childRules = allRules.filter((r: any) => {
+            const rId = Number(r.id);
+            const rParentId = Number(r.parent?.id ?? r.parent);
+            return rId !== currentId && rParentId === currentId;
+          });
+        }
       },
-      error: (err) => console.error('Erro ao carregar regras derivadas:', err),
+      error: (err) => console.error('Erro ao carregar regras secundárias:', err),
     });
   }
 
@@ -309,6 +327,9 @@ export class RuleDetailsComponent implements OnInit {
 
     if (!finalContent) return;
 
+    // Regra Principal é a raiz para qualquer conversão
+    const parentId = this.rule.parent?.id ?? this.rule.parent ?? this.rule.id;
+
     const payload = {
       title: `${this.rule.title} (${this.targetSyntax})`,
       useCaseId: this.rule.useCaseId || this.rule.ruleModel?.useCaseId,
@@ -317,7 +338,7 @@ export class RuleDetailsComponent implements OnInit {
       ruleCode: finalContent,
       logsources: this.rule.logsources || [],
       client: null,
-      parent: this.rule.id,
+      parent: parentId,
       status: 'Regra não validada',
       generate_sigma: false,
     };
@@ -410,6 +431,8 @@ export class RuleDetailsComponent implements OnInit {
       }
     }
 
+    const parentId = this.rule.parent?.id ?? this.rule.parent ?? this.rule.id;
+
     const payload = {
       title: this.rule.title,
       useCaseId: this.rule.useCaseId || this.rule.ruleModel?.useCaseId,
@@ -418,7 +441,7 @@ export class RuleDetailsComponent implements OnInit {
       ruleCode: formVals.modalCode,
       logsources: this.rule.logsources || [],
       client: clientId,
-      parent: this.rule.id,
+      parent: parentId,
       status: 'Regra não validada',
       generate_sigma: false,
     };

@@ -171,6 +171,14 @@ def createRule(request):
     parent = None
     if data.get('parent'):
         parent = Rule.objects.filter(id=data['parent']).first()
+        # Se a regra pai indicada for uma regra secundária (filho),
+        # subimos até à regra principal raiz para que todas as conversões
+        # fiquem diretamente associadas à regra principal!
+        if parent:
+            root = parent
+            while root.parent:
+                root = root.parent
+            parent = root
     elif rule_model and client:
         parent = Rule.objects.filter(
             ruleModel=rule_model, client__isnull=True, parent__isnull=True).first()
@@ -214,7 +222,7 @@ def createRule(request):
 @api_view(['GET'])
 def getRules(request):
     if request.method == 'GET':
-        rules = Rule.objects.select_related('client', 'ruleModel').all()
+        rules = Rule.objects.select_related('client', 'ruleModel', 'parent').prefetch_related('children').all()
         serializer = RuleSerializer(rules, many=True)
         return JsonResponse(serializer.data, safe=False)
 
@@ -230,7 +238,7 @@ def getRules(request):
 @api_view(['GET'])
 def getRuleById(request, id):
     try:
-        rule = Rule.objects.select_related('client', 'ruleModel').get(id=id)
+        rule = Rule.objects.select_related('client', 'ruleModel', 'parent').prefetch_related('children').get(id=id)
         serializer = RuleSerializer(rule, many=False)
         return JsonResponse(serializer.data, safe=False)
     except Rule.DoesNotExist:
@@ -246,7 +254,7 @@ def getRuleById(request, id):
 @api_view(['GET'])
 def getRulesByUseCase(request, useCaseId):
     if request.method == 'GET':
-        rules = Rule.objects.select_related('client', 'ruleModel').filter(useCaseId=useCaseId)
+        rules = Rule.objects.select_related('client', 'ruleModel', 'parent').prefetch_related('children').filter(useCaseId=useCaseId)
         serializer = RuleSerializer(rules, many=True)
         return JsonResponse(serializer.data, safe=False)
     else:
