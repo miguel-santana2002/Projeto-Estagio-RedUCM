@@ -58,6 +58,7 @@ export class CreateRuleComponent implements OnInit {
   forceSigma: boolean = false;
 
   code: string = '';
+  examplePlaceholder: string = '';
   isAutoDetecting = false;
   message: string = '';
 
@@ -228,9 +229,10 @@ level: medium`,
   }
 
   applyExampleCode(syntax: string): void {
-    if (this.isAutoDetecting) return;
-    this.code = this.examples[syntax] || '';
-  }
+  if (this.isAutoDetecting) return;
+  this.examplePlaceholder = this.examples[syntax] || '';
+  this.code = '';
+}
 
   onCodeChanged(value: string): void {
     this.code = value;

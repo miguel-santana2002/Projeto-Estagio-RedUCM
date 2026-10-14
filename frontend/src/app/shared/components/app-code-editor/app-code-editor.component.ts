@@ -20,12 +20,17 @@ import { CodeEditorModule, CodeModel } from '@ngstack/code-editor';
       [style.min-height]="minHeight"
       [style.max-height]="maxHeight"
     >
+      <div
+        *ngIf="showPlaceholder && placeholder"
+        class="absolute inset-0 p-3 text-sm text-gray-400 dark:text-gray-500 pointer-events-none select-none whitespace-pre-wrap z-10 bg-white dark:bg-[#131b2e]"
+      >{{ placeholder }}</div>
+
       <ngs-code-editor
         class="w-full h-full block"
         [theme]="currentTheme"
         [codeModel]="model"
         [options]="editorOptions"
-        (loaded)="onEditorLoaded()"
+        (loaded)="onEditorLoaded($event)"
         (valueChanged)="onValueChanged($event)"
       >
       </ngs-code-editor>
@@ -53,6 +58,7 @@ export class AppCodeEditorComponent implements OnInit, OnDestroy {
     if (val !== this.model.value) {
       this.model = { ...this.model, value: val || '' };
     }
+    this.showPlaceholder = !val;
   }
   @Input() set language(lang: string) {
     this.model = { ...this.model, language: this.normalizeLanguage(lang) };
@@ -61,11 +67,14 @@ export class AppCodeEditorComponent implements OnInit, OnDestroy {
   @Input() height: string = '280px';
   @Input() minHeight: string = '160px';
   @Input() maxHeight: string = '800px';
+  @Input() placeholder: string = '';
 
   @Output() codeChange = new EventEmitter<string>();
 
   currentTheme: string = 'vs';
+  showPlaceholder: boolean = true;
   private themeObserver!: MutationObserver;
+  private editorInstance: any;
 
   model: CodeModel = {
     value: '',
@@ -90,6 +99,7 @@ export class AppCodeEditorComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.editorOptions.readOnly = this.readOnly;
+    this.showPlaceholder = !this.model.value;
     this.detectTheme();
 
     this.themeObserver = new MutationObserver(() => this.detectTheme());
@@ -105,7 +115,21 @@ export class AppCodeEditorComponent implements OnInit, OnDestroy {
     }
   }
 
-  onEditorLoaded(): void {
+  onEditorLoaded(editor: any): void {
+    this.editorInstance = editor;
+
+    // Esconde o placeholder assim que o utilizador clica no editor
+    if (editor?.onDidFocusEditorText) {
+      editor.onDidFocusEditorText(() => {
+        this.showPlaceholder = false;
+      });
+    }
+    if (editor?.onDidBlurEditorText) {
+      editor.onDidBlurEditorText(() => {
+        this.showPlaceholder = !this.model.value;
+      });
+    }
+
     const monaco = (window as any).monaco;
     if (monaco) {
       // Registo do tema escuro alinhado com o Dark Mode da aplicação
@@ -129,6 +153,7 @@ export class AppCodeEditorComponent implements OnInit, OnDestroy {
 
   onValueChanged(value: string): void {
     this.model.value = value;
+    this.showPlaceholder = !value;
     this.codeChange.emit(value);
   }
 
