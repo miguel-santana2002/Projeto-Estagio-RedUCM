@@ -217,7 +217,7 @@ export class TagComboboxComponent implements ControlValueAccessor, OnChanges {
   @Input() disabled: boolean = false;
   @Input() id: string = '';
   @Input() isInvalid: boolean = false;
-  @Input() dropdownPosition: 'auto' | 'top' | 'bottom' = 'auto';
+  @Input() dropdownPosition: 'auto' | 'top' | 'bottom' = 'bottom';
 
   @Output() selectionChange = new EventEmitter<string[]>();
 
@@ -404,12 +404,14 @@ export class TagComboboxComponent implements ControlValueAccessor, OnChanges {
       this.isDropUp = false;
       return;
     }
-    // Auto: deteta se há menos de 300px abaixo e mais espaço acima
+    // Auto: só deve abrir para cima se estiver praticamente colado ao fundo do ecrã (< 160px) e com muito espaço acima (> 360px)
     if (this.containerRef?.nativeElement) {
       const rect = this.containerRef.nativeElement.getBoundingClientRect();
       const spaceBelow = window.innerHeight - rect.bottom;
       const spaceAbove = rect.top;
-      this.isDropUp = spaceBelow < 300 && spaceAbove > spaceBelow;
+      this.isDropUp = spaceBelow < 160 && spaceAbove > 360;
+    } else {
+      this.isDropUp = false;
     }
   }
 
