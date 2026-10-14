@@ -81,7 +81,7 @@
             Descrição <span class="text-red-500">*</span>
           </label>
           <textarea id="description" rows="4" formControlName="description"
-            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-redshift-red focus:border-redshift-red block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white transition resize-none"
+            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-redshift-red focus:border-redshift-red block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white transition resize-y min-h-[90px]"
             placeholder="Descrição da finalidade, eventos recolhidos e detalhes técnicos..."></textarea>
           <p *ngIf="editLogSourceForm.get('description')?.invalid && editLogSourceForm.get('description')?.touched"
             class="text-red-600 dark:text-red-400 text-xs mt-1">

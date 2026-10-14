@@ -15,6 +15,7 @@ import { TitlebannerComponent } from '../../layout/titlebanner/titlebanner.compo
 import { AuthService } from '../../services/auth.service';
 import { RulesService } from '../../services/rules.service';
 import { smartMatch } from '../../helper/search-utils';
+import { TagComboboxComponent } from '../../shared/components/tag-combobox/tag-combobox.component';
 
 @Component({
   selector: 'app-manage-clients',
@@ -29,6 +30,7 @@ import { smartMatch } from '../../helper/search-utils';
     RouterModule,
     ReactiveFormsModule,
     TagInputModule,
+    TagComboboxComponent,
   ],
 })
 export class ManageClientsComponent implements OnInit {

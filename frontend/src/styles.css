@@ -163,3 +163,20 @@ mat-select[multiple]:focus,
   box-shadow: none !important;
   outline: none !important;
 }
+
+/* ============================================================
+   REDIMENSIONAMENTO VERTICAL CONSISTENTE EM TODAS AS TEXTAREAS
+   ============================================================ */
+
+textarea {
+  resize: vertical !important;
+  min-height: 80px;
+}
+
+textarea::-webkit-resizer {
+  border-width: 9px;
+  border-style: solid;
+  border-color: transparent #ef4444 #ef4444 transparent;
+  cursor: se-resize;
+}
+

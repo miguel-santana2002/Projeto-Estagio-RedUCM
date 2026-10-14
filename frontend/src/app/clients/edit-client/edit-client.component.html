@@ -2,44 +2,60 @@
 <app-titlebanner [title]="isAdmin ? 'Edição de Clientes' : 'Acesso Restrito'"
   image="./assets/bannercover.jpg"></app-titlebanner>
 
-<div class="page-container px-4 py-16">
+<div class="page-container px-4 py-10">
 
   <!-- SE FOR ADMIN: Mostra o formulário de edição normal -->
-  <div *ngIf="isAdmin" class="max-w-xl mx-auto bg-white dark:bg-gray-700 p-6 rounded-lg shadow-md">
-    <div class="flex items-center mb-6 border-b pb-4 dark:border-gray-600">
-      <i class="fas fa-building mr-3 text-redshift-red text-xl"></i>
-      <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
-        Editar Cliente #{{ clientId }}
-      </h3>
+  <div *ngIf="isAdmin"
+    class="max-w-2xl mx-auto bg-white dark:bg-gray-800 p-6 sm:p-8 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 transition-colors duration-200">
+    <div class="flex items-center justify-between mb-6 border-b pb-4 border-gray-200 dark:border-gray-700">
+      <div class="flex items-center gap-3">
+        <div
+          class="w-10 h-10 rounded-lg bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 flex items-center justify-center text-lg">
+          <i class="fas fa-building"></i>
+        </div>
+        <div>
+          <h3 class="text-lg font-bold text-gray-900 dark:text-white">
+            Editar Cliente #{{ clientId }}
+          </h3>
+          <p class="text-xs text-gray-500 dark:text-gray-400">
+            Atualize as informações organizacionais e fontes de eventos associadas
+          </p>
+        </div>
+      </div>
     </div>
 
     <!-- Spinner de Loading -->
-    <div *ngIf="isLoading" class="flex justify-center py-6">
-      <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-redshift-red"></div>
+    <div *ngIf="isLoading" class="flex flex-col items-center justify-center py-12 space-y-3">
+      <div class="w-8 h-8 border-4 border-redshift-red/20 border-t-redshift-red rounded-full animate-spin"></div>
+      <span class="text-xs text-gray-500 dark:text-gray-400">A carregar dados do cliente...</span>
     </div>
 
     <!-- Formulário de Edição -->
-    <form *ngIf="!isLoading" [formGroup]="editClientForm" (ngSubmit)="updateClient()">
-      <div class="grid gap-4 mb-4 grid-cols-2">
+    <form *ngIf="!isLoading" [formGroup]="editClientForm" (ngSubmit)="updateClient()" class="space-y-6">
+      <div class="space-y-5">
 
-        <!-- Nome -->
-        <div class="col-span-2">
-          <label for="name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
-            Nome <span class="text-red-500">*</span>
+        <!-- Nome da Empresa -->
+        <div class="space-y-2">
+          <label for="name" class="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">
+            Nome da Empresa <span class="text-red-500">*</span>
           </label>
           <input type="text" formControlName="name" id="name"
-            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white"
+            class="block w-full rounded-md border-0 bg-white dark:bg-gray-700 px-3 py-2 text-gray-900 dark:text-white shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-600 placeholder:text-gray-400 dark:placeholder-gray-400 focus:ring-2 focus:ring-inset focus:ring-redshift-red sm:text-sm sm:leading-6 transition"
             placeholder="Insira o nome da empresa">
+          <div *ngIf="editClientForm.get('name')?.touched && editClientForm.get('name')?.invalid"
+            class="text-red-600 dark:text-red-400 text-xs mt-1">
+            Nome é obrigatório.
+          </div>
         </div>
 
         <!-- SIEM -->
-        <div class="col-span-2">
-          <label for="siem" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+        <div class="space-y-2">
+          <label for="siem" class="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">
             SIEM <span class="text-red-500">*</span>
           </label>
           <select id="siem" formControlName="siem"
-            class="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-redshift-red focus:border-redshift-red block w-full p-2.5 transition">
-            <option value="" disabled>Selecione o SIEM</option>
+            class="block w-full rounded-md border-0 bg-white dark:bg-gray-700 px-3 py-2 text-gray-900 dark:text-white shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-600 focus:ring-2 focus:ring-inset focus:ring-redshift-red sm:text-sm sm:leading-6 transition">
+            <option value="" disabled>Selecione o SIEM...</option>
             <option value="Splunk">Splunk</option>
             <option value="Sentinel">Sentinel</option>
             <option value="Crowdstrike">Crowdstrike</option>
@@ -47,37 +63,47 @@
             <option value="Elastic">Elastic</option>
             <option value="FortiSIEM">FortiSIEM</option>
           </select>
+          <div *ngIf="editClientForm.get('siem')?.touched && editClientForm.get('siem')?.invalid"
+            class="text-red-600 dark:text-red-400 text-xs mt-1">
+            SIEM é obrigatório.
+          </div>
         </div>
 
-        <!-- LogSources -->
-        <div class="col-span-2">
-          <label for="logsources" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
-            LogSources <span class="text-red-500">*</span>
+        <!-- Log Sources (com o mesmo design que tecnicas/taticas da pagina edit-usecase) -->
+        <div class="space-y-2">
+          <label for="logsources" class="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">
+            Log Sources <span class="text-red-500">*</span>
           </label>
-          <tag-input theme='minimal' [onlyFromAutocomplete]="true" formControlName="logsources"
-            secondaryPlaceholder="+ Nova"
-            class="block w-full rounded-md border-0 px-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6">
-            <tag-input-dropdown [showDropdownIfEmpty]="true" [autocompleteItems]="registeredLogsources">
-            </tag-input-dropdown>
-          </tag-input>
+          <app-tag-combobox
+            formControlName="logsources"
+            [items]="registeredLogsources"
+            placeholder="Selecione da lista ou escreva uma log source..."
+            [isInvalid]="!!(editClientForm.get('logsources')?.touched && editClientForm.get('logsources')?.invalid)">
+          </app-tag-combobox>
+          <div *ngIf="editClientForm.get('logsources')?.touched && editClientForm.get('logsources')?.invalid"
+            class="text-red-600 dark:text-red-400 text-xs mt-1">
+            Selecione pelo menos uma log source.
+          </div>
         </div>
 
       </div>
 
-      <div *ngIf="errorMessage" class="mb-4 text-red-600 text-sm">
-        {{ errorMessage }}
+      <div *ngIf="errorMessage"
+        class="p-3 rounded-lg bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 text-xs">
+        <i class="fas fa-circle-exclamation mr-1.5"></i>
+        <span>{{ errorMessage }}</span>
       </div>
 
       <!-- Botões -->
-      <div class="flex justify-end gap-3 pt-4 border-t dark:border-gray-600">
+      <div class="flex items-center justify-end gap-3 pt-6 border-t border-gray-200 dark:border-gray-700">
+        <button type="button" (click)="cancel()"
+          class="w-full sm:w-auto py-2.5 px-5 text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg border border-gray-300 dark:border-gray-600 text-sm font-medium transition text-center shadow-sm">
+          Cancelar
+        </button>
         <button type="submit" [disabled]="editClientForm.invalid"
-          class="text-white items-center bg-redshift-red hover:bg-redshift-hover focus:ring-4 focus:outline-none font-medium rounded-lg text-sm px-5 py-2.5 text-center disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
+          class="w-full sm:w-auto text-white bg-redshift-red hover:bg-redshift-hover focus:ring-4 focus:outline-none font-medium rounded-lg text-sm px-5 py-2.5 text-center disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-sm transition">
           <i class="fas fa-save"></i>
           <span>Guardar Alterações</span>
-        </button>
-        <button type="button" (click)="cancel()"
-          class="w-full sm:w-auto py-2.5 px-6 text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-lg border border-gray-300 dark:border-gray-600 text-sm font-medium transition text-center">
-          Cancelar
         </button>
       </div>
     </form>
@@ -85,16 +111,17 @@
 
   <!-- SE NÃO FOR ADMIN (É Operador): Mostra mensagem de acesso negado -->
   <div *ngIf="!isAdmin"
-    class="max-w-md mx-auto bg-white dark:bg-gray-800 p-8 rounded-lg shadow-md text-center border border-gray-200 dark:border-gray-700">
-    <div class="text-red-500 mb-4">
-      <i class="fas fa-ban text-5xl"></i>
+    class="max-w-md mx-auto bg-white dark:bg-gray-800 p-8 rounded-xl shadow-sm text-center border border-gray-200 dark:border-gray-700">
+    <div
+      class="w-14 h-14 mx-auto mb-4 rounded-full bg-red-50 dark:bg-red-950/40 text-red-500 flex items-center justify-center text-2xl">
+      <i class="fas fa-ban"></i>
     </div>
-    <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2">Acesso Restrito</h3>
-    <p class="text-gray-600 dark:text-gray-400 text-sm mb-6">
-      Não tens permissões de administrador para aceder a esta página de edição.
+    <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-1.5">Acesso Restrito</h3>
+    <p class="text-gray-600 dark:text-gray-400 text-xs mb-6">
+      Não tem permissões de administrador para aceder a esta página de edição.
     </p>
     <button type="button" (click)="cancel()"
-      class="bg-redshift-red text-white hover:bg-redshift-hover px-5 py-2.5 rounded-lg text-sm font-medium transition">
+      class="bg-redshift-red text-white hover:bg-redshift-hover px-5 py-2 rounded-lg text-xs font-semibold transition shadow-sm">
       Voltar
     </button>
   </div>

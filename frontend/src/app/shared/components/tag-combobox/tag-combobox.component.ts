@@ -117,7 +117,11 @@ import { normalizeSearchText } from '../../../helper/search-utils';
       <!-- Painel Dropdown Flutuante -->
       <div
         *ngIf="isOpen"
-        class="absolute left-0 right-0 top-full mt-1.5 z-50 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-xl overflow-hidden text-sm"
+        class="absolute left-0 right-0 z-50 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-xl overflow-hidden text-sm"
+        [ngClass]="{
+          'bottom-full mb-1.5': isDropUp,
+          'top-full mt-1.5': !isDropUp
+        }"
       >
         <!-- Cabeçalho Informativo -->
         <div
@@ -213,9 +217,11 @@ export class TagComboboxComponent implements ControlValueAccessor, OnChanges {
   @Input() disabled: boolean = false;
   @Input() id: string = '';
   @Input() isInvalid: boolean = false;
+  @Input() dropdownPosition: 'auto' | 'top' | 'bottom' = 'auto';
 
   @Output() selectionChange = new EventEmitter<string[]>();
 
+  isDropUp: boolean = false;
   selectedItems: string[] = [];
   filteredItems: string[] = [];
   searchQuery: string = '';
@@ -389,21 +395,42 @@ export class TagComboboxComponent implements ControlValueAccessor, OnChanges {
     this.emitChange();
   }
 
+  updateDropdownPosition(): void {
+    if (this.dropdownPosition === 'top') {
+      this.isDropUp = true;
+      return;
+    }
+    if (this.dropdownPosition === 'bottom') {
+      this.isDropUp = false;
+      return;
+    }
+    // Auto: deteta se há menos de 300px abaixo e mais espaço acima
+    if (this.containerRef?.nativeElement) {
+      const rect = this.containerRef.nativeElement.getBoundingClientRect();
+      const spaceBelow = window.innerHeight - rect.bottom;
+      const spaceAbove = rect.top;
+      this.isDropUp = spaceBelow < 300 && spaceAbove > spaceBelow;
+    }
+  }
+
   onSearchChange(): void {
     this.applyFilter();
     if (!this.isOpen) {
       this.isOpen = true;
+      this.updateDropdownPosition();
     }
   }
 
   onInputFocus(): void {
     this.isOpen = true;
+    this.updateDropdownPosition();
     this.applyFilter();
   }
 
   onContainerClick(event: MouseEvent): void {
     if (this.disabled) return;
     this.isOpen = true;
+    this.updateDropdownPosition();
     this.focusTextInput();
   }
 
@@ -412,6 +439,7 @@ export class TagComboboxComponent implements ControlValueAccessor, OnChanges {
     if (this.disabled) return;
     this.isOpen = !this.isOpen;
     if (this.isOpen) {
+      this.updateDropdownPosition();
       this.applyFilter();
       this.focusTextInput();
     } else {
@@ -442,6 +470,7 @@ export class TagComboboxComponent implements ControlValueAccessor, OnChanges {
       event.preventDefault();
       if (!this.isOpen) {
         this.isOpen = true;
+        this.updateDropdownPosition();
         this.applyFilter();
         return;
       }
