@@ -411,6 +411,19 @@
             </div>
 
             <div class="p-4 md:p-5 space-y-4">
+              <!-- Cabeçalho da Secção com Botão Editar (Opção B) -->
+              <div class="flex items-center justify-between pb-1">
+                <h4 class="text-sm font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                  Detalhes do Registo
+                </h4>
+
+                <button *ngIf="isAdmin" type="button" (click)="editClient(selectedClient)"
+                  class="bg-redshift-red hover:bg-redshift-hover text-sm font-medium text-white px-3.5 py-1.5 rounded-lg transition flex items-center gap-1.5 shadow-sm">
+                  <span>Editar</span>
+                  <i class="fas fa-pen text-xs"></i>
+                </button>
+              </div>
+
               <div>
                 <label
                   class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider font-semibold">Nome</label>
@@ -445,13 +458,8 @@
 
             <div
               class="flex items-center justify-end p-4 md:p-5 border-b-0 border-t border-gray-200 dark:border-gray-700 rounded-b gap-2">
-              <!-- Botão Editar apenas para Admin -->
-              <button *ngIf="isAdmin" type="button" (click)="editClient(selectedClient)"
-                class="text-white bg-redshift-red hover:bg-redshift-hover rounded-lg text-sm px-4 py-2 font-medium transition">
-                <i class="fas fa-edit mr-1"></i> Editar
-              </button>
               <button type="button" (click)="closeDetailsModal()"
-                class="text-gray-500 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-100 rounded-lg border border-gray-200 dark:border-gray-600 text-sm px-4 py-2 transition">
+                class="text-gray-500 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-100 rounded-lg border border-gray-200 dark:border-gray-600 text-sm px-4 py-2 font-medium transition shadow-sm">
                 Fechar
               </button>
             </div>

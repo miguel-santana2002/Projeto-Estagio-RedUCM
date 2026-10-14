@@ -75,6 +75,10 @@ export class RulesService {
     return this.http.get<any[]>(`${AUTH_URL}getRegisteredLogSources`);
   }
 
+  getRegisteredLogSourceById(id: number): Observable<any> {
+    return this.http.get<any>(`${AUTH_URL}getRegisteredLogSourceById/${id}`);
+  }
+
   deleteLogSourceById(id: number): Observable<any> {
     return this.http.post<any>(`${AUTH_URL}deleteLogSourceById/${id}`, id);
   }

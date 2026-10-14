@@ -1,0 +1,10 @@
+.resize-y {
+  resize: vertical !important;
+}
+
+.resize-y::-webkit-resizer {
+  border-width: 9px;
+  border-style: solid;
+  border-color: transparent #ef4444 #ef4444 transparent;
+}
+

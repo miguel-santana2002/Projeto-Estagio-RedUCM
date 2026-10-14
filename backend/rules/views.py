@@ -320,6 +320,16 @@ def getRegisteredLogSources(request):
 
     else:
         return JsonResponse({'error': 'Invalid request method'})
+
+
+@api_view(['GET'])
+def getRegisteredLogSourceById(request, id):
+    try:
+        logsource = RegisteredLogSource.objects.get(id=id)
+        serializer = RegisteredLogSourceSerializer(logsource)
+        return JsonResponse(serializer.data, safe=False)
+    except RegisteredLogSource.DoesNotExist:
+        return JsonResponse({'error': 'LogSource não encontrada'}, status=404)
     
 
 @api_view(['POST'])
