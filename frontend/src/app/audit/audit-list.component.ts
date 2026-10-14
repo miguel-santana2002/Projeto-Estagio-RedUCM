@@ -6,7 +6,7 @@ import { AuditLog } from './audit-log.model';
 import { AuditService } from './audit.service';
 import { HeaderComponent } from '../layout/header/header.component';
 import { TitlebannerComponent } from '../layout/titlebanner/titlebanner.component';
-import { smartMatch } from '../helper/search-utils';
+import { normalizeSearchText, tokenizeQuery } from '../helper/search-utils';
 
 @Component({
   selector: 'app-audit-list',
@@ -22,6 +22,8 @@ import { smartMatch } from '../helper/search-utils';
 })
 export class AuditListComponent implements OnInit {
   logs: AuditLog[] = [];
+  filteredLogs: AuditLog[] = [];
+  pagedLogs: AuditLog[] = [];
   loading: boolean = false;
   errorMessage: string | null = null;
 
@@ -58,11 +60,45 @@ export class AuditListComponent implements OnInit {
     this.loading = true;
     this.errorMessage = null;
 
+    const actionLabels: Record<string, string> = {
+      CREATE: 'Criação Criar Adicionar',
+      UPDATE: 'Alteração Editar Modificar Atualização',
+      DELETE: 'Remoção Apagar Eliminar Exclusão',
+      LOGIN: 'Login Sessão Entrada',
+      LOGOUT: 'Logout Saída',
+    };
+
     this.auditService.getAuditLogs().subscribe({
       next: (data) => {
-        this.logs = Array.isArray(data) ? data : [];
+        this.logs = (Array.isArray(data) ? data : []).map((log: any) => {
+          const extraAction = actionLabels[log.action] || '';
+          const changesStr =
+            log.changes && typeof log.changes === 'object'
+              ? JSON.stringify(log.changes)
+              : String(log.changes || '');
+
+          const corpus = normalizeSearchText([
+            log.id,
+            `#${log.id}`,
+            log.action,
+            extraAction,
+            log.object_repr,
+            log.model_name,
+            log.actor || 'Sistema',
+            log.timestamp,
+            changesStr.length > 500 ? changesStr.substring(0, 500) : changesStr,
+          ].join(' '));
+
+          return {
+            ...log,
+            _actor: log.actor || 'Sistema',
+            _searchCorpus: corpus,
+          };
+        });
+
         this.startFilters();
         this.sortTable('id');
+        this.applyFilters();
         this.loading = false;
       },
       error: (err) => {
@@ -94,7 +130,7 @@ export class AuditListComponent implements OnInit {
     this.uniqueActors = Array.from(
       new Set(
         this.logs
-          .map((l: any) => l.actor || 'Sistema')
+          .map((l: any) => l._actor || l.actor || 'Sistema')
           .filter((a): a is string => Boolean(a)),
       ),
     ).sort();
@@ -108,6 +144,7 @@ export class AuditListComponent implements OnInit {
     } else {
       this.selectedActions = [...this.selectedActions, act];
     }
+    this.applyFilters();
   }
 
   isActionSelected(act: string): boolean {
@@ -121,6 +158,7 @@ export class AuditListComponent implements OnInit {
     } else {
       this.selectedModels = [...this.selectedModels, model];
     }
+    this.applyFilters();
   }
 
   isModelSelected(model: string): boolean {
@@ -134,6 +172,7 @@ export class AuditListComponent implements OnInit {
     } else {
       this.selectedActors = [...this.selectedActors, actor];
     }
+    this.applyFilters();
   }
 
   isActorSelected(actor: string): boolean {
@@ -145,68 +184,44 @@ export class AuditListComponent implements OnInit {
     this.selectedActions = [];
     this.selectedModels = [];
     this.selectedActors = [];
+    this.searchTerm = '';
+    this.applyFilters();
   }
 
   onSearchChange(): void {
     this.page = 1;
+    this.applyFilters();
   }
 
-  // Filtragem Reativa
-  get filteredLogs(): AuditLog[] {
-    return this.logs.filter((log: any) => {
-      // 1. Pesquisa Inteligente Multi-campo
-      const actionLabels: Record<string, string> = {
-        CREATE: 'Criação Criar Adicionar',
-        UPDATE: 'Alteração Editar Modificar Atualização',
-        DELETE: 'Remoção Apagar Eliminar Exclusão',
-        LOGIN: 'Login Sessão Entrada',
-        LOGOUT: 'Logout Saída',
-      };
-      const extraAction = actionLabels[log.action] || '';
-      const changesStr =
-        log.changes && typeof log.changes === 'object'
-          ? JSON.stringify(log.changes)
-          : String(log.changes || '');
+  applyFilters(): void {
+    const tokens = tokenizeQuery(this.searchTerm);
 
-      const matchesSearch = smartMatch(
-        [
-          log.id,
-          `#${log.id}`,
-          log.action,
-          extraAction,
-          log.object_repr,
-          log.model_name,
-          log.actor || 'Sistema',
-          log.timestamp,
-          changesStr,
-        ],
-        this.searchTerm
-      );
+    this.filteredLogs = this.logs.filter((log: any) => {
+      const matchesSearch =
+        tokens.length === 0 || tokens.every((token) => log._searchCorpus.includes(token));
 
-      // 2. Filtro Ação
       const matchesAction =
         this.selectedActions.length === 0 ||
         this.selectedActions.includes(log.action);
 
-      // 3. Filtro Modelo
       const matchesModel =
         this.selectedModels.length === 0 ||
         this.selectedModels.includes(log.model_name);
 
-      // 4. Filtro Ator
-      const actorName = log.actor || 'Sistema';
+      const actorName = log._actor || log.actor || 'Sistema';
       const matchesActor =
         this.selectedActors.length === 0 ||
         this.selectedActors.includes(actorName);
 
       return matchesSearch && matchesAction && matchesModel && matchesActor;
     });
+
+    this.updatePagedLogs();
   }
 
-  // Segmentação Paginada
-  get pagedLogs(): AuditLog[] {
+  updatePagedLogs(): void {
     const start = (this.page - 1) * this.pageSize;
-    return this.filteredLogs.slice(start, start + this.pageSize);
+    this.pagedLogs = this.filteredLogs.slice(start, start + this.pageSize);
   }
 
   get totalPages(): number {
@@ -216,12 +231,14 @@ export class AuditListComponent implements OnInit {
   setPage(newPage: number): void {
     if (newPage >= 1 && newPage <= this.totalPages) {
       this.page = newPage;
+      this.updatePagedLogs();
     }
   }
 
   onPageSizeChange(newSize: number): void {
     this.pageSize = Number(newSize);
     this.page = 1;
+    this.updatePagedLogs();
   }
 
   // Ordenação
@@ -258,5 +275,7 @@ export class AuditListComponent implements OnInit {
 
       return (Number(valA) - Number(valB)) * (this.sortReverse ? -1 : 1);
     });
+
+    this.applyFilters();
   }
 }

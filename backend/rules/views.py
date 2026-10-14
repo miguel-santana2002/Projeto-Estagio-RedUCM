@@ -223,6 +223,18 @@ def createRule(request):
 def getRules(request):
     if request.method == 'GET':
         rules = Rule.objects.select_related('client', 'ruleModel', 'parent').prefetch_related('children').all()
+
+        parent_param = request.GET.get('parent')
+        if parent_param is not None:
+            if parent_param in ('null', 'None', '', 'root'):
+                rules = rules.filter(parent__isnull=True)
+            else:
+                rules = rules.filter(parent_id=parent_param)
+
+        use_case_param = request.GET.get('useCaseId')
+        if use_case_param is not None:
+            rules = rules.filter(useCaseId=use_case_param)
+
         serializer = RuleSerializer(rules, many=True)
         return JsonResponse(serializer.data, safe=False)
 
@@ -255,6 +267,22 @@ def getRuleById(request, id):
 def getRulesByUseCase(request, useCaseId):
     if request.method == 'GET':
         rules = Rule.objects.select_related('client', 'ruleModel', 'parent').prefetch_related('children').filter(useCaseId=useCaseId)
+        serializer = RuleSerializer(rules, many=True)
+        return JsonResponse(serializer.data, safe=False)
+    else:
+        return JsonResponse({'error': 'Invalid request method'}, status=400)
+
+
+@extend_schema(request=RuleSerializer,
+                description='Get child rules based on Parent Rule Id.',
+                responses={
+                     200: OpenApiResponse(response=RuleSerializer, description='Child rules retrieved successfully'),
+                     400: OpenApiResponse(response=None, description='Invalid request method')
+                })
+@api_view(['GET'])
+def getRulesByParent(request, parentId):
+    if request.method == 'GET':
+        rules = Rule.objects.select_related('client', 'ruleModel', 'parent').prefetch_related('children').filter(parent_id=parentId)
         serializer = RuleSerializer(rules, many=True)
         return JsonResponse(serializer.data, safe=False)
     else:

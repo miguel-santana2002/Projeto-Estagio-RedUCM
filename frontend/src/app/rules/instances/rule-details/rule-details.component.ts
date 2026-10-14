@@ -159,31 +159,18 @@ export class RuleDetailsComponent implements OnInit {
   }
 
   private loadChildRules(ruleId: number): void {
-    this.rulesService.getRules().subscribe({
-      next: (allRules: any[]) => {
-        const currentId = Number(this.rule?.id || ruleId);
-        const parentVal = this.rule?.parent?.id ?? this.rule?.parent;
-        const parentId = parentVal ? Number(parentVal) : null;
+    const currentId = Number(this.rule?.id || ruleId);
+    const parentVal = this.rule?.parent?.id ?? this.rule?.parent;
+    const parentId = parentVal ? Number(parentVal) : null;
+    const rootParentId = parentId || currentId;
 
-        if (parentId) {
-          // A regra atual é SECUNDÁRIA (tem pai).
-          // Mostramos apenas OUTRAS regras secundárias da mesma regra principal (irmãs).
-          // NUNCA incluir a própria regra aberta no ecrã nem a regra principal raiz.
-          this.childRules = allRules.filter((r: any) => {
-            const rId = Number(r.id);
-            const rParentId = Number(r.parent?.id ?? r.parent);
-            return rId !== currentId && rId !== parentId && rParentId === parentId;
-          });
-        } else {
-          // A regra atual é a REGRA PRINCIPAL.
-          // Mostramos todas as regras secundárias que são filhas desta regra.
-          // NUNCA incluir a própria regra principal.
-          this.childRules = allRules.filter((r: any) => {
-            const rId = Number(r.id);
-            const rParentId = Number(r.parent?.id ?? r.parent);
-            return rId !== currentId && rParentId === currentId;
-          });
-        }
+    this.rulesService.getRulesByParent(rootParentId).subscribe({
+      next: (children: any[]) => {
+        // Exclui a própria regra que está aberta no ecrã e a regra raiz se vier devolvida
+        this.childRules = (children || []).filter((r: any) => {
+          const rId = Number(r.id);
+          return rId !== currentId && (!parentId || rId !== parentId);
+        });
       },
       error: (err) => console.error('Erro ao carregar regras secundárias:', err),
     });

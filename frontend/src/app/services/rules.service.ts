@@ -26,6 +26,10 @@ export class RulesService {
     return this.http.get<any[]>(`${AUTH_URL}getRulesByUseCase/${useCaseId}`);
   }
 
+  getRulesByParent(parentId: number): Observable<any[]> {
+    return this.http.get<any[]>(`${AUTH_URL}getRulesByParent/${parentId}`);
+  }
+
   getRuleModelsByUseCase(useCaseId: number): Observable<any[]> {
     return this.http.get<any[]>(
       `${AUTH_URL}getRuleModelsByUseCase/${useCaseId}`,
