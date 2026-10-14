@@ -167,11 +167,15 @@
           <span>Copiar para Clipboard</span>
         </button>
 
-        <!-- Converter Regra -->
+        <!-- Converter Regra (com Badge Experimental) -->
         <button (click)="openConvertModal()" type="button"
-          class="flex items-center w-full px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 hover:text-redshift-red dark:hover:text-white shadow-sm transition gap-3">
+          class="relative flex items-center w-full px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 hover:text-redshift-red dark:hover:text-white shadow-sm transition gap-3">
           <i class="fas fa-exchange-alt w-5 text-center text-gray-500 dark:text-gray-400"></i>
           <span>Converter Regra</span>
+          <span
+            class="absolute -top-2 -right-1 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-xs pointer-events-none">
+            Experimental
+          </span>
         </button>
 
         <!-- Atribuir a Cliente -->
@@ -444,9 +448,13 @@
     <!-- Header -->
     <div
       class="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-[#1F2937]/50">
-      <h3 class="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2.5">
+      <h3 class="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2.5 flex-wrap">
         <i class="fas fa-brain text-redshift-red"></i>
-        Conversão de Regras (pySigma vs. AI)
+        <span>Conversão de Regras (pySigma vs. AI)</span>
+        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300 border border-amber-300 dark:border-amber-700">
+          <i class="fas fa-flask text-[9px]"></i>
+          Experimental
+        </span>
       </h3>
       <button (click)="closeConvertModal()" type="button"
         class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 inline-flex justify-center items-center dark:hover:bg-gray-700 dark:hover:text-white transition">
@@ -550,17 +558,29 @@
 
     <!-- Footer Modal -->
     <div
-      class="flex items-center justify-end px-6 py-4 border-t border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-[#1F2937]/50 space-x-3">
-      <button (click)="applyConvertedRule()"
-        [disabled]="(!aiConvertedContent && !pysigmaConvertedContent && !aiPureConvertedContent) || isConverting"
-        type="button"
-        class="py-2.5 px-5 text-xs font-medium text-white bg-redshift-red hover:bg-redshift-hover disabled:opacity-50 disabled:cursor-not-allowed rounded-lg shadow transition">
-        Criar Regra Convertida
-      </button>
-      <button (click)="closeConvertModal()" type="button"
-        class="py-2.5 px-5 text-xs font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-[#111827] rounded-lg border border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 transition">
-        Fechar
-      </button>
+      class="flex flex-col sm:flex-row items-center justify-between gap-4 px-6 py-4 border-t border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-[#1F2937]/50">
+      
+      <!-- Nota de Aviso: Validação Humana / Extra Obrigatória -->
+      <div class="flex items-center gap-2.5 text-xs text-amber-800 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 rounded-lg px-3.5 py-2 w-full sm:w-auto">
+        <i class="fas fa-triangle-exclamation text-amber-500 text-sm flex-shrink-0"></i>
+        <span class="leading-relaxed">
+          <strong>Aviso:</strong> A conversão gerada pode conter imprecisões e requer <strong>sempre validação humana e revisão técnica</strong> antes de ser implementada.
+        </span>
+      </div>
+
+      <!-- Botões de Ação -->
+      <div class="flex items-center gap-3 w-full sm:w-auto justify-end flex-shrink-0">
+        <button (click)="applyConvertedRule()"
+          [disabled]="(!aiConvertedContent && !pysigmaConvertedContent && !aiPureConvertedContent) || isConverting"
+          type="button"
+          class="py-2.5 px-5 text-xs font-medium text-white bg-redshift-red hover:bg-redshift-hover disabled:opacity-50 disabled:cursor-not-allowed rounded-lg shadow transition">
+          Criar Regra Convertida
+        </button>
+        <button (click)="closeConvertModal()" type="button"
+          class="py-2.5 px-5 text-xs font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-[#111827] rounded-lg border border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 transition">
+          Fechar
+        </button>
+      </div>
     </div>
 
   </div>
