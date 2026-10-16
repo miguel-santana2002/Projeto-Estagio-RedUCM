@@ -257,6 +257,11 @@ export class ManageUsersComponent implements OnInit, AfterViewInit {
         valueB = b.is_superuser || b.is_admin ? 'Administrador' : 'Operador';
       }
 
+      if (column === 'is_active') {
+        valueA = a.is_active !== false ? 1 : 0;
+        valueB = b.is_active !== false ? 1 : 0;
+      }
+
       if (valueA == null && valueB != null) return this.sortReverse ? -1 : 1;
       if (valueA != null && valueB == null) return this.sortReverse ? 1 : -1;
       if (valueA == null && valueB == null) return 0;
@@ -339,7 +344,7 @@ export class ManageUsersComponent implements OnInit, AfterViewInit {
     });
   }
 
-  // Controlo da checkbox de bloqueio do utilizador
+  // Controlo da checkbox de bloqueio do utilizador (caso mantido por compatibilidade)
   toggleUserBlock(): void {
     if (!this.selectedUser || this.isUpdatingBlockStatus) return;
 
@@ -365,5 +370,23 @@ export class ManageUsersComponent implements OnInit, AfterViewInit {
           this.isUpdatingBlockStatus = false;
         },
       });
+  }
+
+  // Alteração direta do estado do utilizador (Ativo / Bloqueado) na tabela
+  onUserStatusChange(user: any, newStatus: string): void {
+    const isBlocked = newStatus === 'blocked';
+    this.authService.toggleUserStatus(user.pk, isBlocked).subscribe({
+      next: (res: any) => {
+        user.is_active = !Boolean(res.is_blocked);
+        if (this.selectedUser && this.selectedUser.pk === user.pk) {
+          this.selectedUser.is_active = user.is_active;
+          this.isUserBlocked = !user.is_active;
+        }
+      },
+      error: (err) => {
+        console.error('Erro ao atualizar estado do utilizador:', err);
+        this.loadUsers();
+      },
+    });
   }
 }

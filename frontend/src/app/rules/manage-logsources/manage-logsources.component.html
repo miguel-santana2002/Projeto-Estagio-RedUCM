@@ -1,322 +1,483 @@
 <app-header></app-header>
+
 <app-titlebanner title="Gestão de Logsources" image="./assets/bannercover.jpg"></app-titlebanner>
 
 <div class="page-container px-4 py-16">
-  <div class="flex flex-col lg:flex-row gap-8 dark:text-white transition">
+  <div class="overflow-x-auto">
+    <div class="inline-block min-w-full shadow-md p-5 rounded-lg overflow-hidden bg-white dark:bg-gray-800 transition">
 
-    <!-- Painel Esquerdo: Tabela de Log Sources -->
-    <div class="w-full lg:w-2/3">
-      <div
-        class="bg-white dark:bg-gray-800 shadow-md rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 transition">
+      <!-- Barra Superior: Pesquisa, Contador e Botões -->
+      <div class="mb-5 flex flex-col md:flex-row gap-4 items-center justify-between">
 
-        <!-- Toolbar da Tabela -->
-        <div
-          class="flex flex-col md:flex-row justify-between items-center gap-4 p-5 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
-          <div class="flex items-center gap-3">
-            <h3 class="text-xl font-semibold text-gray-800 dark:text-white">Fontes registadas</h3>
-            <span
-              class="bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-xs font-bold px-2.5 py-1 rounded-full">
-              {{ filteredLogsources.length }}
+        <!-- Campo de Pesquisa -->
+        <div class="relative w-full md:w-96">
+          <i class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-gray-400 dark:text-gray-500 pointer-events-none">
+            <span class="fas fa-search text-sm"></span>
+          </i>
+          <input type="text" id="nameSearch" [(ngModel)]="nameSearch" (ngModelChange)="onSearchChange()"
+            placeholder="Pesquisa (nome, tipo, método, descrição...)"
+            class="pl-10 pr-9 px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-redshift-red transition text-sm">
+          <button *ngIf="nameSearch" (click)="nameSearch = ''; onSearchChange()" type="button"
+            class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition"
+            title="Limpar pesquisa">
+            <i class="fas fa-times-circle text-sm"></i>
+          </button>
+        </div>
+
+        <div class="flex items-center gap-4 w-full md:w-auto justify-end">
+          <!-- Contador de Registos -->
+          <span class="text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">
+            Mostrando <strong class="text-gray-900 dark:text-white font-semibold">{{ filteredLogsources.length }}</strong> de
+            <strong class="text-gray-900 dark:text-white font-semibold">{{ logsources.length }}</strong>
+          </span>
+
+          <!-- Botão Adicionar Novo (Disponível para Admin e Operador) -->
+          <button (click)="openCreateModal()" type="button"
+            class="h-10 px-5 bg-redshift-red text-white rounded-lg hover:bg-redshift-hover shadow-md transition flex items-center justify-center gap-2 text-sm font-medium flex-shrink-0">
+            <i class="fas fa-plus text-xs"></i>
+            <span>Nova Log Source</span>
+          </button>
+
+          <!-- Botão Filtros -->
+          <button (click)="showFilters = !showFilters"
+            [ngClass]="{'ring-2 ring-offset-2 ring-redshift-red': showFilters}"
+            class="h-10 px-4 bg-redshift-red text-white rounded-lg hover:bg-redshift-hover shadow-md flex items-center justify-center gap-2 transition text-sm font-medium flex-shrink-0"
+            type="button">
+            <i class="fas fa-filter text-xs"></i>
+            <span>Filtros</span>
+            <span *ngIf="selectedTypes.length > 0 || selectedCollections.length > 0"
+              class="w-2 h-2 rounded-full bg-white animate-pulse"></span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Painel de Filtros Expansível -->
+      <div *ngIf="showFilters"
+        class="mb-6 p-5 rounded-xl bg-gray-50 dark:bg-[#1a2234] border border-gray-200 dark:border-gray-700 shadow-sm transition-all duration-200">
+
+        <div class="flex items-center justify-between pb-3 mb-4 border-b border-gray-200 dark:border-gray-700/60">
+          <div class="flex items-center gap-2">
+            <div class="w-2 h-2 rounded-full bg-redshift-red animate-pulse"></div>
+            <span class="text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-200">
+              Filtrar Log Sources
+            </span>
+            <span *ngIf="selectedTypes.length > 0 || selectedCollections.length > 0"
+              class="ml-2 px-2 py-0.5 text-[11px] font-semibold rounded-full bg-redshift-red/10 text-redshift-red dark:bg-redshift-red/20 border border-redshift-red/30">
+              {{ selectedTypes.length + selectedCollections.length }} ativo(s)
             </span>
           </div>
 
-          <div class="relative w-full md:w-80">
-            <i
-              class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400 dark:text-gray-500 fas fa-search pointer-events-none"></i>
-            <input type="text" [(ngModel)]="searchTerm" name="search"
-              class="pl-10 pr-9 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-redshift-red transition text-sm"
-              placeholder="Pesquisa (nome, tipo, recolha, descrição...)" />
-            <button *ngIf="searchTerm" (click)="searchTerm = ''" type="button"
-              class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition"
-              title="Limpar pesquisa">
-              <i class="fas fa-times-circle text-sm"></i>
-            </button>
-          </div>
+          <button *ngIf="selectedTypes.length > 0 || selectedCollections.length > 0" (click)="clearAllFilters()"
+            class="text-xs text-redshift-red hover:text-redshift-hover font-medium flex items-center gap-1.5 transition">
+            <i class="fas fa-trash-can text-[11px]"></i>
+            <span>Limpar filtros</span>
+          </button>
         </div>
 
-        <!-- Tabela sem barra horizontal (layout fixo com percentagens) -->
-        <table class="w-full table-fixed text-sm">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <!-- Coluna 1: Tipos -->
+          <div class="flex flex-col">
+            <div class="flex items-center justify-between mb-2">
+              <label class="text-xs font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-1.5">
+                <i class="fas fa-tag text-redshift-red"></i>
+                <span>Tipo (Type)</span>
+              </label>
+              <span class="text-[11px] text-gray-400">
+                {{ selectedTypes.length }} de {{ uniqueTypes.length }}
+              </span>
+            </div>
+
+            <div class="flex flex-wrap gap-2 max-h-36 overflow-y-auto pr-1">
+              <button *ngFor="let t of uniqueTypes" type="button" (click)="toggleType(t)" [ngClass]="{
+                    'bg-redshift-red text-white border-redshift-red shadow-sm': isTypeSelected(t),
+                    'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-700 hover:border-redshift-red dark:hover:border-redshift-red': !isTypeSelected(t)
+                  }"
+                class="px-3 py-1.5 rounded-lg border text-xs font-medium transition flex items-center gap-2 select-none">
+                <i [class]="isTypeSelected(t) ? 'fas fa-check text-[10px]' : 'fas fa-plus text-[10px] opacity-40'"></i>
+                <span>{{ typeLabel(t) }}</span>
+              </button>
+              <span *ngIf="uniqueTypes.length === 0" class="text-xs text-gray-400 italic">
+                Nenhum tipo registado.
+              </span>
+            </div>
+          </div>
+
+          <!-- Coluna 2: Métodos de Recolha -->
+          <div class="flex flex-col">
+            <div class="flex items-center justify-between mb-2">
+              <label class="text-xs font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-1.5">
+                <i class="fas fa-network-wired text-redshift-red"></i>
+                <span>Método de Recolha (Collector)</span>
+              </label>
+              <span class="text-[11px] text-gray-400">
+                {{ selectedCollections.length }} de {{ uniqueCollections.length }}
+              </span>
+            </div>
+
+            <div class="flex flex-wrap gap-2 max-h-36 overflow-y-auto pr-1">
+              <button *ngFor="let c of uniqueCollections" type="button" (click)="toggleCollection(c)" [ngClass]="{
+                    'bg-redshift-red text-white border-redshift-red shadow-sm': isCollectionSelected(c),
+                    'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-700 hover:border-redshift-red dark:hover:border-redshift-red': !isCollectionSelected(c)
+                  }"
+                class="px-3 py-1.5 rounded-lg border text-xs font-medium transition flex items-center gap-2 select-none">
+                <i [class]="isCollectionSelected(c) ? 'fas fa-check text-[10px]' : 'fas fa-plus text-[10px] opacity-40'"></i>
+                <span>{{ collectionLabel(c) }}</span>
+              </button>
+              <span *ngIf="uniqueCollections.length === 0" class="text-xs text-gray-400 italic">
+                Nenhum método registado.
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tabela de Log Sources -->
+      <div class="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+        <table class="min-w-full table-fixed divide-y divide-gray-200 dark:divide-gray-700 leading-normal">
           <thead>
-            <tr
-              class="bg-gray-100 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 uppercase text-xs font-semibold tracking-wider">
-              <th class="py-3 px-4 text-left w-[28%]">Log Source</th>
-              <th class="py-3 px-3 text-left w-[14%]">Type</th>
-              <th class="py-3 px-3 text-left w-[14%]">Collector</th>
-              <th class="py-3 px-4 text-left w-[30%]">Descrição</th>
-              <th class="py-3 px-3 text-center w-[14%]">Ações</th>
+            <tr>
+              <th (click)="sortTable('id')"
+                class="w-20 px-4 py-3.5 bg-gray-100 dark:bg-gray-700 text-left text-xs font-bold text-gray-700 dark:text-gray-200 uppercase tracking-wider cursor-pointer select-none">
+                ID
+                <i [class]="sortType === 'id' ? (sortReverse ? 'fas fa-caret-up ml-1' : 'fas fa-caret-down ml-1') : ''"></i>
+              </th>
+              <th (click)="sortTable('name')"
+                class="w-64 md:w-1/4 px-4 py-3.5 bg-gray-100 dark:bg-gray-700 text-left text-xs font-bold text-gray-700 dark:text-gray-200 uppercase tracking-wider cursor-pointer select-none">
+                Nome da Log Source
+                <i [class]="sortType === 'name' ? (sortReverse ? 'fas fa-caret-up ml-1' : 'fas fa-caret-down ml-1') : ''"></i>
+              </th>
+              <th (click)="sortTable('type')"
+                class="w-32 md:w-36 px-4 py-3.5 bg-gray-100 dark:bg-gray-700 text-left text-xs font-bold text-gray-700 dark:text-gray-200 uppercase tracking-wider cursor-pointer select-none">
+                Tipo
+                <i [class]="sortType === 'type' ? (sortReverse ? 'fas fa-caret-up ml-1' : 'fas fa-caret-down ml-1') : ''"></i>
+              </th>
+              <th (click)="sortTable('collectionMethod')"
+                class="w-36 md:w-40 px-4 py-3.5 bg-gray-100 dark:bg-gray-700 text-left text-xs font-bold text-gray-700 dark:text-gray-200 uppercase tracking-wider cursor-pointer select-none">
+                Recolha
+                <i [class]="sortType === 'collectionMethod' ? (sortReverse ? 'fas fa-caret-up ml-1' : 'fas fa-caret-down ml-1') : ''"></i>
+              </th>
+              <th
+                class="px-4 py-3.5 bg-gray-100 dark:bg-gray-700 text-left text-xs font-bold text-gray-700 dark:text-gray-200 uppercase tracking-wider select-none">
+                Descrição
+              </th>
+              <th *ngIf="isAdmin"
+                class="w-20 px-4 py-3.5 bg-gray-100 dark:bg-gray-700 text-center text-xs font-bold text-gray-700 dark:text-gray-200 uppercase tracking-wider select-none">
+                Ação
+              </th>
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
 
-            <tr *ngFor="let log of filteredLogsources; let i = index" [ngClass]="[
-                i % 2 === 0 ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-900',
-                editingId === log.id ? 'ring-2 ring-inset ring-redshift-red bg-red-50 dark:bg-red-900/20' : ''
-              ]" class="hover:bg-gray-100 dark:hover:bg-gray-700 transition">
+            <tr *ngFor="let log of pagedLogsources; let i = index"
+              (click)="viewDetails(log)"
+              [ngClass]="i % 2 === 0 ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-900'"
+              class="hover:bg-gray-100 dark:hover:bg-gray-700/60 transition cursor-pointer h-16">
 
-              <!-- Log Source -->
-              <td class="py-3 px-4 text-left">
-                <span class="font-mono text-gray-900 dark:text-white font-semibold block truncate" [title]="log.name">
+              <!-- ID -->
+              <td class="px-4 py-3.5 whitespace-nowrap text-xs font-mono font-bold text-redshift-red dark:text-red-400">
+                #{{ log.id }}
+              </td>
+
+              <!-- Nome -->
+              <td class="px-4 py-3.5 max-w-0">
+                <span class="font-mono text-xs font-semibold text-gray-900 dark:text-white truncate block" [title]="log.name">
                   {{ log.name }}
                 </span>
               </td>
 
-              <!-- Type -->
-              <td class="py-3 px-3 text-left text-gray-700 dark:text-gray-300">
+              <!-- Tipo -->
+              <td class="px-4 py-3.5 whitespace-nowrap">
                 <span *ngIf="log.type"
-                  class="bg-gray-200 dark:bg-gray-700 px-2 py-0.5 rounded text-xs truncate inline-block max-w-full"
-                  [title]="typeLabel(log.type)">
+                  class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
                   {{ typeLabel(log.type) }}
                 </span>
-                <span *ngIf="!log.type" class="text-gray-400">—</span>
+                <span *ngIf="!log.type" class="text-xs text-gray-400">—</span>
               </td>
 
-              <!-- Collector -->
-              <td class="py-3 px-3 text-left text-gray-700 dark:text-gray-300">
+              <!-- Método de Recolha -->
+              <td class="px-4 py-3.5 whitespace-nowrap">
                 <span *ngIf="log.collectionMethod"
-                  class="bg-gray-200 dark:bg-gray-700 px-2 py-0.5 rounded text-xs truncate inline-block max-w-full"
-                  [title]="collectionLabel(log.collectionMethod)">
+                  class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 dark:bg-purple-900/40 text-purple-800 dark:text-purple-300 border border-purple-200 dark:border-purple-800">
                   {{ collectionLabel(log.collectionMethod) }}
                 </span>
-                <span *ngIf="!log.collectionMethod" class="text-gray-400">—</span>
+                <span *ngIf="!log.collectionMethod" class="text-xs text-gray-400">—</span>
               </td>
 
               <!-- Descrição -->
-              <td class="py-3 px-4 text-left">
-                <p class="text-gray-700 dark:text-gray-300 truncate" [title]="log.description">
+              <td class="px-4 py-3.5 max-w-0">
+                <p class="text-xs text-gray-600 dark:text-gray-300 truncate block" [title]="log.description">
                   {{ log.description || '—' }}
                 </p>
               </td>
 
-              <!-- Ações -->
-              <td class="py-3 px-3 text-center whitespace-nowrap">
-                <div class="flex items-center justify-center space-x-1.5">
-                  <button (click)="viewDetails(log)"
-                    class="bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded-md shadow-sm transition"
-                    title="Ver detalhes">
-                    <i class="fas fa-eye text-xs"></i>
-                  </button>
-                  <button (click)="startEdit(log)"
-                    class="bg-gray-400 hover:bg-gray-500 text-white px-2 py-1 rounded-md shadow-sm transition"
-                    title="Editar logsource">
-                    <i class="fas fa-pen text-xs"></i>
-                  </button>
-                  <button *ngIf="isAdmin" data-modal-target="deleteModal"
-                    (click)="updateSelectDelete($event, log); openModal()"
-                    class="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded-md shadow-sm transition"
-                    title="Eliminar logsource">
-                    <i class="fas fa-trash-alt text-xs"></i>
+              <!-- Ação: Eliminar (Apenas Admin) -->
+              <td *ngIf="isAdmin" class="px-4 py-3.5 text-center whitespace-nowrap" (click)="$event.stopPropagation()">
+                <button (click)="openDeleteModal(log)" title="Eliminar Log Source"
+                  class="bg-red-500 hover:bg-red-600 text-white w-8 h-8 rounded-md shadow transition inline-flex items-center justify-center">
+                  <i class="fas fa-trash-alt text-xs"></i>
+                </button>
+              </td>
+            </tr>
+
+            <!-- Estado Vazio / Sem Resultados -->
+            <tr *ngIf="filteredLogsources.length === 0">
+              <td [attr.colspan]="isAdmin ? 6 : 5" class="py-12 text-center bg-white dark:bg-gray-800">
+                <div class="flex flex-col items-center justify-center text-gray-400 dark:text-gray-500">
+                  <i class="fas fa-filter-circle-xmark text-4xl mb-3 opacity-40"></i>
+                  <p class="text-base font-semibold text-gray-700 dark:text-gray-300">Nenhuma log source encontrada</p>
+                  <p class="text-sm mt-1">Tenta alterar o termo de pesquisa ou limpar os filtros aplicados.</p>
+                  <button *ngIf="nameSearch || selectedTypes.length > 0 || selectedCollections.length > 0"
+                    (click)="clearAllFilters()" class="mt-3 text-sm text-redshift-red hover:underline font-medium">
+                    Limpar todos os critérios
                   </button>
                 </div>
               </td>
             </tr>
 
-            <!-- Empty States -->
-            <tr *ngIf="logsources.length === 0">
-              <td colspan="5" class="py-8 text-center text-gray-500 dark:text-gray-400">
-                Ainda nenhuma logsource registada. Adiciona a primeira no painel ao lado.
-              </td>
-            </tr>
-            <tr *ngIf="logsources.length > 0 && filteredLogsources.length === 0">
-              <td colspan="5" class="py-8 text-center text-gray-500 dark:text-gray-400">
-                Nenhuma logsource corresponde a <span class="font-semibold">"{{ searchTerm }}"</span>.
-              </td>
-            </tr>
-
           </tbody>
         </table>
-
       </div>
+
+      <!-- Rodapé da Tabela: Paginação -->
+      <div *ngIf="filteredLogsources.length > 0"
+        class="flex flex-col sm:flex-row items-center justify-between pt-4 mt-2 gap-3 text-sm text-gray-600 dark:text-gray-400">
+
+        <div class="flex items-center gap-2.5">
+          <span>Registos por página:</span>
+          <select [ngModel]="pageSize" (ngModelChange)="onPageSizeChange($event)"
+            class="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-2.5 py-1 text-sm text-gray-900 dark:text-white focus:ring-redshift-red focus:border-redshift-red">
+            <option *ngFor="let size of pageSizeOptions" [value]="size">{{ size }}</option>
+          </select>
+        </div>
+
+        <div class="flex items-center gap-3">
+          <span>Página <strong class="text-gray-900 dark:text-white">{{ page }}</strong> de <strong
+              class="text-gray-900 dark:text-white">{{ totalPages }}</strong></span>
+
+          <div class="inline-flex rounded-lg shadow-sm">
+            <button (click)="setPage(page - 1)" [disabled]="page === 1"
+              class="px-3 py-1.5 text-sm font-medium bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-l-lg hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-40 disabled:cursor-not-allowed transition">
+              <i class="fas fa-chevron-left text-xs"></i>
+            </button>
+            <button (click)="setPage(page + 1)" [disabled]="page === totalPages"
+              class="px-3 py-1.5 text-sm font-medium bg-white dark:bg-gray-700 border-t border-b border-r border-gray-300 dark:border-gray-600 rounded-r-lg hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-40 disabled:cursor-not-allowed transition">
+              <i class="fas fa-chevron-right text-xs"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Criar Nova Log Source -->
+<div *ngIf="showCreateModal"
+  class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 transition-opacity">
+  <div class="relative bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-lg overflow-hidden border border-gray-200 dark:border-gray-700 transition-all">
+
+    <!-- Header Modal -->
+    <div class="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/80">
+      <div class="flex items-center gap-2">
+        <i class="fas fa-plus-circle text-redshift-red"></i>
+        <h3 class="text-base font-bold text-gray-900 dark:text-white">
+          Registar Nova Log Source
+        </h3>
+      </div>
+      <button (click)="closeCreateModal()" aria-label="Fechar"
+        class="text-gray-400 hover:text-gray-900 rounded-lg text-sm w-8 h-8 inline-flex justify-center items-center dark:hover:bg-gray-700 dark:hover:text-white transition">
+        <i class="fas fa-times text-base"></i>
+      </button>
     </div>
 
-    <!-- Painel Direito: Formulário -->
-    <div class="w-full lg:w-1/3">
-      <div
-        class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 transition sticky top-24">
+    <!-- Body Modal -->
+    <form (ngSubmit)="createLogSource()" class="p-5 space-y-4">
 
-        <!-- Cabeçalho do Formulário -->
-        <div class="flex items-center justify-between mb-6 pb-4 border-b border-gray-200 dark:border-gray-700">
-          <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
-            {{ isEditing ? 'Editar fonte' : 'Registar nova fonte' }}
-          </h3>
-          <button *ngIf="isEditing" (click)="cancelEdit()" type="button"
-            class="text-sm font-medium text-gray-500 hover:text-redshift-red dark:text-gray-400 dark:hover:text-redshift-red transition">
-            Cancelar
-          </button>
-        </div>
-
-        <!-- Alerta de Sucesso -->
-        <div *ngIf="successMessage"
-          class="mb-4 p-3 text-sm text-green-700 bg-green-100 rounded-lg dark:bg-green-900/30 dark:text-green-400 border border-green-200 dark:border-green-800">
-          <i class="fas fa-check-circle mr-1.5"></i> {{ successMessage }}
-        </div>
-
-        <form #logForm="ngForm" (ngSubmit)="logForm.form.valid && submitForm()">
-
-          <!-- Campo: Nome -->
-          <div class="mb-4">
-            <label class="block text-gray-700 dark:text-gray-300 text-sm font-medium mb-1.5" for="logName">
-              Nome <span class="text-red-500">*</span>
-            </label>
-            <input #logNameCtrl="ngModel" id="logName" type="text" [(ngModel)]="newLog.name" name="logName" required
-              placeholder="Ex: windows"
-              [ngClass]="{'border-red-500 dark:border-red-500': logNameCtrl.invalid && logNameCtrl.touched, 'border-gray-300 dark:border-gray-600': !(logNameCtrl.invalid && logNameCtrl.touched)}"
-              class="border rounded-lg w-full py-2 px-3 font-mono bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-redshift-red text-sm transition" />
-            <p *ngIf="logNameCtrl.invalid && logNameCtrl.touched" class="text-red-600 dark:text-red-400 text-xs mt-1">
-              Indica um nome.</p>
-          </div>
-
-          <!-- Campos: Tipo e Recolha -->
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-            <div>
-              <label class="block text-gray-700 dark:text-gray-300 text-sm font-medium mb-1.5"
-                for="logType">Type</label>
-              <select id="logType" [(ngModel)]="newLog.type" name="logType"
-                class="border border-gray-300 dark:border-gray-600 rounded-lg w-full py-2 px-3 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-redshift-red text-sm transition">
-                <option value="">—</option>
-                <option *ngFor="let opt of typeOptions" [value]="opt.value">{{ opt.label }}</option>
-              </select>
-              <input *ngIf="newLog.type === 'other'" type="text" [(ngModel)]="customType" name="customType"
-                placeholder="Especificar Type..." required
-                class="mt-2 border border-gray-300 dark:border-gray-600 rounded-lg w-full py-2 px-3 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-redshift-red text-sm transition" />
-            </div>
-
-            <div>
-              <label class="block text-gray-700 dark:text-gray-300 text-sm font-medium mb-1.5"
-                for="logCollection">Collector</label>
-              <select id="logCollection" [(ngModel)]="newLog.collectionMethod" name="logCollection"
-                class="border border-gray-300 dark:border-gray-600 rounded-lg w-full py-2 px-3 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-redshift-red text-sm transition">
-                <option value="">—</option>
-                <option *ngFor="let opt of collectionOptions" [value]="opt.value">{{ opt.label }}</option>
-              </select>
-              <input *ngIf="newLog.collectionMethod === 'other'" type="text" [(ngModel)]="customCollection"
-                name="customCollection" placeholder="Especificar Collector..." required
-                class="mt-2 border border-gray-300 dark:border-gray-600 rounded-lg w-full py-2 px-3 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-redshift-red text-sm transition" />
-            </div>
-          </div>
-
-          <!-- Campo: Descrição -->
-          <div class="mb-6">
-            <label class="block text-gray-700 dark:text-gray-300 text-sm font-medium mb-1.5" for="logDescription">
-              Descrição <span class="text-red-500">*</span>
-            </label>
-            <textarea #logDescCtrl="ngModel" id="logDescription" rows="3" [(ngModel)]="newLog.description"
-              name="logDescription" required placeholder="Windows Event Logs..."
-              [ngClass]="{'border-red-500 dark:border-red-500': logDescCtrl.invalid && logDescCtrl.touched, 'border-gray-300 dark:border-gray-600': !(logDescCtrl.invalid && logDescCtrl.touched)}"
-              class="border rounded-lg w-full py-2 px-3 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-redshift-red text-sm transition resize-none"></textarea>
-            <p *ngIf="logDescCtrl.invalid && logDescCtrl.touched" class="text-red-600 dark:text-red-400 text-xs mt-1">
-              Indica uma descrição.</p>
-          </div>
-
-          <!-- Alerta de Erro Geral -->
-          <div *ngIf="errorMessage"
-            class="mb-4 p-3 text-sm text-red-700 bg-red-100 rounded-lg dark:bg-red-900/30 dark:text-red-400 border border-red-200 dark:border-red-800">
-            <i class="fas fa-exclamation-triangle mr-1.5"></i> {{ errorMessage }}
-          </div>
-
-          <!-- Botão Submit -->
-          <button type="submit" [disabled]="!logForm.form.valid"
-            class="w-full py-2.5 bg-redshift-red hover:bg-redshift-hover text-white rounded-lg font-medium shadow-sm transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
-            <i class="fas" [class.fa-plus]="!isEditing" [class.fa-check]="isEditing"></i>
-            <span>{{ isEditing ? 'Guardar alterações' : 'Registar fonte' }}</span>
-          </button>
-        </form>
+      <!-- Nome -->
+      <div>
+        <label for="createLogName" class="block text-gray-700 dark:text-gray-300 text-xs font-semibold mb-1">
+          Nome <span class="text-red-500">*</span>
+        </label>
+        <input id="createLogName" type="text" [(ngModel)]="newLog.name" name="createLogName" required
+          placeholder="Ex: windows, syslog_cisco, aws_cloudtrail..."
+          class="border border-gray-300 dark:border-gray-600 rounded-lg w-full py-2 px-3 font-mono bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-redshift-red text-xs transition" />
       </div>
+
+      <!-- Tipo e Método de Recolha -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div>
+          <label for="createLogType" class="block text-gray-700 dark:text-gray-300 text-xs font-semibold mb-1">
+            Tipo (Type)
+          </label>
+          <select id="createLogType" [(ngModel)]="newLog.type" name="createLogType"
+            class="border border-gray-300 dark:border-gray-600 rounded-lg w-full py-2 px-3 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-redshift-red text-xs transition">
+            <option value="">— Selecionar —</option>
+            <option *ngFor="let opt of typeOptions" [value]="opt.value">{{ opt.label }}</option>
+          </select>
+          <input *ngIf="newLog.type === 'other'" type="text" [(ngModel)]="customType" name="customType"
+            placeholder="Especificar tipo..." required
+            class="mt-2 border border-gray-300 dark:border-gray-600 rounded-lg w-full py-1.5 px-2.5 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-redshift-red text-xs transition" />
+        </div>
+
+        <div>
+          <label for="createLogCollection" class="block text-gray-700 dark:text-gray-300 text-xs font-semibold mb-1">
+            Método (Collector)
+          </label>
+          <select id="createLogCollection" [(ngModel)]="newLog.collectionMethod" name="createLogCollection"
+            class="border border-gray-300 dark:border-gray-600 rounded-lg w-full py-2 px-3 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-redshift-red text-xs transition">
+            <option value="">— Selecionar —</option>
+            <option *ngFor="let opt of collectionOptions" [value]="opt.value">{{ opt.label }}</option>
+          </select>
+          <input *ngIf="newLog.collectionMethod === 'other'" type="text" [(ngModel)]="customCollection"
+            name="customCollection" placeholder="Especificar método..." required
+            class="mt-2 border border-gray-300 dark:border-gray-600 rounded-lg w-full py-1.5 px-2.5 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-redshift-red text-xs transition" />
+        </div>
+      </div>
+
+      <!-- Descrição -->
+      <div>
+        <label for="createLogDescription" class="block text-gray-700 dark:text-gray-300 text-xs font-semibold mb-1">
+          Descrição <span class="text-red-500">*</span>
+        </label>
+        <textarea id="createLogDescription" rows="3" [(ngModel)]="newLog.description" name="createLogDescription"
+          required placeholder="Descreve as fontes, eventos gerados e finalidade..."
+          class="border border-gray-300 dark:border-gray-600 rounded-lg w-full py-2 px-3 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-redshift-red text-xs transition resize-y min-h-[80px]"></textarea>
+      </div>
+
+      <!-- Erro -->
+      <div *ngIf="createErrorMessage"
+        class="p-3 text-xs text-red-700 bg-red-100 rounded-lg dark:bg-red-950/40 dark:text-red-400 border border-red-200 dark:border-red-900/50 flex items-center gap-1.5">
+        <i class="fas fa-exclamation-triangle flex-shrink-0"></i>
+        <span>{{ createErrorMessage }}</span>
+      </div>
+
+      <!-- Footer Modal -->
+      <div class="flex items-center justify-end gap-2 pt-3 border-t border-gray-200 dark:border-gray-700">
+        <button (click)="closeCreateModal()" type="button"
+          class="py-2 px-4 text-xs font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600 transition">
+          Cancelar
+        </button>
+        <button type="submit" [disabled]="!newLog.name || !newLog.description || isCreating"
+          class="py-2 px-4 bg-redshift-red hover:bg-redshift-hover disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg text-xs font-medium shadow-sm transition flex items-center gap-1.5">
+          <i *ngIf="isCreating" class="fas fa-spinner fa-spin text-xs"></i>
+          <i *ngIf="!isCreating" class="fas fa-plus text-xs"></i>
+          <span>{{ isCreating ? 'A registar...' : 'Registar Log Source' }}</span>
+        </button>
+      </div>
+
+    </form>
+  </div>
+</div>
+
+<!-- Modal: Ver Detalhes -->
+<div *ngIf="selectedLog"
+  class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 transition-opacity">
+  <div class="relative bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-lg overflow-hidden border border-gray-200 dark:border-gray-700 transition-all">
+
+    <!-- Header Modal Detalhes -->
+    <div class="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/80">
+      <div class="flex items-center gap-2 min-w-0">
+        <i class="fas fa-file-lines text-redshift-red"></i>
+        <h3 class="text-base font-bold text-gray-900 dark:text-white font-mono truncate">
+          {{ selectedLog.name }}
+        </h3>
+        <span class="text-xs text-gray-400 font-mono">#{{ selectedLog.id }}</span>
+      </div>
+      <button (click)="closeDetails()" aria-label="Fechar"
+        class="text-gray-400 hover:text-gray-900 rounded-lg text-sm w-8 h-8 inline-flex justify-center items-center dark:hover:bg-gray-700 dark:hover:text-white transition flex-shrink-0">
+        <i class="fas fa-times text-base"></i>
+      </button>
     </div>
 
-    <!-- Modal Detalhes -->
-    <div *ngIf="selectedLog"
-      class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 transition-opacity">
-      <div
-        class="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-lg overflow-hidden border border-transparent dark:border-gray-700 transition-all"
-        (click)="$event.stopPropagation()">
+    <!-- Body Modal Detalhes -->
+    <div class="p-5 space-y-4">
 
-        <!-- Header Modal Detalhes -->
-        <div
-          class="flex items-center justify-between gap-4 p-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
-          <span class="font-mono font-bold text-gray-900 dark:text-white break-words min-w-0 flex-1">{{ selectedLog.name
-            }}</span>
-          <button (click)="closeDetails()" aria-label="Fechar"
-            class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 inline-flex justify-center items-center dark:hover:bg-gray-700 dark:hover:text-white transition flex-shrink-0">
-            <i class="fas fa-times text-base"></i>
-          </button>
-        </div>
+      <!-- Cabeçalho da Secção com Botão Editar (Opção B) -->
+      <div class="flex items-center justify-between pb-1">
+        <h4 class="text-sm font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+          Detalhes do Registo
+        </h4>
 
-        <!-- Body Modal Detalhes -->
-        <div class="p-5 space-y-5">
-          <div>
-            <h4 class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">Type</h4>
-            <p class="text-gray-900 dark:text-gray-200 font-medium break-words">{{ selectedLog.type ?
-              typeLabel(selectedLog.type) : '—' }}</p>
-          </div>
-
-          <div>
-            <h4 class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">Collector
-            </h4>
-            <p class="text-gray-900 dark:text-gray-200 font-medium break-words">{{ selectedLog.collectionMethod ?
-              collectionLabel(selectedLog.collectionMethod) : '—' }}</p>
-          </div>
-
-          <div>
-            <h4 class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">Descrição
-            </h4>
-            <p
-              class="text-gray-700 dark:text-gray-300 leading-relaxed bg-gray-50 dark:bg-gray-900/50 p-3 rounded-lg border border-gray-100 dark:border-gray-700 break-words whitespace-pre-wrap">
-              {{ selectedLog.description || '—' }}
-            </p>
-          </div>
-        </div>
-
-        <!-- Footer Modal Detalhes -->
-        <div
-          class="flex items-center justify-end p-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
-          <button (click)="closeDetails()" type="button"
-            class="py-2 px-4 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600 hover:text-redshift-red dark:hover:text-white transition shadow-sm">
-            Fechar
-          </button>
-        </div>
-
+        <button [routerLink]="['/edit-logsource', selectedLog.id]" (click)="closeDetails()" type="button"
+          class="bg-redshift-red hover:bg-redshift-hover text-sm font-medium text-white px-3.5 py-1.5 rounded-lg transition flex items-center gap-1.5 shadow-sm">
+          <span>Editar</span>
+          <i class="fas fa-pen text-xs"></i>
+        </button>
       </div>
-    </div>
 
-    <!-- Modal Eliminar -->
-    <div id="deleteModal" tabindex="-1" aria-hidden="true"
-      class="bg-black/60 backdrop-blur-sm hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-modal md:h-full"
-      #modal>
-      <div class="relative p-4 w-full max-w-md h-full md:h-auto">
-        <div
-          class="relative p-4 text-center bg-white rounded-lg shadow dark:bg-gray-800 sm:p-5 border border-transparent dark:border-gray-700">
-
-          <button type="button" (click)="closeModal()"
-            class="text-gray-400 absolute top-2.5 right-2.5 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center dark:hover:bg-gray-700 dark:hover:text-white transition">
-            <i class="fas fa-times text-base"></i>
-            <span class="sr-only">Fechar</span>
-          </button>
-
-          <div class="text-gray-400 dark:text-gray-500 mb-3.5 mx-auto">
-            <i class="fas fa-trash-alt text-4xl"></i>
-          </div>
-
-          <p class="mb-4 text-gray-500 dark:text-gray-300">
-            Tem a certeza que quer eliminar a Logsource <span class="font-bold text-gray-800 dark:text-white">{{
-              selectDelete?.name }}</span>?
+      <div class="grid grid-cols-2 gap-4">
+        <div class="bg-gray-50 dark:bg-gray-700/50 p-3 rounded-lg border border-gray-100 dark:border-gray-700">
+          <h4 class="text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">Tipo</h4>
+          <p class="text-gray-900 dark:text-gray-200 font-medium text-xs">
+            {{ selectedLog.type ? typeLabel(selectedLog.type) : '—' }}
           </p>
+        </div>
 
-          <div class="flex justify-center items-center space-x-4">
-            <button (click)="closeModal()" type="button"
-              class="py-2 px-3 text-sm font-medium text-gray-500 bg-white rounded-lg border border-gray-200 hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-primary-300 hover:text-gray-900 focus:z-10 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-600 transition">
-              Não, cancelar
-            </button>
-
-            <button (click)="deleteLogSource(); closeModal()" data-modal-target="deleteModal"
-              class="py-2 px-3 text-sm font-medium text-center text-white bg-red-600 rounded-lg hover:bg-red-700 focus:ring-4 focus:outline-none focus:ring-red-300 dark:bg-red-500 dark:hover:bg-red-600 dark:focus:ring-red-900 transition">
-              Sim, tenho a certeza
-            </button>
-          </div>
-
+        <div class="bg-gray-50 dark:bg-gray-700/50 p-3 rounded-lg border border-gray-100 dark:border-gray-700">
+          <h4 class="text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">Método de Recolha</h4>
+          <p class="text-gray-900 dark:text-gray-200 font-medium text-xs">
+            {{ selectedLog.collectionMethod ? collectionLabel(selectedLog.collectionMethod) : '—' }}
+          </p>
         </div>
       </div>
+
+      <div>
+        <h4 class="text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">Descrição</h4>
+        <div class="text-xs text-gray-700 dark:text-gray-300 leading-relaxed bg-gray-50 dark:bg-gray-900/50 p-3.5 rounded-lg border border-gray-200 dark:border-gray-700 whitespace-pre-wrap max-h-56 overflow-y-auto">
+          {{ selectedLog.description || 'Sem descrição registada.' }}
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer Modal Detalhes -->
+    <div class="flex items-center justify-end p-4 md:p-5 border-t border-gray-200 dark:border-gray-700 rounded-b gap-2 bg-gray-50 dark:bg-gray-800/80">
+      <button (click)="closeDetails()" type="button"
+        class="text-gray-500 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-lg border border-gray-200 dark:border-gray-600 text-sm px-4 py-2 font-medium transition shadow-sm">
+        Fechar
+      </button>
     </div>
 
   </div>
+</div>
 
+<!-- Modal: Confirmar Eliminação -->
+<div *ngIf="showDeleteModal"
+  class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 transition-opacity">
+  <div class="relative bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-md overflow-hidden border border-gray-200 dark:border-gray-700 p-6 text-center">
+
+    <button type="button" (click)="closeDeleteModal()"
+      class="text-gray-400 absolute top-3 right-3 hover:text-gray-900 rounded-lg text-sm w-7 h-7 inline-flex items-center justify-center dark:hover:text-white transition">
+      <i class="fas fa-times text-base"></i>
+    </button>
+
+    <div class="text-red-500 mb-4 inline-flex items-center justify-center w-12 h-12 rounded-full bg-red-100 dark:bg-red-950/50">
+      <i class="fas fa-trash-alt text-xl"></i>
+    </div>
+
+    <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-2">Eliminar Log Source</h3>
+    <p class="text-xs text-gray-600 dark:text-gray-400 mb-6">
+      Tens a certeza que desejas eliminar a log source
+      <strong class="text-gray-900 dark:text-white font-mono">{{ selectDelete?.name }}</strong>? Esta ação é irreversível.
+    </p>
+
+    <div class="flex justify-center items-center gap-3">
+      <button (click)="closeDeleteModal()" type="button"
+        class="py-2.5 px-4 text-xs font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600 transition">
+        Cancelar
+      </button>
+
+      <button (click)="deleteLogSource()" type="button"
+        class="py-2.5 px-4 text-xs font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition shadow-sm">
+        Sim, eliminar
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<!-- Toast Flutuante de Notificação -->
+<div *ngIf="toastMessage"
+  class="fixed bottom-6 right-6 z-50 bg-green-600 text-white px-4 py-3 rounded-lg shadow-xl flex items-center gap-2.5 text-xs font-medium animate-bounce">
+  <i class="fas fa-check-circle text-sm"></i>
+  <span>{{ toastMessage }}</span>
 </div>

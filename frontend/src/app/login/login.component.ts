@@ -63,9 +63,45 @@ export class LoginComponent {
         Validators.maxLength(6),
       ]),
     });
+
+    this.loginForm.valueChanges.subscribe(() => {
+      if (this.errorMessage) this.errorMessage = '';
+    });
+
+    this.otpForm.valueChanges.subscribe(() => {
+      if (this.errorMessage) this.errorMessage = '';
+    });
   }
 
   errorMessage = '';
+
+  private sanitizeErrorMessage(err: any, fallback: string): string {
+    const raw = (err?.message || (typeof err === 'string' ? err : '')).trim();
+
+    if (
+      !raw ||
+      /<[a-z][\s\S]*>/i.test(raw) ||
+      raw.includes('502 Bad Gateway') ||
+      raw.includes('Bad Gateway') ||
+      raw.includes('nginx')
+    ) {
+      return 'Serviço temporariamente indisponível. Por favor, tente novamente dentro de momentos.';
+    }
+
+    if (err?.status === 502 || err?.status === 503 || err?.status === 504) {
+      return 'Serviço temporariamente indisponível. Por favor, tente novamente dentro de momentos.';
+    }
+
+    if (err?.status === 500) {
+      return 'Ocorreu um erro no servidor. Por favor, tente novamente mais tarde.';
+    }
+
+    if (err?.status === 0) {
+      return 'Não foi possível ligar ao servidor. Verifique a sua ligação de rede.';
+    }
+
+    return raw;
+  }
 
   onSubmit() {
     if (this.loginForm.valid) {
@@ -86,8 +122,10 @@ export class LoginComponent {
           }
         },
         error: (err: any) => {
-          this.errorMessage =
-            err?.message || 'Credenciais inválidas para início de sessão';
+          this.errorMessage = this.sanitizeErrorMessage(
+            err,
+            'Credenciais inválidas para início de sessão',
+          );
         },
       });
     }
@@ -105,8 +143,10 @@ export class LoginComponent {
           }
         },
         (err: any) => {
-          this.errorMessage =
-            err?.message || 'Código de Verificação Inválido';
+          this.errorMessage = this.sanitizeErrorMessage(
+            err,
+            'Código de Verificação Inválido',
+          );
         },
       );
     }

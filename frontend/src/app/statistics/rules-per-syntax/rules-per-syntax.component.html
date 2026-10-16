@@ -1,18 +1,19 @@
-<div class="max-w-sm w-full bg-white rounded-lg shadow dark:bg-gray-800 p-4 md:p-6">
-
-  <div class="flex justify-between items-start w-full">
-    <div class="flex-col items-center">
-      <div class="flex items-center mb-1">
-        <h5 class="text-xl font-bold leading-none text-gray-900 dark:text-white me-1">Regras Atribuídas por Sintaxe</h5>
-
-      </div>
-
-    </div>
-
+<div class="w-full h-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm hover:shadow-md transition-all duration-200 p-5 flex flex-col justify-between">
+  <div class="flex items-center justify-between pb-3 mb-2 border-b border-gray-100 dark:border-gray-700/60">
+    <h5 class="text-sm font-bold text-gray-900 dark:text-white flex items-center gap-2">
+      <i class="fas fa-code text-redshift-red"></i>
+      <span>Regras por Sintaxe</span>
+    </h5>
+    <span class="text-[11px] px-2 py-0.5 rounded-full bg-red-50 dark:bg-red-950/40 text-redshift-red dark:text-red-400 font-semibold">
+      Distribuição
+    </span>
   </div>
 
-  <!-- Line Chart -->
-  <div *ngIf="rules" class="py-6" id="pie-chart" #chartElement></div>
+  <!-- Chart Container -->
+  <div *ngIf="rules" class="py-2 flex items-center justify-center flex-1 w-full" id="pie-chart" #chartElement></div>
 
-
+  <div *ngIf="!rules || rules.length === 0" class="flex flex-col items-center justify-center py-12 text-gray-400 dark:text-gray-500 flex-1">
+    <i class="fas fa-chart-pie text-3xl mb-2 opacity-40"></i>
+    <span class="text-xs">Sem dados de sintaxe para apresentar</span>
+  </div>
 </div>

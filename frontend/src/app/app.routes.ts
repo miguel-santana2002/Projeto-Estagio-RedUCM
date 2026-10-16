@@ -21,10 +21,13 @@ import { ManageLogsourcesComponent } from './rules/manage-logsources/manage-logs
 import { isAdminGuard } from './helper/is-admin.guard';
 import { EditUserComponent } from './users/edit-user/edit-user.component';
 import { EditClientComponent } from './clients/edit-client/edit-client.component';
+import { CreateClientComponent } from './clients/create-client/create-client.component';
 import { EditRuleModelComponent } from './rules/rule-models/edit-rule-model/edit-rule-model.component';
 import { numericIdGuard } from './guards/numeric-id.guard';
 import { AuditListComponent } from './audit/audit-list.component';
 import { EditRuleComponent } from './rules/instances/edit-rule/edit-rule.component';
+import { CreateRuleComponent } from './rules/instances/create-rule/create-rule.component';
+import { EditLogsourceComponent } from './rules/edit-logsource/edit-logsource.component';
 
 export const routes: Routes = [
   { path: '', component: LandingpageComponent, pathMatch: 'full' },
@@ -46,6 +49,11 @@ export const routes: Routes = [
     canActivate: [authGuard], // Permite qualquer utilizador autenticado ver a listagem
   },
   {
+    path: 'create-client',
+    component: CreateClientComponent,
+    canActivate: [isAdminGuard],
+  },
+  {
     path: 'create-usecase',
     component: CreateUseCaseComponent,
   },
@@ -56,8 +64,17 @@ export const routes: Routes = [
     canActivate: [numericIdGuard],
   },
   {
+    path: 'create-rule',
+    component: CreateRuleComponent,
+  },
+  {
     path: 'create-rule-model',
     component: CreateRuleModelComponent,
+  },
+  {
+    path: 'ruleModel-Details/:id',
+    component: RuleDetailsComponent,
+    canActivate: [numericIdGuard],
   },
   {
     path: 'techniqueDetails/:id',
@@ -106,6 +123,11 @@ export const routes: Routes = [
     path: 'edit-rule/:id',
     component: EditRuleComponent,
     canActivate: [numericIdGuard],
+  },
+  {
+    path: 'edit-logsource/:id',
+    component: EditLogsourceComponent,
+    canActivate: [authGuard, numericIdGuard],
   },
   {
     path: 'page-not-found',

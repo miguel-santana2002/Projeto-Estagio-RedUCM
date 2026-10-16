@@ -75,6 +75,36 @@ class RuleSerializer(serializers.ModelSerializer):
         else:
             data['ruleModel'] = None
 
+        # Fallback seguro caso a regra direta não tenha algum campo mas o modelo legado tenha
+        if not data.get('title') and getattr(instance, 'ruleModel', None):
+            data['title'] = instance.ruleModel.title
+        if not data.get('type') and getattr(instance, 'ruleModel', None):
+            data['type'] = getattr(instance.ruleModel, 'type', None)
+        if not data.get('useCaseId') and getattr(instance, 'ruleModel', None):
+            data['useCaseId'] = getattr(instance.ruleModel, 'useCaseId', None)
+        if (not data.get('logsources') or len(data.get('logsources')) == 0) and getattr(instance, 'ruleModel', None):
+            data['logsources'] = getattr(instance.ruleModel, 'logsources', [])
+
+        # Hierarquia: Regra Principal vs Regra Secundária (Filho)
+        parent_instance = getattr(instance, 'parent', None)
+        if parent_instance:
+            data['is_principal'] = False
+            data['parent'] = parent_instance.id
+            data['parent_info'] = {
+                'id': parent_instance.id,
+                'title': parent_instance.title,
+                'syntax': parent_instance.syntax
+            }
+        else:
+            data['is_principal'] = True
+            data['parent'] = None
+            data['parent_info'] = None
+
+        if hasattr(instance, 'children'):
+            data['children_count'] = len(instance.children.all())
+        else:
+            data['children_count'] = 0
+
         return data
 
 

@@ -131,15 +131,17 @@ def deleteRuleById(request, id):
 def _generate_sigma(sigma_id, source_code, source_syntax):
     from django.db import connection
     try:
-        from rules.services.rule_converter import convert_single_engine
+        from rules.services.rule_converter import convert_single_engine, decompile_to_sigma
         
-        # Usa o mesmo motor híbrido (ai) que o conversor interativo usa, 
-        # garantindo que o resultado é limpo e consistente.
-        res = convert_single_engine(source_code, source_syntax, "Sigma Rule", "ai")
-        sigma_code = res.get("ai_result") or res.get("sigma_rule")
+        sigma_code = None
+        try:
+            res = convert_single_engine(source_code, source_syntax, "Sigma Rule", "ai")
+            sigma_code = res.get("ai_result") or res.get("sigma_rule")
+        except Exception:
+            sigma_code = decompile_to_sigma(source_code, source_syntax)
         
-        if not sigma_code or "Erro" in sigma_code:
-            raise ValueError("O motor de IA não conseguiu gerar um Sigma válido.")
+        if not sigma_code or "Erro:" in sigma_code:
+            sigma_code = decompile_to_sigma(source_code, source_syntax)
 
         Rule.objects.filter(pk=sigma_id).update(
             ruleCode=sigma_code, generationStatus='done', generationNote=None)
@@ -169,6 +171,14 @@ def createRule(request):
     parent = None
     if data.get('parent'):
         parent = Rule.objects.filter(id=data['parent']).first()
+        # Se a regra pai indicada for uma regra secundária (filho),
+        # subimos até à regra principal raiz para que todas as conversões
+        # fiquem diretamente associadas à regra principal!
+        if parent:
+            root = parent
+            while root.parent:
+                root = root.parent
+            parent = root
     elif rule_model and client:
         parent = Rule.objects.filter(
             ruleModel=rule_model, client__isnull=True, parent__isnull=True).first()
@@ -212,7 +222,19 @@ def createRule(request):
 @api_view(['GET'])
 def getRules(request):
     if request.method == 'GET':
-        rules = Rule.objects.select_related('client', 'ruleModel').all()
+        rules = Rule.objects.select_related('client', 'ruleModel', 'parent').prefetch_related('children').all()
+
+        parent_param = request.GET.get('parent')
+        if parent_param is not None:
+            if parent_param in ('null', 'None', '', 'root'):
+                rules = rules.filter(parent__isnull=True)
+            else:
+                rules = rules.filter(parent_id=parent_param)
+
+        use_case_param = request.GET.get('useCaseId')
+        if use_case_param is not None:
+            rules = rules.filter(useCaseId=use_case_param)
+
         serializer = RuleSerializer(rules, many=True)
         return JsonResponse(serializer.data, safe=False)
 
@@ -228,11 +250,43 @@ def getRules(request):
 @api_view(['GET'])
 def getRuleById(request, id):
     try:
-        rule = Rule.objects.select_related('client', 'ruleModel').get(id=id)
+        rule = Rule.objects.select_related('client', 'ruleModel', 'parent').prefetch_related('children').get(id=id)
         serializer = RuleSerializer(rule, many=False)
         return JsonResponse(serializer.data, safe=False)
     except Rule.DoesNotExist:
         return JsonResponse({'error': 'Rule not found'}, status=404)
+
+
+@extend_schema(request=RuleSerializer,
+                description='Get rules based on Use Case Id.',
+                responses={
+                     200: OpenApiResponse(response=RuleSerializer, description='Rules retrieved successfully'),
+                     400: OpenApiResponse(response=None, description='Invalid request method')
+                })
+@api_view(['GET'])
+def getRulesByUseCase(request, useCaseId):
+    if request.method == 'GET':
+        rules = Rule.objects.select_related('client', 'ruleModel', 'parent').prefetch_related('children').filter(useCaseId=useCaseId)
+        serializer = RuleSerializer(rules, many=True)
+        return JsonResponse(serializer.data, safe=False)
+    else:
+        return JsonResponse({'error': 'Invalid request method'}, status=400)
+
+
+@extend_schema(request=RuleSerializer,
+                description='Get child rules based on Parent Rule Id.',
+                responses={
+                     200: OpenApiResponse(response=RuleSerializer, description='Child rules retrieved successfully'),
+                     400: OpenApiResponse(response=None, description='Invalid request method')
+                })
+@api_view(['GET'])
+def getRulesByParent(request, parentId):
+    if request.method == 'GET':
+        rules = Rule.objects.select_related('client', 'ruleModel', 'parent').prefetch_related('children').filter(parent_id=parentId)
+        serializer = RuleSerializer(rules, many=True)
+        return JsonResponse(serializer.data, safe=False)
+    else:
+        return JsonResponse({'error': 'Invalid request method'}, status=400)
     
 
 @api_view(['POST'])
@@ -266,6 +320,16 @@ def getRegisteredLogSources(request):
 
     else:
         return JsonResponse({'error': 'Invalid request method'})
+
+
+@api_view(['GET'])
+def getRegisteredLogSourceById(request, id):
+    try:
+        logsource = RegisteredLogSource.objects.get(id=id)
+        serializer = RegisteredLogSourceSerializer(logsource)
+        return JsonResponse(serializer.data, safe=False)
+    except RegisteredLogSource.DoesNotExist:
+        return JsonResponse({'error': 'LogSource não encontrada'}, status=404)
     
 
 @api_view(['POST'])
@@ -326,7 +390,14 @@ def updateRule(request, id):
         rule.client = None
 
     # Atualiza os restantes campos
-    rule.status = data.get('status', '')
+    if 'title' in data:
+        rule.title = data.get('title')
+    if 'useCaseId' in data:
+        rule.useCaseId = data.get('useCaseId')
+    if 'type' in data:
+        rule.type = data.get('type')
+
+    rule.status = data.get('status', rule.status)
     rule.syntax = data.get('syntax', rule.syntax)
     rule.logsources = data.get('logsources', rule.logsources)
     rule.ruleCode = data.get('ruleCode', rule.ruleCode)

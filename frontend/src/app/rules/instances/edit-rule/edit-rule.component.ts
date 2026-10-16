@@ -15,6 +15,7 @@ import { TitlebannerComponent } from '../../../layout/titlebanner/titlebanner.co
 import { AppCodeEditorComponent } from '../../../shared/components/app-code-editor/app-code-editor.component';
 import { TagComboboxComponent } from '../../../shared/components/tag-combobox/tag-combobox.component';
 import { RulesService } from '../../../services/rules.service';
+import { UsecasesService } from '../../../services/usecases.service';
 
 @Component({
   selector: 'app-edit-rule',
@@ -38,6 +39,7 @@ export class EditRuleComponent implements OnInit {
   isLoading: boolean = true;
   code: string = '';
   isLogsourceOpen: boolean = false;
+  usecases: any[] = [];
 
   typeSyntaxes: { [key: string]: string[] } = {
     SIEM: [
@@ -65,6 +67,8 @@ export class EditRuleComponent implements OnInit {
   registeredLogsources: string[] = [];
 
   editRuleForm = new FormGroup({
+    title: new FormControl('', Validators.required),
+    selectedUseCase: new FormControl<any>('', Validators.required),
     client: new FormControl<number | null>(null),
     status: new FormControl(''),
     selectedType: new FormControl('SIEM'),
@@ -76,6 +80,7 @@ export class EditRuleComponent implements OnInit {
     private route: ActivatedRoute,
     private router: Router,
     private rulesService: RulesService,
+    private useCasesService: UsecasesService,
     private http: HttpClient,
   ) {}
 
@@ -147,6 +152,17 @@ export class EditRuleComponent implements OnInit {
         this.clients = [];
       },
     });
+
+    // 3. Use Cases
+    this.useCasesService.getUseCases().subscribe({
+      next: (data: any[]) => {
+        this.usecases = data || [];
+      },
+      error: (err) => {
+        console.error('Erro ao carregar Use Cases:', err);
+        this.usecases = [];
+      },
+    });
   }
 
   loadRuleData(): void {
@@ -163,7 +179,6 @@ export class EditRuleComponent implements OnInit {
           }
         }
 
-        // Já não precisamos de formatar em objetos para os chips, strings simples bastam
         const flatLogsources = rule.logsources || [];
 
         let ruleStatus = (rule.status || '').trim();
@@ -171,10 +186,15 @@ export class EditRuleComponent implements OnInit {
           ruleStatus = 'Regra não validada';
         }
 
+        const ruleTitle = rule.title || rule.ruleModel?.title || '';
+        const ruleUseCase = rule.useCaseId || rule.ruleModel?.useCaseId || '';
+
         this.editRuleForm.patchValue({
+          title: ruleTitle,
+          selectedUseCase: ruleUseCase,
           client: rule.client?.pk || rule.client?.id || rule.client || null,
           status: ruleStatus,
-          selectedType: this.selectedType,
+          selectedType: rule.type || this.selectedType,
           syntax: this.selectedSyntax,
           logsources: flatLogsources,
         });
@@ -194,6 +214,9 @@ export class EditRuleComponent implements OnInit {
     const formValues = this.editRuleForm.value;
 
     const payload = {
+      title: formValues.title,
+      useCaseId: formValues.selectedUseCase ? Number(formValues.selectedUseCase) : null,
+      type: formValues.selectedType || this.selectedType,
       client: formValues.client || null,
       status: formValues.status || '',
       syntax: formValues.syntax,

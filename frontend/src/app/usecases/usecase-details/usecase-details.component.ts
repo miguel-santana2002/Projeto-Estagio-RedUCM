@@ -105,14 +105,12 @@ export class UsecaseDetailsComponent implements OnInit, AfterViewInit, OnDestroy
   }
 
   /**
-   * Obtém todas as regras da aplicação e filtra as que pertencem a este Use Case.
+   * Obtém apenas as regras deste Use Case a partir da API.
    */
-    loadAssociatedRules(useCaseId: number): void {
-    this.rulesService.getRules().subscribe({
-      next: (allRules: any[]) => {
-        const mine = allRules.filter(
-          (r: any) => Number(r.useCaseId) === useCaseId && !r.client,
-        );
+  loadAssociatedRules(useCaseId: number): void {
+    this.rulesService.getRulesByUseCase(useCaseId).subscribe({
+      next: (rules: any[]) => {
+        const mine = (rules || []).filter((r: any) => !r.client);
         this.sigmas = mine.filter((r: any) => r.syntax === 'Sigma Rule');
         this.regras = mine.filter((r: any) => r.syntax !== 'Sigma Rule');
         this.managePolling(mine.some((r: any) => r.generationStatus === 'pending'));
@@ -128,6 +126,14 @@ export class UsecaseDetailsComponent implements OnInit, AfterViewInit, OnDestroy
       clearInterval(this.pollTimer);
       this.pollTimer = null;
     }
+  }
+
+  get countPrincipal(): number {
+    return [...this.regras, ...this.sigmas].filter((r: any) => !r.parent && r.parent !== 0).length;
+  }
+
+  get countChild(): number {
+    return [...this.regras, ...this.sigmas].filter((r: any) => Boolean(r.parent || r.parent === 0)).length;
   }
 
   ngOnDestroy(): void {
@@ -214,6 +220,16 @@ export class UsecaseDetailsComponent implements OnInit, AfterViewInit, OnDestroy
         },
         error: (err) => console.error('Erro ao criar tarefa:', err),
       });
+  }
+
+  copiedMessage: string = '';
+
+  copyUseCaseId(): void {
+    if (this.usecase?.id) {
+      navigator.clipboard.writeText(`RedUC${this.usecase.id}`);
+      this.copiedMessage = 'ID copiado!';
+      setTimeout(() => (this.copiedMessage = ''), 3000);
+    }
   }
 
   getTechniqueId(technique: any): string {

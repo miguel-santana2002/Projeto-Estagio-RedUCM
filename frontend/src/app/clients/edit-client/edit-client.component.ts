@@ -7,12 +7,12 @@ import {
   Validators,
 } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { TagInputModule } from 'ngx-chips';
 
 import { AuthService } from '../../services/auth.service';
 import { RulesService } from '../../services/rules.service';
 import { HeaderComponent } from '../../layout/header/header.component';
 import { TitlebannerComponent } from '../../layout/titlebanner/titlebanner.component';
+import { TagComboboxComponent } from '../../shared/components/tag-combobox/tag-combobox.component';
 
 @Component({
   selector: 'app-edit-client',
@@ -21,7 +21,7 @@ import { TitlebannerComponent } from '../../layout/titlebanner/titlebanner.compo
     CommonModule,
     ReactiveFormsModule,
     RouterModule,
-    TagInputModule,
+    TagComboboxComponent,
     HeaderComponent,
     TitlebannerComponent,
   ],
@@ -68,16 +68,16 @@ export class EditClientComponent implements OnInit {
       error: (err) => {
         console.error('Erro ao verificar permissões do utilizador:', err);
         this.loadRegisteredLogSources();
-      }
+      },
     });
   }
 
   loadRegisteredLogSources(): void {
     this.rulesService.getRegisteredLogSources().subscribe({
       next: (data: any) => {
-        this.registeredLogsources = data.map(
-          (logsource: any) => logsource.name,
-        );
+        this.registeredLogsources = Array.isArray(data)
+          ? data.map((logsource: any) => logsource.name).filter(Boolean)
+          : [];
         this.loadClientData();
       },
       error: (err) => {
@@ -90,15 +90,18 @@ export class EditClientComponent implements OnInit {
   loadClientData(): void {
     this.authService.getClientById(this.clientId).subscribe({
       next: (client: any) => {
-        const formattedLogs = (client.logsources || []).map((log: string) => ({
-          display: log,
-          value: log,
-        }));
+        const clientLogs = Array.isArray(client.logsources)
+          ? client.logsources.map((log: any) =>
+              typeof log === 'string'
+                ? log
+                : log.name || log.display || log.value,
+            )
+          : [];
 
         this.editClientForm.patchValue({
           name: client.name,
           siem: client.siem || '',
-          logsources: formattedLogs,
+          logsources: clientLogs,
         });
 
         this.isLoading = false;
@@ -118,10 +121,14 @@ export class EditClientComponent implements OnInit {
 
     this.errorMessage = '';
 
-    const logsourcesArray: any = this.editClientForm.get('logsources')?.value;
-    const logsources = logsourcesArray?.map((item: any) =>
-      typeof item === 'string' ? item : item.value,
-    );
+    const logsourcesValue: any = this.editClientForm.get('logsources')?.value;
+    const logsources = Array.isArray(logsourcesValue)
+      ? logsourcesValue.map((item: any) =>
+          typeof item === 'string'
+            ? item
+            : item?.value || item?.display || item?.name || String(item),
+        )
+      : [];
 
     const payload = {
       name: this.editClientForm.get('name')?.value,

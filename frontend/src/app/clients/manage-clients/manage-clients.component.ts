@@ -1,14 +1,7 @@
 import { Component, ViewChild, ElementRef, OnInit } from '@angular/core';
-import {
-  FormControl,
-  FormGroup,
-  FormsModule,
-  ReactiveFormsModule,
-  Validators,
-} from '@angular/forms';
+import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
-import { TagInputModule } from 'ngx-chips';
 
 import { HeaderComponent } from '../../layout/header/header.component';
 import { TitlebannerComponent } from '../../layout/titlebanner/titlebanner.component';
@@ -27,8 +20,6 @@ import { smartMatch } from '../../helper/search-utils';
     FormsModule,
     CommonModule,
     RouterModule,
-    ReactiveFormsModule,
-    TagInputModule,
   ],
 })
 export class ManageClientsComponent implements OnInit {
@@ -61,19 +52,8 @@ export class ManageClientsComponent implements OnInit {
   uniqueSiems: string[] = [];
 
   // Modais
-  isCreateModalOpen: boolean = false;
   selectedClient: any = null;
   isDetailsModalOpen: boolean = false;
-
-  createClientForm = new FormGroup({
-    name: new FormControl('', [Validators.required]),
-    siem: new FormControl('', [Validators.required]),
-    logsources: new FormControl(null, [Validators.required]),
-  });
-
-  get name() {
-    return this.createClientForm.get('name');
-  }
 
   constructor(
     private authService: AuthService,
@@ -281,19 +261,6 @@ export class ManageClientsComponent implements OnInit {
     this.modal.nativeElement.classList.remove('flex');
   }
 
-  openCreateModal(): void {
-    if (!this.isAdmin) return;
-    this.isCreateModalOpen = true;
-  }
-
-  closeCreateModal(): void {
-    this.isCreateModalOpen = false;
-    this.errorMessage = '';
-    if (this.createClientForm) {
-      this.createClientForm.reset();
-    }
-  }
-
   openDetailsModal(client: any): void {
     this.selectedClient = client;
     this.isDetailsModalOpen = true;
@@ -308,35 +275,6 @@ export class ManageClientsComponent implements OnInit {
     if (!this.isAdmin) return;
     this.closeDetailsModal();
     this.router.navigate(['/edit-client', client.pk]);
-  }
-
-  createClient(): void {
-    if (!this.isAdmin) return;
-    this.errorMessage = '';
-    const logsourcesArray: any = this.createClientForm.get('logsources')?.value;
-    const logsources = Array.isArray(logsourcesArray)
-      ? logsourcesArray.map(
-          (ls: any) => ls?.value || ls?.id || ls?.display || ls,
-        )
-      : [];
-
-    const clientData = {
-      name: this.name!.value!,
-      siem: this.createClientForm.get('siem')?.value,
-      logsources: logsources,
-    };
-
-    this.authService.createClient(clientData).subscribe({
-      next: () => {
-        this.loadClients();
-        this.createClientForm.reset();
-        this.closeCreateModal();
-      },
-      error: (err: any) => {
-        this.errorMessage =
-          err.error?.error || 'Erro ao comunicar com o servidor.';
-      },
-    });
   }
 
   deleteClient(): void {

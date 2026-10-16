@@ -1,27 +1,30 @@
 <app-header></app-header>
 <app-titlebanner title="Estatísticas da Plataforma" image="./assets/bannercover.jpg"></app-titlebanner>
 
-<div class="page-container px-4 py-16">
+<div class="page-container px-4 py-8">
 
-  <!-- Barra de Controlo de Filtros -->
-  <div class="flex justify-between items-center mb-6">
+  <!-- Barra Superior de Controlo de Filtros -->
+  <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-6">
     <div>
-      <h3 class="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
+      <h3 class="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2.5">
         <i class="fas fa-chart-pie text-redshift-red"></i>
         <span>Métricas Globais</span>
       </h3>
-      <p class="text-xs text-gray-500 dark:text-gray-400">
-        Visão consolidada de regras, casos de uso e cobertura de clientes
+      <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+        Visão consolidada de regras, casos de uso, fontes de logs e cobertura de clientes
       </p>
     </div>
 
     <!-- Botão Toggle Filtros -->
     <button (click)="showFilters = !showFilters" [ngClass]="{'ring-2 ring-offset-2 ring-redshift-red': showFilters}"
-      class="w-32 h-10 bg-redshift-red text-white rounded hover:bg-redshift-hover shadow-md transition flex items-center justify-center gap-2 text-sm font-medium"
+      class="self-start sm:self-auto px-4 py-2 bg-redshift-red text-white rounded-lg hover:bg-redshift-hover shadow-sm transition flex items-center gap-2 text-xs font-semibold"
       type="button">
       <i class="fas fa-filter"></i>
       <span>Filtros</span>
-      <span *ngIf="selectedClients.length > 0" class="w-2 h-2 rounded-full bg-white animate-pulse"></span>
+      <span *ngIf="selectedClients.length > 0"
+        class="ml-1 px-1.5 py-0.2 rounded-full bg-white text-redshift-red text-[10px] font-bold">
+        {{ selectedClients.length }}
+      </span>
     </button>
   </div>
 
@@ -62,7 +65,8 @@
       </div>
 
       <div class="flex flex-wrap gap-2 max-h-40 overflow-y-auto pr-1">
-        <button *ngFor="let client of uniqueClientsName; trackBy: trackByClient" type="button" (click)="toggleClient(client)" [ngClass]="{
+        <button *ngFor="let client of uniqueClientsName; trackBy: trackByClient" type="button"
+          (click)="toggleClient(client)" [ngClass]="{
             'bg-redshift-red text-white border-redshift-red shadow-sm': isClientSelected(client),
             'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-700 hover:border-redshift-red dark:hover:border-redshift-red': !isClientSelected(client)
           }" class="px-3 py-1.5 rounded-lg border text-xs font-medium transition flex items-center gap-2 select-none">
@@ -77,62 +81,81 @@
     </div>
   </div>
 
-  <!-- Cards de Estatísticas Globais -->
-  <div class="flex flex-wrap gap-6 justify-center mb-8">
+  <!-- Cards de Métricas Globais (5 KPIs) -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
 
-    <!-- Utilizadores Registados -->
+    <!-- Card 1: Utilizadores -->
     <div
-      class="flex items-center p-6 bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 shadow-md rounded-lg hover:shadow-xl transition duration-300 h-28 w-72">
-      <div
-        class="inline-flex flex-shrink-0 items-center justify-center h-14 w-14 text-redshift-red bg-red-100 dark:bg-red-950/40 dark:text-red-400 rounded-full mr-4">
-        <i class="fas fa-user text-xl"></i>
-      </div>
+      class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-5 shadow-sm hover:shadow-md transition-all duration-200 flex items-center justify-between">
       <div>
-        <span *ngIf="!isLoading" class="block text-xl font-bold text-gray-900 dark:text-white">{{ users.length }}</span>
-        <span *ngIf="isLoading" class="block h-6 w-12 bg-gray-200 dark:bg-gray-700 rounded animate-pulse my-1"></span>
-        <span class="block text-gray-500 dark:text-gray-400 text-sm">Utilizadores Registados</span>
+        <span class="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Utilizadores</span>
+        <span *ngIf="!isLoading" class="block text-2xl font-extrabold text-gray-900 dark:text-white mt-1">{{ users.length }}</span>
+        <span *ngIf="isLoading" class="block h-7 w-12 bg-gray-200 dark:bg-gray-700 rounded animate-pulse mt-1"></span>
+        <span class="block text-xs text-gray-400 dark:text-gray-500 mt-0.5">Contas registadas</span>
+      </div>
+      <div
+        class="w-12 h-12 rounded-xl bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400 flex items-center justify-center text-xl shrink-0">
+        <i class="fas fa-users"></i>
       </div>
     </div>
 
-    <!-- Clientes Registados -->
+    <!-- Card 2: Clientes -->
     <div
-      class="flex items-center p-6 bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 shadow-md rounded-lg hover:shadow-xl transition duration-300 h-28 w-72">
-      <div
-        class="inline-flex flex-shrink-0 items-center justify-center h-14 w-14 text-redshift-red bg-red-100 dark:bg-red-950/40 dark:text-red-400 rounded-full mr-4">
-        <i class="fas fa-building text-xl"></i>
-      </div>
+      class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-5 shadow-sm hover:shadow-md transition-all duration-200 flex items-center justify-between">
       <div>
-        <span *ngIf="!isLoading" class="block text-xl font-bold text-gray-900 dark:text-white">{{ clientsFromBd.length }}</span>
-        <span *ngIf="isLoading" class="block h-6 w-12 bg-gray-200 dark:bg-gray-700 rounded animate-pulse my-1"></span>
-        <span class="block text-gray-500 dark:text-gray-400 text-sm">Clientes Registados</span>
+        <span class="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Clientes</span>
+        <span *ngIf="!isLoading" class="block text-2xl font-extrabold text-gray-900 dark:text-white mt-1">{{ clientsFromBd.length }}</span>
+        <span *ngIf="isLoading" class="block h-7 w-12 bg-gray-200 dark:bg-gray-700 rounded animate-pulse mt-1"></span>
+        <span class="block text-xs text-gray-400 dark:text-gray-500 mt-0.5">Organizações ativas</span>
+      </div>
+      <div
+        class="w-12 h-12 rounded-xl bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 flex items-center justify-center text-xl shrink-0">
+        <i class="fas fa-building"></i>
       </div>
     </div>
 
-    <!-- Use Cases Registados -->
+    <!-- Card 3: Use Cases -->
     <div
-      class="flex items-center p-6 bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 shadow-md rounded-lg hover:shadow-xl transition duration-300 h-28 w-72">
-      <div
-        class="inline-flex flex-shrink-0 items-center justify-center h-14 w-14 text-redshift-red bg-red-100 dark:bg-red-950/40 dark:text-red-400 rounded-full mr-4">
-        <i class="fas fa-file text-xl"></i>
-      </div>
+      class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-5 shadow-sm hover:shadow-md transition-all duration-200 flex items-center justify-between">
       <div>
-        <span *ngIf="!isLoading" class="block text-xl font-bold text-gray-900 dark:text-white">{{ useCases.length }}</span>
-        <span *ngIf="isLoading" class="block h-6 w-12 bg-gray-200 dark:bg-gray-700 rounded animate-pulse my-1"></span>
-        <span class="block text-gray-500 dark:text-gray-400 text-sm">Use Cases Registados</span>
+        <span class="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Use Cases</span>
+        <span *ngIf="!isLoading" class="block text-2xl font-extrabold text-gray-900 dark:text-white mt-1">{{ useCases.length }}</span>
+        <span *ngIf="isLoading" class="block h-7 w-12 bg-gray-200 dark:bg-gray-700 rounded animate-pulse mt-1"></span>
+        <span class="block text-xs text-gray-400 dark:text-gray-500 mt-0.5">Catálogo global</span>
+      </div>
+      <div
+        class="w-12 h-12 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-xl shrink-0">
+        <i class="fas fa-shield-alt"></i>
       </div>
     </div>
 
-    <!-- Regras Registadas -->
+    <!-- Card 4: Regras Registadas -->
     <div
-      class="flex items-center p-6 bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 shadow-md rounded-lg hover:shadow-xl transition duration-300 h-28 w-72">
-      <div
-        class="inline-flex flex-shrink-0 items-center justify-center h-14 w-14 text-redshift-red bg-red-100 dark:bg-red-950/40 dark:text-red-400 rounded-full mr-4">
-        <i class="fas fa-handshake text-xl"></i>
-      </div>
+      class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-5 shadow-sm hover:shadow-md transition-all duration-200 flex items-center justify-between">
       <div>
-        <span *ngIf="!isLoading" class="block text-xl font-bold text-gray-900 dark:text-white">{{ filteredRules.length }}</span>
-        <span *ngIf="isLoading" class="block h-6 w-12 bg-gray-200 dark:bg-gray-700 rounded animate-pulse my-1"></span>
-        <span class="block text-gray-500 dark:text-gray-400 text-sm">Regras Registadas</span>
+        <span class="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Regras</span>
+        <span *ngIf="!isLoading" class="block text-2xl font-extrabold text-gray-900 dark:text-white mt-1">{{ filteredRules.length }}</span>
+        <span *ngIf="isLoading" class="block h-7 w-12 bg-gray-200 dark:bg-gray-700 rounded animate-pulse mt-1"></span>
+        <span class="block text-xs text-gray-400 dark:text-gray-500 mt-0.5">Deteção ativa</span>
+      </div>
+      <div
+        class="w-12 h-12 rounded-xl bg-red-50 dark:bg-red-950/40 text-redshift-red dark:text-red-400 flex items-center justify-center text-xl shrink-0">
+        <i class="fas fa-bolt"></i>
+      </div>
+    </div>
+
+    <!-- Card 5: Log Sources Registadas -->
+    <div
+      class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-5 shadow-sm hover:shadow-md transition-all duration-200 flex items-center justify-between">
+      <div>
+        <span class="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Log Sources</span>
+        <span *ngIf="!isLoading" class="block text-2xl font-extrabold text-gray-900 dark:text-white mt-1">{{ logsourcesFromBd.length }}</span>
+        <span *ngIf="isLoading" class="block h-7 w-12 bg-gray-200 dark:bg-gray-700 rounded animate-pulse mt-1"></span>
+        <span class="block text-xs text-gray-400 dark:text-gray-500 mt-0.5">Fontes registadas</span>
+      </div>
+      <div
+        class="w-12 h-12 rounded-xl bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 flex items-center justify-center text-xl shrink-0">
+        <i class="fas fa-server"></i>
       </div>
     </div>
 
@@ -141,65 +164,139 @@
   <!-- Loading State dos Gráficos -->
   <div *ngIf="isLoading" class="flex flex-col items-center justify-center py-24 space-y-4">
     <div class="w-10 h-10 border-4 border-redshift-red/20 border-t-redshift-red rounded-full animate-spin"></div>
-    <span class="text-sm font-medium text-gray-500 dark:text-gray-400">A processar dados e a gerar gráficos...</span>
+    <span class="text-sm font-medium text-gray-500 dark:text-gray-400">A carregar métricas analíticas e gráficos...</span>
   </div>
 
-  <!-- Gráficos Secundários -->
-  <div *ngIf="!isLoading && (filteredRules?.length ?? 0) > 0" class="flex justify-center space-x-12 my-12">
-    <app-rules-per-syntax [rules]="filteredRules"></app-rules-per-syntax>
-    <app-rules-per-logsource [rules]="filteredRules"></app-rules-per-logsource>
-    <app-rules-per-type [rules]="filteredRules"></app-rules-per-type>
+  <!-- Secção: Gráficos de Distribuição de Regras -->
+  <div *ngIf="!isLoading && (filteredRules?.length ?? 0) > 0" class="mb-8">
+    <div class="mb-4">
+      <h4 class="text-sm font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 flex items-center gap-2">
+        <i class="fas fa-chart-pie text-redshift-red"></i>
+        <span>Distribuição de Regras de Deteção</span>
+      </h4>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <app-rules-per-syntax [rules]="filteredRules" class="w-full"></app-rules-per-syntax>
+      <app-rules-per-logsource [rules]="filteredRules" class="w-full"></app-rules-per-logsource>
+      <app-rules-per-type [rules]="filteredRules" class="w-full"></app-rules-per-type>
+    </div>
   </div>
 
-  <!-- Painéis Informativos e Gráficos -->
-  <div *ngIf="!isLoading && (filteredRules?.length ?? 0) > 0" class="flex justify-center space-x-8 my-12 min-h-80">
+  <!-- Secção: Detalhamento MITRE ATT&CK & Clientes -->
+  <div *ngIf="!isLoading && (filteredRules?.length ?? 0) > 0" class="mb-8">
+    <div class="mb-4">
+      <h4 class="text-sm font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 flex items-center gap-2">
+        <i class="fas fa-project-diagram text-redshift-red"></i>
+        <span>Detalhamento MITRE ATT&CK & Clientes</span>
+      </h4>
+    </div>
 
-    <!-- Painel 1: Use Cases por Técnica -->
-    <div
-      class="max-w-sm w-full bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-lg shadow p-4 md:p-6 transition">
-      <h5 class="text-xl font-bold leading-none text-gray-900 dark:text-white">Use Cases por Técnica</h5>
-      <hr class="mb-4 mt-4 border-gray-200 dark:border-gray-700">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 
-      <div class="max-h-60 overflow-y-auto pr-1">
-        <table class="w-full text-sm text-left text-gray-600 dark:text-gray-300">
-          <tbody>
-            <tr *ngFor="let technique of mitreTechniques; let i = index; trackBy: trackByTechnique"
-              class="border-b border-gray-100 dark:border-gray-700/60 hover:bg-gray-50 dark:hover:bg-gray-700/50">
-              <td class="p-2 font-bold break-words text-gray-800 dark:text-gray-200">{{ technique }}</td>
-              <td class="p-2 break-words text-right text-gray-600 dark:text-gray-400">{{ mitreTechniquesCount[i] }}</td>
-            </tr>
-          </tbody>
-        </table>
+      <!-- Painel 1: Use Cases por Técnica -->
+      <div
+        class="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm hover:shadow-md p-5 flex flex-col justify-between transition-all duration-200">
+        <div class="flex items-center justify-between pb-3 mb-3 border-b border-gray-100 dark:border-gray-700/60">
+          <h5 class="text-sm font-bold text-gray-900 dark:text-white flex items-center gap-2">
+            <i class="fas fa-crosshairs text-redshift-red"></i>
+            <span>Use Cases por Técnica</span>
+          </h5>
+          <span class="text-[11px] px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 font-semibold">
+            {{ mitreTechniques.length }} técnicas
+          </span>
+        </div>
+
+        <div class="max-h-72 overflow-y-auto pr-1 flex-1">
+          <table class="w-full text-xs text-left">
+            <tbody>
+              <tr *ngFor="let technique of mitreTechniques; let i = index; trackBy: trackByTechnique"
+                class="border-b border-gray-100 dark:border-gray-700/40 hover:bg-gray-50 dark:hover:bg-gray-700/40 transition">
+                <td class="py-2.5 px-2 font-medium text-gray-800 dark:text-gray-200">{{ technique }}</td>
+                <td class="py-2.5 px-2 text-right">
+                  <span
+                    class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-red-50 dark:bg-red-950/40 text-redshift-red dark:text-red-400">
+                    {{ mitreTechniquesCount[i] }}
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <div *ngIf="mitreTechniques.length === 0" class="py-12 text-center text-xs text-gray-400">
+            Nenhuma técnica mapeada.
+          </div>
+        </div>
       </div>
-    </div>
 
-    <!-- Painel 2: Regras por Cliente -->
-    <div
-      class="max-w-sm w-full bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-lg shadow p-4 md:p-6 transition">
-      <h5 class="text-xl font-bold leading-none text-gray-900 dark:text-white">Regras por Cliente</h5>
-      <hr class="mb-4 mt-4 border-gray-200 dark:border-gray-700">
+      <!-- Painel 2: Regras por Cliente -->
+      <div
+        class="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm hover:shadow-md p-5 flex flex-col justify-between transition-all duration-200">
+        <div class="flex items-center justify-between pb-3 mb-3 border-b border-gray-100 dark:border-gray-700/60">
+          <h5 class="text-sm font-bold text-gray-900 dark:text-white flex items-center gap-2">
+            <i class="fas fa-building text-blue-500"></i>
+            <span>Regras por Cliente</span>
+          </h5>
+          <span class="text-[11px] px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 font-semibold">
+            {{ clients.length }} clientes
+          </span>
+        </div>
 
-      <div class="max-h-60 overflow-y-auto pr-1">
-        <table class="w-full text-sm text-left text-gray-600 dark:text-gray-300">
-          <tbody>
-            <tr *ngFor="let client of clients; let i = index; trackBy: trackByClient"
-              class="border-b border-gray-100 dark:border-gray-700/60 hover:bg-gray-50 dark:hover:bg-gray-700/50">
-              <td class="p-2 font-bold text-gray-800 dark:text-gray-200">{{ client }}</td>
-              <td class="p-2 text-right text-gray-600 dark:text-gray-400">{{ clientsCount[i] }}</td>
-            </tr>
-          </tbody>
-        </table>
+        <div class="max-h-72 overflow-y-auto pr-1 flex-1">
+          <table class="w-full text-xs text-left">
+            <tbody>
+              <tr *ngFor="let client of clients; let i = index; trackBy: trackByClient"
+                class="border-b border-gray-100 dark:border-gray-700/40 hover:bg-gray-50 dark:hover:bg-gray-700/40 transition">
+                <td class="py-2.5 px-2 font-medium text-gray-800 dark:text-gray-200">{{ client }}</td>
+                <td class="py-2.5 px-2 text-right">
+                  <span
+                    class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400">
+                    {{ clientsCount[i] }}
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <div *ngIf="clients.length === 0" class="py-12 text-center text-xs text-gray-400">
+            Nenhum cliente com regras atribuídas.
+          </div>
+        </div>
       </div>
-    </div>
 
-    <!-- Painel 3: Táticas por UseCases -->
-    <div
-      class="max-w-sm w-full bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-lg shadow p-4 md:p-6 transition">
-      <h5 class="text-xl font-bold leading-none text-gray-900 dark:text-white">Táticas por UseCases</h5>
-      <hr class="mb-4 mt-4 border-gray-200 dark:border-gray-700">
-      <app-radar-tactics [useCases]="useCases" class="mt-0 pt-0 max-h-96"></app-radar-tactics>
-    </div>
+      <!-- Painel 3: Táticas por UseCases -->
+      <div
+        class="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm hover:shadow-md p-5 flex flex-col justify-between transition-all duration-200">
+        <div class="flex items-center justify-between pb-3 mb-3 border-b border-gray-100 dark:border-gray-700/60">
+          <h5 class="text-sm font-bold text-gray-900 dark:text-white flex items-center gap-2">
+            <i class="fas fa-bullseye text-emerald-500"></i>
+            <span>Táticas por Use Cases</span>
+          </h5>
+          <span class="text-[11px] px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 font-semibold">
+            Radar MITRE
+          </span>
+        </div>
+        <div class="flex-1 flex items-center justify-center">
+          <app-radar-tactics [useCases]="useCases" class="w-full"></app-radar-tactics>
+        </div>
+      </div>
 
+    </div>
+  </div>
+
+  <!-- Empty State Quando Não Há Regras -->
+  <div *ngIf="!isLoading && (filteredRules?.length ?? 0) === 0"
+    class="text-center py-16 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-8 shadow-sm my-6">
+    <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-gray-400 text-2xl">
+      <i class="fas fa-chart-line"></i>
+    </div>
+    <h4 class="text-base font-bold text-gray-800 dark:text-gray-200 mb-1">Nenhum dado encontrado</h4>
+    <p class="text-xs text-gray-500 dark:text-gray-400 max-w-sm mx-auto mb-4">
+      Não foram encontradas regras correspondentes aos filtros selecionados. Tente limpar os filtros para visualizar os dados globais.
+    </p>
+    <button *ngIf="selectedClients.length > 0" (click)="clearAllFilters()"
+      class="inline-flex items-center gap-2 px-3.5 py-2 text-xs font-semibold text-white bg-redshift-red rounded-lg hover:bg-redshift-hover transition shadow-sm">
+      <i class="fas fa-rotate-left"></i>
+      <span>Repor filtros</span>
+    </button>
   </div>
 
 </div>

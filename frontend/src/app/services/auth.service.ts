@@ -32,21 +32,10 @@ export class AuthService {
         return { otpSent: false };
       }),
       catchError((e) => {
-        let errorMsg = 'Credenciais inválidas para início de sessão';
-        if (e.error) {
-          if (typeof e.error === 'string') {
-            errorMsg = e.error;
-          } else if (e.error.detail) {
-            errorMsg = e.error.detail;
-          } else if (e.error.error) {
-            errorMsg = e.error.error;
-          } else if (
-            e.error.non_field_errors &&
-            e.error.non_field_errors.length > 0
-          ) {
-            errorMsg = e.error.non_field_errors[0];
-          }
-        }
+        const errorMsg = this.extractErrorMessage(
+          e,
+          'Credenciais inválidas para início de sessão',
+        );
         return throwError(() => new Error(errorMsg));
       }),
     );
@@ -59,19 +48,53 @@ export class AuthService {
         return true;
       }),
       catchError((e) => {
-        let errorMsg = 'Código de verificação inválido';
-        if (e.error) {
-          if (typeof e.error === 'string') {
-            errorMsg = e.error;
-          } else if (e.error.detail) {
-            errorMsg = e.error.detail;
-          } else if (e.error.error) {
-            errorMsg = e.error.error;
-          }
-        }
+        const errorMsg = this.extractErrorMessage(
+          e,
+          'Código de verificação inválido',
+        );
         return throwError(() => new Error(errorMsg));
       }),
     );
+  }
+
+  private extractErrorMessage(e: any, defaultMsg: string): string {
+    if (!e) return defaultMsg;
+    if (e.status === 502 || e.status === 503 || e.status === 504) {
+      return 'Serviço temporariamente indisponível. Por favor, tente novamente dentro de momentos.';
+    }
+    if (e.status === 500) {
+      return 'Ocorreu um erro interno no servidor. Por favor, tente novamente mais tarde.';
+    }
+    if (e.status === 0) {
+      return 'Não foi possível ligar ao servidor. Verifique a sua ligação de rede.';
+    }
+    if (e.error) {
+      if (typeof e.error === 'string') {
+        if (
+          e.error.includes('<html') ||
+          e.error.includes('<!DOCTYPE') ||
+          e.error.includes('<body') ||
+          e.error.includes('502 Bad Gateway') ||
+          e.error.includes('Bad Gateway')
+        ) {
+          return 'Serviço temporariamente indisponível. Por favor, tente novamente dentro de momentos.';
+        }
+        return e.error;
+      }
+      if (e.error.detail) {
+        return e.error.detail;
+      }
+      if (e.error.error) {
+        return e.error.error;
+      }
+      if (
+        Array.isArray(e.error.non_field_errors) &&
+        e.error.non_field_errors.length > 0
+      ) {
+        return e.error.non_field_errors[0];
+      }
+    }
+    return defaultMsg;
   }
 
   generateTOTP(email: string): Observable<string | null> {

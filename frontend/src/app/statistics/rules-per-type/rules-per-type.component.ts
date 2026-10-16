@@ -40,9 +40,9 @@ export class RulesPerTypeComponent implements OnChanges, OnDestroy {
       return;
     }
 
-    // 1. Extração segura ignorando instâncias com ruleModel nulo
+    // 1. Extração segura de tipos das regras (direto ou legado)
     const rulesType = rulesData
-      .map((rule: any) => rule.ruleModel?.type)
+      .map((rule: any) => rule.type || rule.ruleModel?.type)
       .filter((type: string | undefined): type is string => Boolean(type));
 
     if (rulesType.length === 0) {
