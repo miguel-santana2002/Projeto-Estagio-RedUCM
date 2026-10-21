@@ -4,11 +4,16 @@ from accounts.models import Company
 
 class RuleModel(models.Model):
     title = models.CharField(max_length=255, null=True, blank=True)
-    useCaseId = models.IntegerField(null=True, blank=True)
+    useCaseId = models.IntegerField(null=True, blank=True, db_index=True)
     type = models.CharField(max_length=50, null=True, blank=True)
     syntax = models.CharField(max_length=100, null=True, blank=True)
     ruleCode = models.TextField(null=True, blank=True)
     logsources = ArrayField(models.CharField(max_length=255, blank=True), blank=True, default=list)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['useCaseId']),
+        ]
 
     def __str__(self):
         return self.title or f"RuleModel #{self.id}"
@@ -29,28 +34,37 @@ class Rule(models.Model):
 
     # Campos que vêm do antigo RuleModel
     title = models.CharField(max_length=255, null=True, blank=True)
-    useCaseId = models.IntegerField(null=True, blank=True)
+    useCaseId = models.IntegerField(null=True, blank=True, db_index=True)
     type = models.CharField(max_length=50, null=True, blank=True)
 
     # Transição: some quando o RuleModel for removido
     ruleModel = models.ForeignKey(RuleModel, on_delete=models.CASCADE, null=True, blank=True, related_name='rules')
 
     ruleCode = models.TextField(null=True, blank=True)
-    syntax = models.CharField(max_length=100, null=True, blank=True)
+    syntax = models.CharField(max_length=100, null=True, blank=True, db_index=True)
     logsources = ArrayField(models.CharField(max_length=255, blank=True), blank=True, default=list)
-    client = models.ForeignKey(Company, on_delete=models.CASCADE, null=True, blank=True)
+    client = models.ForeignKey(Company, on_delete=models.CASCADE, null=True, blank=True, db_index=True)
     status = models.CharField(
         max_length=50,
         choices=STATUS_CHOICES,
         default='Regra não validada',
-        blank=True
+        blank=True,
+        db_index=True
     )
 
     # Regra de origem (ex: o Sigma gerado aponta para a regra SPL)
-    parent = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name='children')
+    parent = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name='children', db_index=True)
     generated = models.BooleanField(default=False)
     generationStatus = models.CharField(max_length=20, choices=GENERATION_CHOICES, default='', blank=True)
     generationNote = models.TextField(null=True, blank=True)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['useCaseId']),
+            models.Index(fields=['status']),
+            models.Index(fields=['syntax']),
+            models.Index(fields=['parent']),
+        ]
 
     def __str__(self):
         return (self.title or f"Rule #{self.id or 'Nova'}")[:255]

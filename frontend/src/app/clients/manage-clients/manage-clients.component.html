@@ -33,11 +33,11 @@
           </span>
 
           <!-- Botão Adicionar Novo (Apenas Admin) -->
-          <button *ngIf="isAdmin" (click)="openCreateModal()" type="button"
+          <a *ngIf="isAdmin" [routerLink]="['/create-client']"
             class="h-10 px-5 bg-redshift-red text-white rounded-lg hover:bg-redshift-hover shadow-md transition flex items-center justify-center gap-2 text-sm font-medium flex-shrink-0">
             <i class="fas fa-plus text-xs"></i>
             <span>Adicionar Novo</span>
-          </button>
+          </a>
 
           <!-- Botão Filtros -->
           <button (click)="showFilters = !showFilters"
@@ -278,88 +278,8 @@
         </div>
       </div>
 
-      <!-- Modal Criar Cliente (Apenas renderizado/executado se for Admin) -->
+      <!-- Modais Administrativos (Eliminar Cliente) -->
       <div *ngIf="isAdmin">
-        <div *ngIf="isCreateModalOpen" class="bg-black/60 backdrop-blur-sm fixed inset-0 z-40"></div>
-
-        <div tabindex="-1" aria-hidden="true"
-          class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full"
-          [ngClass]="{'hidden': !isCreateModalOpen, 'flex': isCreateModalOpen}">
-          <div class="relative p-4 w-full max-w-md max-h-full">
-            <div
-              class="relative bg-white rounded-lg shadow dark:bg-gray-800 border border-transparent dark:border-gray-700">
-              <div class="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-700">
-                <div class="flex items-center">
-                  <i class="fas fa-building mr-3 text-redshift-red"></i>
-                  <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Adicionar novo</h3>
-                </div>
-                <button type="button" (click)="closeCreateModal()"
-                  class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-700 dark:hover:text-white transition">
-                  <i class="fas fa-times text-base"></i>
-                </button>
-              </div>
-
-              <form class="p-4 md:p-5" (ngSubmit)="createClient()" [formGroup]="createClientForm"
-                *ngIf="createClientForm">
-                <div class="grid gap-4 mb-4 grid-cols-2">
-                  <div class="col-span-2">
-                    <label for="name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
-                      Nome <span class="text-red-500">*</span>
-                    </label>
-                    <input type="text" formControlName="name" name="name" id="name"
-                      class="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-redshift-red focus:border-redshift-red block w-full p-2.5 transition"
-                      placeholder="Insira o nome da empresa">
-                  </div>
-
-                  <!-- Campo SIEM na criação com TODAS as opções -->
-                  <div class="col-span-2">
-                    <label for="siem" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
-                      SIEM <span class="text-red-500">*</span>
-                    </label>
-                    <select id="siem" formControlName="siem"
-                      class="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-redshift-red focus:border-redshift-red block w-full p-2.5 transition">
-                      <option value="" disabled selected>Selecione o SIEM</option>
-                      <option value="Splunk">Splunk</option>
-                      <option value="Sentinel">Sentinel</option>
-                      <option value="Crowdstrike">Crowdstrike</option>
-                      <option value="QRadar">QRadar</option>
-                      <option value="Elastic">Elastic</option>
-                      <option value="FortiSIEM">FortiSIEM</option>
-                    </select>
-                  </div>
-
-                  <div class="col-span-2">
-                    <label for="logsources" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
-                      LogSources <span class="text-red-500">*</span>
-                    </label>
-                    <tag-input theme='minimal' [onlyFromAutocomplete]="true" formControlName="logsources"
-                      secondaryPlaceholder="+ Nova"
-                      class="block w-full rounded-md border-0 px-2 text-gray-900 bg-white dark:bg-gray-700 dark:text-white shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-600 transition">
-                      <tag-input-dropdown [showDropdownIfEmpty]="true" [autocompleteItems]="registeredLogsources">
-                      </tag-input-dropdown>
-                    </tag-input>
-                  </div>
-                </div>
-
-                <div *ngIf="errorMessage" class="mb-4 text-red-600 dark:text-red-400 text-sm">
-                  {{ errorMessage }}
-                </div>
-
-                <div
-                  class="flex items-center justify-end pt-6 border-t border-gray-200 dark:border-gray-700 rounded-b gap-2">
-                  <button type="submit" [disabled]="createClientForm.invalid"
-                    class="text-white inline-flex items-center gap-2 bg-redshift-red hover:bg-redshift-hover font-medium rounded-lg text-sm px-5 py-2.5 disabled:opacity-50 disabled:cursor-not-allowed transition">
-                    <i class="fas fa-plus"></i> Criar Cliente
-                  </button>
-                  <button type="button" (click)="closeCreateModal()"
-                    class="text-gray-500 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-lg border border-gray-200 dark:border-gray-600 text-sm px-4 py-2 transition">
-                    Fechar
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
 
         <!-- Modal Eliminar -->
         <div id="deleteModal" tabindex="-1" aria-hidden="true"
@@ -411,6 +331,19 @@
             </div>
 
             <div class="p-4 md:p-5 space-y-4">
+              <!-- Cabeçalho da Secção com Botão Editar (Opção B) -->
+              <div class="flex items-center justify-between pb-1">
+                <h4 class="text-sm font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                  Detalhes do Registo
+                </h4>
+
+                <button *ngIf="isAdmin" type="button" (click)="editClient(selectedClient)"
+                  class="bg-redshift-red hover:bg-redshift-hover text-sm font-medium text-white px-3.5 py-1.5 rounded-lg transition flex items-center gap-1.5 shadow-sm">
+                  <span>Editar</span>
+                  <i class="fas fa-pen text-xs"></i>
+                </button>
+              </div>
+
               <div>
                 <label
                   class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider font-semibold">Nome</label>
@@ -445,13 +378,8 @@
 
             <div
               class="flex items-center justify-end p-4 md:p-5 border-b-0 border-t border-gray-200 dark:border-gray-700 rounded-b gap-2">
-              <!-- Botão Editar apenas para Admin -->
-              <button *ngIf="isAdmin" type="button" (click)="editClient(selectedClient)"
-                class="text-white bg-redshift-red hover:bg-redshift-hover rounded-lg text-sm px-4 py-2 font-medium transition">
-                <i class="fas fa-edit mr-1"></i> Editar
-              </button>
               <button type="button" (click)="closeDetailsModal()"
-                class="text-gray-500 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-100 rounded-lg border border-gray-200 dark:border-gray-600 text-sm px-4 py-2 transition">
+                class="text-gray-500 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-100 rounded-lg border border-gray-200 dark:border-gray-600 text-sm px-4 py-2 font-medium transition shadow-sm">
                 Fechar
               </button>
             </div>

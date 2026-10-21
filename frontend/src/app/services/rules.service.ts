@@ -26,6 +26,10 @@ export class RulesService {
     return this.http.get<any[]>(`${AUTH_URL}getRulesByUseCase/${useCaseId}`);
   }
 
+  getRulesByParent(parentId: number): Observable<any[]> {
+    return this.http.get<any[]>(`${AUTH_URL}getRulesByParent/${parentId}`);
+  }
+
   getRuleModelsByUseCase(useCaseId: number): Observable<any[]> {
     return this.http.get<any[]>(
       `${AUTH_URL}getRuleModelsByUseCase/${useCaseId}`,
@@ -69,6 +73,10 @@ export class RulesService {
 
   getRegisteredLogSources(): Observable<any[]> {
     return this.http.get<any[]>(`${AUTH_URL}getRegisteredLogSources`);
+  }
+
+  getRegisteredLogSourceById(id: number): Observable<any> {
+    return this.http.get<any>(`${AUTH_URL}getRegisteredLogSourceById/${id}`);
   }
 
   deleteLogSourceById(id: number): Observable<any> {

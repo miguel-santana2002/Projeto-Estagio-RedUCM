@@ -36,6 +36,7 @@ export class StatisticsPageComponent implements OnInit {
   useCases: any[] = [];
   users: any[] = [];
   clientsFromBd: any[] = [];
+  logsourcesFromBd: any[] = [];
 
   mitreTechniques: string[] = [];
   mitreTechniquesCount: number[] = [];
@@ -70,13 +71,15 @@ export class StatisticsPageComponent implements OnInit {
       useCases: this.useCasesService.getUseCases(),
       users: this.authService.getUsers(),
       clients: this.authService.getClients(),
+      logSources: this.rulesService.getRegisteredLogSources(),
     }).subscribe({
-      next: ({ rules, useCases, users, clients }) => {
+      next: ({ rules, useCases, users, clients, logSources }) => {
         this.rules = Array.isArray(rules) ? rules : [];
         this.filteredRules = [...this.rules];
         this.useCases = Array.isArray(useCases) ? useCases : [];
         this.users = Array.isArray(users) ? users : [];
         this.clientsFromBd = Array.isArray(clients) ? clients : [];
+        this.logsourcesFromBd = Array.isArray(logSources) ? logSources : [];
 
         this.uniqueClientsName = Array.from(
           new Set(

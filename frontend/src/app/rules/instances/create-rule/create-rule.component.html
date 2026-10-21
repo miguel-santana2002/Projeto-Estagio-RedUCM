@@ -137,7 +137,7 @@
             </div>
 
             <div class="w-full border border-gray-300 dark:border-gray-700 rounded-lg overflow-hidden">
-                <app-code-editor [code]="code" [language]="selectedSyntax" height="420px"
+                <app-code-editor [code]="code" [language]="selectedSyntax" [placeholder]="examplePlaceholder" height="420px"
                     (codeChange)="onCodeChanged($event)">
                 </app-code-editor>
             </div>

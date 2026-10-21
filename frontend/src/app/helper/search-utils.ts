@@ -18,15 +18,24 @@ export function normalizeSearchText(value: any): string {
     .trim();
 }
 
+export function tokenizeQuery(query: string): string[] {
+  if (!query || !query.trim()) return [];
+  const normalized = normalizeSearchText(query);
+  return normalized.split(/\s+/).filter((t) => t.length > 0);
+}
+
+export function smartMatchTokens(tokens: string[], preNormalizedCorpus: string): boolean {
+  if (!tokens || tokens.length === 0) return true;
+  return tokens.every((token) => preNormalizedCorpus.includes(token));
+}
+
 export function smartMatch(
   corpus: (string | number | boolean | null | undefined)[] | string,
   query: string,
 ): boolean {
   if (!query || !query.trim()) return true;
 
-  const normalizedQuery = normalizeSearchText(query);
-  const tokens = normalizedQuery.split(/\s+/).filter((t) => t.length > 0);
-
+  const tokens = tokenizeQuery(query);
   if (tokens.length === 0) return true;
 
   let fullCorpus: string;

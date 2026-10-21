@@ -15,7 +15,7 @@ import { TitlebannerComponent } from '../../../layout/titlebanner/titlebanner.co
 import { HeaderComponent } from '../../../layout/header/header.component';
 import { AuthService } from '../../../services/auth.service';
 import { RulesService } from '../../../services/rules.service';
-import { smartMatch } from '../../../helper/search-utils';
+import { normalizeSearchText, tokenizeQuery } from '../../../helper/search-utils';
 import { exportRuleFormatted, ExportFormat } from '../../../shared/utils/rule-export.util';
 
 @Component({
@@ -44,6 +44,8 @@ export class ManageRulesComponent implements OnInit, AfterViewInit {
   selectDelete: number = 999999;
 
   rules: any[] = [];
+  filteredRules: any[] = [];
+  pagedRules: any[] = [];
 
   // Paginação
   page: number = 1;
@@ -80,6 +82,7 @@ export class ManageRulesComponent implements OnInit, AfterViewInit {
   setHierarchyFilter(type: string): void {
     this.selectedHierarchy = type;
     this.page = 1;
+    this.applyFilters();
   }
 
   constructor(
@@ -114,13 +117,52 @@ export class ManageRulesComponent implements OnInit, AfterViewInit {
     this.rulesService.getRules().subscribe({
       next: (data: any) => {
         this.rules = Array.isArray(data)
-          ? data.map((rule) => ({
-              ...rule,
-              status: (rule.status || '').trim(),
-            }))
+          ? data.map((rule) => {
+              const ruleTitle = rule.title || rule.ruleModel?.title || '';
+              const ruleCode = rule.ruleCode || '';
+              const ruleType = rule.type || rule.ruleModel?.type || '';
+              const currentSyntax = rule.syntax || rule.ruleModel?.syntax || '';
+              const ruleLogs = this.getRuleLogSources(rule);
+              const clientName =
+                typeof rule.client === 'object' && rule.client?.name
+                  ? rule.client.name
+                  : typeof rule.client === 'string'
+                    ? rule.client
+                    : '';
+              const modelId = rule.ruleModel?.id ? `RedModel${rule.ruleModel.id}` : '';
+              const ruleIdStr = rule.id ? `RedRule${rule.id}` : '';
+              const isPrincipal = !rule.parent && rule.parent !== 0;
+              const parentIdStr = rule.parent ? `RedRule${rule.parent}` : '';
+              const hierarchyText = isPrincipal ? 'principal matriz' : `secundaria secundária filho child ${parentIdStr}`;
+
+              const searchCorpus = normalizeSearchText([
+                rule.id,
+                ruleIdStr,
+                modelId,
+                ruleTitle,
+                ruleCode.length > 500 ? ruleCode.substring(0, 500) : ruleCode,
+                ruleType,
+                currentSyntax,
+                ruleLogs.join(' '),
+                clientName,
+                rule.status,
+                rule.generationStatus,
+                hierarchyText,
+                parentIdStr,
+              ].join(' '));
+
+              return {
+                ...rule,
+                status: (rule.status || '').trim(),
+                _logSources: ruleLogs,
+                _isPrincipal: isPrincipal,
+                _searchCorpus: searchCorpus,
+              };
+            })
           : [];
         this.startFilters();
         this.rules.sort((a: any, b: any) => this.sortNumeric(a.id, b.id));
+        this.applyFilters();
       },
       error: (err) => console.error('Erro ao carregar regras:', err),
     });
@@ -182,6 +224,7 @@ export class ManageRulesComponent implements OnInit, AfterViewInit {
         // Confirma a persistência do valor retornado
         if (res && res.status !== undefined) {
           rule.status = res.status;
+          this.applyFilters();
         }
       },
       error: (err: any) => {
@@ -197,6 +240,7 @@ export class ManageRulesComponent implements OnInit, AfterViewInit {
     this.selectedLogSources = this.selectedLogSources.includes(logSource)
       ? this.selectedLogSources.filter((l) => l !== logSource)
       : [...this.selectedLogSources, logSource];
+    this.applyFilters();
   }
 
   isLogSourceSelected(logSource: string): boolean {
@@ -208,6 +252,7 @@ export class ManageRulesComponent implements OnInit, AfterViewInit {
     this.selectedTypes = this.selectedTypes.includes(type)
       ? this.selectedTypes.filter((t) => t !== type)
       : [...this.selectedTypes, type];
+    this.applyFilters();
   }
 
   toggleSyntax(syntax: string): void {
@@ -215,6 +260,7 @@ export class ManageRulesComponent implements OnInit, AfterViewInit {
     this.selectedSintaxes = this.selectedSintaxes.includes(syntax)
       ? this.selectedSintaxes.filter((s) => s !== syntax)
       : [...this.selectedSintaxes, syntax];
+    this.applyFilters();
   }
 
   toggleStatus(status: string): void {
@@ -222,6 +268,7 @@ export class ManageRulesComponent implements OnInit, AfterViewInit {
     this.selectedStatus = this.selectedStatus.includes(status)
       ? this.selectedStatus.filter((s) => s !== status)
       : [...this.selectedStatus, status];
+    this.applyFilters();
   }
 
   clearAllFilters(): void {
@@ -232,10 +279,12 @@ export class ManageRulesComponent implements OnInit, AfterViewInit {
     this.selectedSintaxes = [];
     this.selectedStatus = [];
     this.nameSearch = '';
+    this.applyFilters();
   }
 
   onSearchChange(): void {
     this.page = 1;
+    this.applyFilters();
   }
 
   getRuleLogSources(rule: any): string[] {
@@ -299,6 +348,7 @@ export class ManageRulesComponent implements OnInit, AfterViewInit {
       }
       return this.sortNumeric(valA, valB);
     });
+    this.applyFilters();
   }
 
   private sortString(a: string = '', b: string = ''): number {
@@ -309,60 +359,29 @@ export class ManageRulesComponent implements OnInit, AfterViewInit {
     return (a - b) * (this.sortReverse ? -1 : 1);
   }
 
-  get filteredRules(): any[] {
-    return this.rules.filter((rule: any) => {
-      const ruleTitle = rule.title || rule.ruleModel?.title || '';
-      const ruleCode = rule.ruleCode || '';
-      const ruleType = rule.type || rule.ruleModel?.type || '';
-      const currentSyntax = rule.syntax || rule.ruleModel?.syntax || '';
-      const ruleLogs = this.getRuleLogSources(rule).join(' ');
-      const clientName =
-        typeof rule.client === 'object' && rule.client?.name
-          ? rule.client.name
-          : typeof rule.client === 'string'
-            ? rule.client
-            : '';
-      const modelId = rule.ruleModel?.id ? `RedModel${rule.ruleModel.id}` : '';
-      const ruleIdStr = rule.id ? `RedRule${rule.id}` : '';
+  applyFilters(): void {
+    const tokens = tokenizeQuery(this.nameSearch);
 
-      const isPrincipal = !rule.parent && rule.parent !== 0;
-      const parentIdStr = rule.parent ? `RedRule${rule.parent}` : '';
-      const hierarchyText = isPrincipal ? 'principal matriz' : `secundaria secundária filho child ${parentIdStr}`;
-
-      const matchesSearch = smartMatch(
-        [
-          rule.id,
-          ruleIdStr,
-          modelId,
-          ruleTitle,
-          ruleCode,
-          ruleType,
-          currentSyntax,
-          ruleLogs,
-          clientName,
-          rule.status,
-          rule.generationStatus,
-          hierarchyText,
-          parentIdStr,
-        ],
-        this.nameSearch
-      );
+    this.filteredRules = this.rules.filter((rule: any) => {
+      const matchesSearch =
+        tokens.length === 0 || tokens.every((token) => rule._searchCorpus.includes(token));
 
       const matchesHierarchy =
         this.selectedHierarchy === 'all' ||
-        (this.selectedHierarchy === 'principal' && isPrincipal) ||
-        (this.selectedHierarchy === 'child' && !isPrincipal);
+        (this.selectedHierarchy === 'principal' && rule._isPrincipal) ||
+        (this.selectedHierarchy === 'child' && !rule._isPrincipal);
 
       const matchesType =
         this.selectedTypes.length === 0 ||
-        (rule.ruleModel?.type &&
-          this.selectedTypes.includes(rule.ruleModel.type));
+        (rule.type && this.selectedTypes.includes(rule.type)) ||
+        (rule.ruleModel?.type && this.selectedTypes.includes(rule.ruleModel.type));
 
       const matchesSyntax =
         this.selectedSintaxes.length === 0 ||
-        (currentSyntax && this.selectedSintaxes.includes(currentSyntax));
+        (rule.syntax && this.selectedSintaxes.includes(rule.syntax)) ||
+        (rule.ruleModel?.syntax && this.selectedSintaxes.includes(rule.ruleModel.syntax));
 
-      const ruleLogList = this.getRuleLogSources(rule);
+      const ruleLogList = rule._logSources || this.getRuleLogSources(rule);
       const matchesLogSources =
         this.selectedLogSources.length === 0 ||
         ruleLogList.some((log: string) => this.selectedLogSources.includes(log));
@@ -380,11 +399,13 @@ export class ManageRulesComponent implements OnInit, AfterViewInit {
         matchesStatus
       );
     });
+
+    this.updatePagedRules();
   }
 
-  get pagedRules(): any[] {
+  updatePagedRules(): void {
     const start = (this.page - 1) * this.pageSize;
-    return this.filteredRules.slice(start, start + this.pageSize);
+    this.pagedRules = this.filteredRules.slice(start, start + this.pageSize);
   }
 
   get totalPages(): number {
@@ -394,12 +415,14 @@ export class ManageRulesComponent implements OnInit, AfterViewInit {
   setPage(newPage: number): void {
     if (newPage >= 1 && newPage <= this.totalPages) {
       this.page = newPage;
+      this.updatePagedRules();
     }
   }
 
   onPageSizeChange(newSize: number): void {
     this.pageSize = Number(newSize);
     this.page = 1;
+    this.updatePagedRules();
   }
 
   updateSelectDelete(event: Event, id: number): void {

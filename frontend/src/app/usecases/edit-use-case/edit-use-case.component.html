@@ -132,7 +132,7 @@
                     <textarea id="description"
                         placeholder="Descrição do Use Case. Neste parágrafo poderão ser descritos propósito, objetivos, entre outros."
                         name="description" formControlName="description"
-                        class="block w-full rounded-md border-0 bg-white dark:bg-gray-700 px-3 py-2.5 h-32 text-gray-900 dark:text-white shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-600 placeholder:text-gray-400 dark:placeholder-gray-400 focus:ring-2 focus:ring-inset focus:ring-redshift-red sm:text-sm sm:leading-6 transition"></textarea>
+                        class="block w-full rounded-md border-0 bg-white dark:bg-gray-700 px-3 py-2.5 h-32 text-gray-900 dark:text-white shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-600 placeholder:text-gray-400 dark:placeholder-gray-400 focus:ring-2 focus:ring-inset focus:ring-redshift-red sm:text-sm sm:leading-6 resize-y min-h-[96px]"></textarea>
                     <div *ngIf="editUseCaseForm.get('description')?.touched && editUseCaseForm.get('description')?.invalid"
                         class="text-red-600 dark:text-red-400 text-xs mt-1">
                         Descrição é obrigatória.
@@ -148,7 +148,7 @@
                     <textarea id="mitigation"
                         placeholder="Neste parágrafo, poderão ser descritas as estratégias de mitigação"
                         name="mitigation" formControlName="mitigation"
-                        class="block w-full rounded-md border-0 bg-white dark:bg-gray-700 px-3 py-2.5 h-32 text-gray-900 dark:text-white shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-600 placeholder:text-gray-400 dark:placeholder-gray-400 focus:ring-2 focus:ring-inset focus:ring-redshift-red sm:text-sm sm:leading-6 transition"></textarea>
+                        class="block w-full rounded-md border-0 bg-white dark:bg-gray-700 px-3 py-2.5 h-32 text-gray-900 dark:text-white shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-600 placeholder:text-gray-400 dark:placeholder-gray-400 focus:ring-2 focus:ring-inset focus:ring-redshift-red sm:text-sm sm:leading-6 resize-y min-h-[96px]"></textarea>
                     <div *ngIf="editUseCaseForm.get('mitigation')?.touched && editUseCaseForm.get('mitigation')?.invalid"
                         class="text-red-600 dark:text-red-400 text-xs mt-1">
                         Mitigação é obrigatória.

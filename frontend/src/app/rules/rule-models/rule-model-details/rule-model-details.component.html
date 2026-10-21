@@ -255,7 +255,7 @@
             <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Código da Regra (editável antes
               de guardar)</label>
             <textarea rows="16" formControlName="modalCode"
-              class="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white font-mono rounded-lg p-2.5 text-xs focus:ring-2 focus:ring-indigo-600 dark:focus:ring-indigo-500 transition">
+              class="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white font-mono rounded-lg p-2.5 text-xs focus:ring-2 focus:ring-redshift-red resize-y min-h-[220px] transition">
               </textarea>
           </div>
         </div>
@@ -311,14 +311,19 @@
         <!-- Coluna da Esquerda: Sintaxe Original e Controlos (5 colunas) -->
         <div class="lg:col-span-5 flex flex-col h-full space-y-4">
           <div class="flex flex-col flex-1 min-h-[250px]">
-            <label
-              class="block mb-2 text-xs font-semibold uppercase tracking-wider text-gray-700 dark:text-gray-300 flex items-center gap-1.5">
-              <i class="fas fa-code text-redshift-red"></i> Sintaxe Original <span
-                class="normal-case font-normal text-gray-500">({{ ruleModel.syntax }})</span>
-            </label>
-            <!-- Removido o rows="24", adicionado flex-1 para preencher o espaço vertical -->
+            <div class="flex items-center justify-between mb-2">
+              <label
+                class="block text-xs font-semibold uppercase tracking-wider text-gray-700 dark:text-gray-300 flex items-center gap-1.5">
+                <i class="fas fa-code text-redshift-red"></i> Sintaxe Original <span
+                  class="normal-case font-normal text-gray-500">({{ ruleModel.syntax }})</span>
+              </label>
+              <span class="text-[11px] text-gray-400 dark:text-gray-500 flex items-center gap-1 font-medium select-none">
+                <i class="fas fa-arrows-up-down text-[10px]"></i> Arrastar para redimensionar
+              </span>
+            </div>
+            <!-- Textarea com resize vertical suportado -->
             <textarea [(ngModel)]="sourceRuleContent" readonly
-              class="w-full p-4 text-xs font-mono bg-gray-50 dark:bg-[#1F2937] border border-gray-300 dark:border-gray-700 rounded-lg text-gray-800 dark:text-gray-300 resize-none shadow-inner flex-1"></textarea>
+              class="w-full p-4 text-xs font-mono bg-gray-50 dark:bg-[#1F2937] border border-gray-300 dark:border-gray-700 rounded-lg text-gray-800 dark:text-gray-300 resize-y min-h-[220px] max-h-[650px] shadow-inner flex-1"></textarea>
           </div>
 
           <div
@@ -368,14 +373,14 @@
           </div>
 
           <div class="relative flex-1 flex flex-col min-h-[250px]">
-            <!-- Removido o rows="24", adicionado flex-1 -->
+            <!-- Textarea com resize vertical suportado -->
             <textarea
               [ngModel]="selectedOutputView === 'ai' ? aiConvertedContent : (selectedOutputView === 'ai_pure' ? aiPureConvertedContent : pysigmaConvertedContent)"
               (ngModelChange)="
                 selectedOutputView === 'ai' ? aiConvertedContent = $event : 
                 (selectedOutputView === 'ai_pure' ? aiPureConvertedContent = $event : pysigmaConvertedContent = $event)
               " [readonly]="isConverting" placeholder="O resultado da conversão aparecerá aqui..."
-              class="w-full p-4 text-xs font-mono bg-gray-50 dark:bg-[#1F2937] border border-gray-300 dark:border-gray-700 rounded-lg resize-none shadow-inner flex-1"
+              class="w-full p-4 text-xs font-mono bg-gray-50 dark:bg-[#1F2937] border border-gray-300 dark:border-gray-700 rounded-lg resize-y min-h-[220px] max-h-[650px] shadow-inner flex-1"
               [ngClass]="{
                 'text-indigo-400': selectedOutputView === 'ai',
                 'text-purple-400': selectedOutputView === 'ai_pure',
@@ -395,17 +400,29 @@
 
     <!-- Footer Modal -->
     <div
-      class="flex items-center justify-end px-6 py-4 border-t border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-[#1F2937]/50 space-x-3">
-      <button (click)="applyConvertedRule()"
-        [disabled]="(!aiConvertedContent && !pysigmaConvertedContent && !aiPureConvertedContent) || isConverting"
-        type="button"
-        class="py-2.5 px-5 text-xs font-medium text-white bg-redshift-red hover:bg-redshift-hover disabled:opacity-50 disabled:cursor-not-allowed rounded-lg shadow transition">
-        Criar Regra Convertida
-      </button>
-      <button (click)="closeConvertModal()" type="button"
-        class="py-2.5 px-5 text-xs font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-[#111827] rounded-lg border border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 transition">
-        Fechar
-      </button>
+      class="flex flex-col sm:flex-row items-center justify-between gap-4 px-6 py-4 border-t border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-[#1F2937]/50">
+
+      <!-- Nota de Aviso: Validação Humana / Extra Obrigatória -->
+      <div class="flex items-center gap-2.5 text-xs text-amber-800 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 rounded-lg px-3.5 py-2 w-full sm:w-auto">
+        <i class="fas fa-triangle-exclamation text-amber-500 text-sm flex-shrink-0"></i>
+        <span class="leading-relaxed">
+          <strong>Aviso:</strong> A conversão gerada pode conter imprecisões e requer <strong>sempre validação humana e revisão técnica</strong> antes de ser implementada.
+        </span>
+      </div>
+
+      <!-- Botões de Ação -->
+      <div class="flex items-center gap-3 w-full sm:w-auto justify-end flex-shrink-0">
+        <button (click)="applyConvertedRule()"
+          [disabled]="(!aiConvertedContent && !pysigmaConvertedContent && !aiPureConvertedContent) || isConverting"
+          type="button"
+          class="py-2.5 px-5 text-xs font-medium text-white bg-redshift-red hover:bg-redshift-hover disabled:opacity-50 disabled:cursor-not-allowed rounded-lg shadow transition">
+          Criar Regra Convertida
+        </button>
+        <button (click)="closeConvertModal()" type="button"
+          class="py-2.5 px-5 text-xs font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-[#111827] rounded-lg border border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 transition">
+          Fechar
+        </button>
+      </div>
     </div>
 
   </div>
