@@ -14,13 +14,17 @@
         [formGroup]="createRuleForm">
 
         <!-- Informação de Regra Principal -->
-        <div class="col-span-1 md:col-span-2 p-3.5 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl flex items-center justify-between flex-wrap gap-2 text-xs">
+        <div
+            class="col-span-1 md:col-span-2 p-3.5 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl flex items-center justify-between flex-wrap gap-2 text-xs">
             <div class="flex items-center gap-2.5">
-                <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300 flex-shrink-0">
+                <span
+                    class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300 flex-shrink-0">
                     <i class="fas fa-crown text-[10px] text-amber-500"></i>
                 </span>
                 <span class="text-gray-700 dark:text-gray-300">
-                    Esta regra será criada como a <strong>Regra Principal</strong>. Quaisquer conversões futuras (como a versão Sigma automática) serão geradas como <strong>Regras Secundárias (Filhos)</strong> associadas a ela.
+                    Esta regra será criada como a <strong>Regra Principal</strong>. Quaisquer conversões futuras (como a
+                    versão Sigma automática) serão geradas como <strong>Regras Secundárias (Filhos)</strong> associadas
+                    a ela.
                 </span>
             </div>
         </div>
@@ -100,7 +104,7 @@
             <label for="title" class="block text-sm font-semibold text-gray-900 dark:text-white">
                 Nome da Regra <span class="text-redshift-red">*</span>
             </label>
-            <input id="title" type="text" formControlName="title"
+            <input id="title" type="text" formControlName="title" maxlength="255"
                 placeholder="ex: Brute Force Detection - SPL para Azure"
                 class="block w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2.5 text-gray-900 bg-white dark:bg-gray-700 dark:text-white shadow-sm focus:ring-2 focus:ring-redshift-red text-sm transition">
             <div *ngIf="createRuleForm.get('title')?.touched && createRuleForm.get('title')?.invalid"
@@ -141,8 +145,8 @@
             </div>
 
             <div class="w-full border border-gray-300 dark:border-gray-700 rounded-lg overflow-hidden">
-                <app-code-editor [code]="code" [language]="selectedSyntax" [placeholder]="examplePlaceholder" height="420px"
-                    (codeChange)="onCodeChanged($event)">
+                <app-code-editor [code]="code" [language]="selectedSyntax" [placeholder]="examplePlaceholder"
+                    height="420px" (codeChange)="onCodeChanged($event)">
                 </app-code-editor>
             </div>
         </div>

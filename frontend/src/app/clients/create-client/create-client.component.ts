@@ -38,8 +38,8 @@ export class CreateClientComponent implements OnInit {
   isOperator: boolean = false;
 
   createClientForm = new FormGroup({
-    name: new FormControl('', [Validators.required]),
-    siem: new FormControl('', [Validators.required]),
+    name: new FormControl('', [Validators.required, Validators.maxLength(30)]),
+    siem: new FormControl('', [Validators.required, Validators.maxLength(50)]),
     logsources: new FormControl<any>(null, [Validators.required]),
   });
 
@@ -116,7 +116,8 @@ export class CreateClientComponent implements OnInit {
         this.isCreating = false;
         console.error('Erro ao criar cliente:', err);
         this.errorMessage =
-          err.error?.error || 'Erro ao comunicar com o servidor ao criar o cliente.';
+          err.error?.error ||
+          'Erro ao comunicar com o servidor ao criar o cliente.';
       },
     });
   }
@@ -125,4 +126,3 @@ export class CreateClientComponent implements OnInit {
     this.router.navigate(['/manage-clients']);
   }
 }
-

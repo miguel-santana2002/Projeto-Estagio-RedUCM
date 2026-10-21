@@ -39,8 +39,8 @@ export class EditClientComponent implements OnInit {
   isOperator: boolean = false;
 
   editClientForm = new FormGroup({
-    name: new FormControl('', [Validators.required]),
-    siem: new FormControl('', [Validators.required]),
+    name: new FormControl('', [Validators.required, Validators.maxLength(30)]),
+    siem: new FormControl('', [Validators.required, Validators.maxLength(50)]),
     logsources: new FormControl<any>(null, [Validators.required]),
   });
 

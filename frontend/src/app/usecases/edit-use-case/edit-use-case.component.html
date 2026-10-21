@@ -28,7 +28,7 @@
                         Título <span class="text-red-500">*</span>
                     </label>
                     <input id="title" required name="title" placeholder="Título do Use Case" type="text"
-                        autocomplete="title" formControlName="title"
+                        autocomplete="title" formControlName="title" maxlength="255"
                         class="block w-full rounded-md border-0 bg-white dark:bg-gray-700 px-3 py-2.5 text-gray-900 dark:text-white shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-600 placeholder:text-gray-400 dark:placeholder-gray-400 focus:ring-2 focus:ring-inset focus:ring-redshift-red sm:text-sm sm:leading-6 transition">
                     <div *ngIf="editUseCaseForm.get('title')?.touched && editUseCaseForm.get('title')?.invalid"
                         class="text-red-600 dark:text-red-400 text-xs mt-1">
@@ -91,9 +91,7 @@
                         class="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">
                         Técnicas Mitre Associadas <span class="text-red-500">*</span>
                     </label>
-                    <app-tag-combobox
-                        formControlName="mitreTechniques"
-                        [items]="filteredTechniquesList"
+                    <app-tag-combobox formControlName="mitreTechniques" [items]="filteredTechniquesList"
                         [allItems]="mitreAutocompleteList"
                         placeholder="Selecione da lista ou escreva uma técnica (ex: T1687)..."
                         [isInvalid]="!!(editUseCaseForm.get('mitreTechniques')?.touched && editUseCaseForm.get('mitreTechniques')?.invalid)"
@@ -110,9 +108,7 @@
                     <label for="tactics" class="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">
                         Táticas (MITRE ATT&CK) <span class="text-red-500">*</span>
                     </label>
-                    <app-tag-combobox
-                        formControlName="tactics"
-                        [items]="allTacticsList"
+                    <app-tag-combobox formControlName="tactics" [items]="allTacticsList"
                         placeholder="Selecione da lista ou escreva uma tática..."
                         [isInvalid]="!!(editUseCaseForm.get('tactics')?.touched && editUseCaseForm.get('tactics')?.invalid)"
                         (selectionChange)="onTacticChange()">
@@ -131,7 +127,7 @@
                     </label>
                     <textarea id="description"
                         placeholder="Descrição do Use Case. Neste parágrafo poderão ser descritos propósito, objetivos, entre outros."
-                        name="description" formControlName="description"
+                        name="description" formControlName="description" maxlength="5000"
                         class="block w-full rounded-md border-0 bg-white dark:bg-gray-700 px-3 py-2.5 h-32 text-gray-900 dark:text-white shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-600 placeholder:text-gray-400 dark:placeholder-gray-400 focus:ring-2 focus:ring-inset focus:ring-redshift-red sm:text-sm sm:leading-6 resize-y min-h-[96px]"></textarea>
                     <div *ngIf="editUseCaseForm.get('description')?.touched && editUseCaseForm.get('description')?.invalid"
                         class="text-red-600 dark:text-red-400 text-xs mt-1">
@@ -147,7 +143,7 @@
                     </label>
                     <textarea id="mitigation"
                         placeholder="Neste parágrafo, poderão ser descritas as estratégias de mitigação"
-                        name="mitigation" formControlName="mitigation"
+                        name="mitigation" formControlName="mitigation" maxlength="5000"
                         class="block w-full rounded-md border-0 bg-white dark:bg-gray-700 px-3 py-2.5 h-32 text-gray-900 dark:text-white shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-600 placeholder:text-gray-400 dark:placeholder-gray-400 focus:ring-2 focus:ring-inset focus:ring-redshift-red sm:text-sm sm:leading-6 resize-y min-h-[96px]"></textarea>
                     <div *ngIf="editUseCaseForm.get('mitigation')?.touched && editUseCaseForm.get('mitigation')?.invalid"
                         class="text-red-600 dark:text-red-400 text-xs mt-1">
