@@ -33,9 +33,16 @@ export class CreateUserComponent implements OnInit {
   clientNames: string[] = [];
 
   createUserForm = new FormGroup({
-    username: new FormControl('', [Validators.required]),
+    username: new FormControl('', [
+      Validators.required,
+      Validators.maxLength(30),
+    ]),
     companies: new FormControl<string[]>({ value: [], disabled: true }),
-    email: new FormControl('', [Validators.required, Validators.email]),
+    email: new FormControl('', [
+      Validators.required,
+      Validators.email,
+      Validators.maxLength(60),
+    ]),
     password: new FormControl('', [
       Validators.required,
       Validators.minLength(6),

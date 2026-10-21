@@ -69,12 +69,18 @@ export class CreateRuleComponent implements OnInit {
   ];
 
   createRuleForm = new FormGroup({
-    title: new FormControl('', Validators.required),
+    title: new FormControl('', [
+      Validators.required,
+      Validators.maxLength(255),
+    ]),
     selectedUseCase: new FormControl<any>('', Validators.required),
     client: new FormControl<number | null>(null),
     status: new FormControl('Regra não validada'),
     selectedType: new FormControl('SIEM'),
-    syntax: new FormControl('AQL (QRadar)', Validators.required),
+    syntax: new FormControl('AQL (QRadar)', [
+      Validators.required,
+      Validators.maxLength(100),
+    ]),
     logsources: new FormControl<string[]>([]),
   });
 
@@ -262,10 +268,10 @@ level: medium`,
   }
 
   applyExampleCode(syntax: string): void {
-  if (this.isAutoDetecting) return;
-  this.examplePlaceholder = this.examples[syntax] || '';
-  this.code = '';
-}
+    if (this.isAutoDetecting) return;
+    this.examplePlaceholder = this.examples[syntax] || '';
+    this.code = '';
+  }
 
   onCodeChanged(value: string): void {
     this.code = value;
@@ -353,7 +359,9 @@ level: medium`,
     const formValues = this.createRuleForm.value;
     const arrayLogsources: any = formValues.logsources;
     const logsources = Array.isArray(arrayLogsources)
-      ? arrayLogsources.map((l: any) => (typeof l === 'string' ? l : l.value || l.display))
+      ? arrayLogsources.map((l: any) =>
+          typeof l === 'string' ? l : l.value || l.display,
+        )
       : [];
 
     const useCaseId = Number(formValues.selectedUseCase);
@@ -400,4 +408,3 @@ level: medium`,
     );
   }
 }
-

@@ -39,7 +39,7 @@
           <label for="name" class="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">
             Nome da Empresa <span class="text-red-500">*</span>
           </label>
-          <input type="text" formControlName="name" id="name"
+          <input type="text" formControlName="name" id="name" maxlength="30"
             class="block w-full rounded-md border-0 bg-white dark:bg-gray-700 px-3 py-2 text-gray-900 dark:text-white shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-600 placeholder:text-gray-400 dark:placeholder-gray-400 focus:ring-2 focus:ring-inset focus:ring-redshift-red sm:text-sm sm:leading-6 transition"
             placeholder="Insira o nome da empresa">
           <div *ngIf="editClientForm.get('name')?.touched && editClientForm.get('name')?.invalid"
@@ -74,10 +74,7 @@
           <label for="logsources" class="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">
             Log Sources <span class="text-red-500">*</span>
           </label>
-          <app-tag-combobox
-            formControlName="logsources"
-            [items]="registeredLogsources"
-            dropdownPosition="bottom"
+          <app-tag-combobox formControlName="logsources" [items]="registeredLogsources" dropdownPosition="bottom"
             placeholder="Selecione da lista ou escreva uma log source..."
             [isInvalid]="!!(editClientForm.get('logsources')?.touched && editClientForm.get('logsources')?.invalid)">
           </app-tag-combobox>

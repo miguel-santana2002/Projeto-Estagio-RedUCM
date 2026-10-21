@@ -60,19 +60,25 @@ export class EditRuleComponent implements OnInit {
   statusOptions = [
     { value: '', label: '(Vazio)' },
     { value: 'Regra validada', label: 'Regra validada' },
-    { value: 'Regra não validada', label: 'Regra não validada' }
+    { value: 'Regra não validada', label: 'Regra não validada' },
   ];
 
   clients: any[] = [];
   registeredLogsources: string[] = [];
 
   editRuleForm = new FormGroup({
-    title: new FormControl('', Validators.required),
+    title: new FormControl('', [
+      Validators.required,
+      Validators.maxLength(255),
+    ]),
     selectedUseCase: new FormControl<any>('', Validators.required),
     client: new FormControl<number | null>(null),
     status: new FormControl(''),
     selectedType: new FormControl('SIEM'),
-    syntax: new FormControl('Sigma Rule', [Validators.required]),
+    syntax: new FormControl('Sigma Rule', [
+      Validators.required,
+      Validators.maxLength(100),
+    ]),
     logsources: new FormControl<string[]>([]),
   });
 
@@ -215,7 +221,9 @@ export class EditRuleComponent implements OnInit {
 
     const payload = {
       title: formValues.title,
-      useCaseId: formValues.selectedUseCase ? Number(formValues.selectedUseCase) : null,
+      useCaseId: formValues.selectedUseCase
+        ? Number(formValues.selectedUseCase)
+        : null,
       type: formValues.selectedType || this.selectedType,
       client: formValues.client || null,
       status: formValues.status || '',

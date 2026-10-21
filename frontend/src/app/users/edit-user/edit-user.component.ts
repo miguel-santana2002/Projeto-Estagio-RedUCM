@@ -42,7 +42,10 @@ export class EditUserComponent implements OnInit {
   };
 
   updateUserForm = new FormGroup({
-    username: new FormControl('', [Validators.required]),
+    username: new FormControl('', [
+      Validators.required,
+      Validators.maxLength(30),
+    ]),
     companies: new FormControl<string[]>({ value: [], disabled: true }),
     email: new FormControl('', [Validators.required, Validators.email]),
     otpMethod: new FormControl('totp', [Validators.required]),

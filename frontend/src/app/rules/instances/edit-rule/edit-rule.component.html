@@ -1,5 +1,6 @@
 <app-header></app-header>
-<app-titlebanner [title]="'Editar Regra #' + ruleId + (rule?.title ? ' - ' + rule.title : (rule?.ruleModel?.title ? ' - ' + rule.ruleModel.title : ''))"
+<app-titlebanner
+    [title]="'Editar Regra #' + ruleId + (rule?.title ? ' - ' + rule.title : (rule?.ruleModel?.title ? ' - ' + rule.ruleModel.title : ''))"
     image="./assets/bannercover.jpg">
 </app-titlebanner>
 
@@ -87,7 +88,7 @@
             <label for="title" class="block text-sm font-semibold text-gray-900 dark:text-white">
                 Nome da Regra <span class="text-redshift-red">*</span>
             </label>
-            <input id="title" type="text" formControlName="title"
+            <input id="title" type="text" formControlName="title" maxlength="255"
                 placeholder="ex: Brute Force Detection - SPL para Azure"
                 class="block w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2.5 text-gray-900 bg-white dark:bg-gray-700 dark:text-white shadow-sm focus:ring-2 focus:ring-redshift-red text-sm transition">
             <div *ngIf="editRuleForm.get('title')?.touched && editRuleForm.get('title')?.invalid"
@@ -102,9 +103,7 @@
                 <label class="block text-sm font-semibold text-gray-900 dark:text-white">LogSources Associadas</label>
                 <span class="text-xs text-gray-400 font-normal">Opcional</span>
             </div>
-            <app-tag-combobox
-                formControlName="logsources"
-                [items]="registeredLogsources"
+            <app-tag-combobox formControlName="logsources" [items]="registeredLogsources"
                 placeholder="Selecione da lista ou escreva uma log source...">
             </app-tag-combobox>
         </div>
