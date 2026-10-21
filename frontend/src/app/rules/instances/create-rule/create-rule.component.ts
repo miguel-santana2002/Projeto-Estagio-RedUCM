@@ -190,18 +190,45 @@ level: medium`,
   }
 
   onUseCaseChange(): void {
-    const selectedId = Number(
-      this.createRuleForm.get('selectedUseCase')?.value,
-    );
+    const rawVal =
+      this.createRuleForm.get('selectedUseCase')?.value ?? this.selectedUseCase;
+    const selectedId = Number(rawVal);
     const uc = this.usecases.find((item: any) => item.id === selectedId);
 
     if (uc) {
-      const currentTitle = this.createRuleForm.get('title')?.value || '';
-      // Apenas preenche o título se estiver vazio ou se consistir num prefixo antigo
-      if (!currentTitle || currentTitle.trim() === '') {
-        this.createRuleForm.patchValue({
-          title: `${uc.title} `,
+      // Usar o valor raw (sem trim) para que "UCName - " não perca o espaço final
+      // antes de ser comparado com o padrão de prefixo "UCName - "
+      const rawTitle: string = this.createRuleForm.get('title')?.value || '';
+      const newPrefix = `${uc.title.trim()} - `;
+
+      if (!rawTitle.trim()) {
+        // Campo vazio: preenche com o prefixo do Use Case
+        this.createRuleForm.patchValue({ title: newPrefix });
+      } else {
+        // Ordenar Use Cases do título mais longo para o mais curto para evitar
+        // falsos positivos em casos onde um UC é substring de outro
+        const sortedUcs = [...this.usecases]
+          .filter((u: any) => u.title && u.title.trim() !== '')
+          .sort((a, b) => b.title.trim().length - a.title.trim().length);
+
+        // Pesquisa no rawTitle (sem trim) para que "UCName - " com espaço seja detetado
+        const matchingUc = sortedUcs.find((u: any) => {
+          const prefix = `${u.title.trim()} - `;
+          return rawTitle.toLowerCase().startsWith(prefix.toLowerCase());
         });
+
+        if (matchingUc) {
+          // Substitui apenas o prefixo, preservando o sufixo escrito pelo utilizador
+          const oldPrefix = `${matchingUc.title.trim()} - `;
+          const suffix = rawTitle.slice(oldPrefix.length);
+          const newTitle = suffix.trim() ? `${newPrefix}${suffix}` : newPrefix;
+          this.createRuleForm.patchValue({ title: newTitle });
+        } else {
+          // Sem prefixo de UC reconhecido: coloca o novo prefixo à frente
+          this.createRuleForm.patchValue({
+            title: `${newPrefix}${rawTitle.trim()}`,
+          });
+        }
       }
 
       const temRegras = uc.rules && uc.rules.length > 0;
@@ -212,6 +239,12 @@ level: medium`,
         this.forceSigma = false;
         this.generateSigma = false;
       }
+    }
+  }
+
+  useExampleCode(): void {
+    if (this.examplePlaceholder) {
+      this.code = this.examplePlaceholder;
     }
   }
 

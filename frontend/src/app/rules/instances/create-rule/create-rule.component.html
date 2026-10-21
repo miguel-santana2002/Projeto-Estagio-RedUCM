@@ -126,11 +126,15 @@
                 <label class="block text-sm font-semibold text-gray-900 dark:text-white mb-0">
                     Código da Regra ({{ selectedSyntax }})
                 </label>
-                <span *ngIf="isExampleCode"
+                <button type="button" *ngIf="!code && examplePlaceholder" (click)="useExampleCode()"
+                    class="text-xs text-redshift-red hover:underline font-medium cursor-pointer">
+                    Preencher com exemplo
+                </button>
+                <span *ngIf="code.trim() !== '' && isExampleCode"
                     class="bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-[10px] font-bold px-2 py-0.5 rounded border border-gray-300 dark:border-gray-600 uppercase tracking-wide">
                     Exemplo
                 </span>
-                <span *ngIf="!isExampleCode"
+                <span *ngIf="code.trim() !== '' && !isExampleCode"
                     class="bg-green-100 dark:bg-green-950/40 text-green-800 dark:text-green-400 text-[10px] font-bold px-2 py-0.5 rounded border border-green-400 dark:border-green-800 uppercase tracking-wide">
                     Personalizado
                 </span>
