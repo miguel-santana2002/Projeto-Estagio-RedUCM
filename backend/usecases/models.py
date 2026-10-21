@@ -13,11 +13,11 @@ def upload_to(instance, filename):
 
 
 class UseCase(models.Model):
-    title = models.CharField(max_length=1000)
-    cncsClass = models.CharField(max_length=1000, blank=True, null=True)
-    cncsType = models.CharField(max_length=1000, blank=True, null=True)
-    description = models.CharField(max_length=1000000, blank=True, null=True)
-    mitigation = models.CharField(max_length=1000000, blank=True, null=True)
+    title = models.CharField(max_length=255)
+    cncsClass = models.CharField(max_length=255, blank=True, null=True)
+    cncsType = models.CharField(max_length=255, blank=True, null=True)
+    description = models.CharField(max_length=5000, blank=True, null=True)
+    mitigation = models.CharField(max_length=5000, blank=True, null=True)
     mitreTechniques = ArrayField(models.CharField( blank=True, null=True),blank=True, null=True)
     phaseTasks = ArrayField(models.JSONField(blank=True, null=True), blank=True, null=True)
     rules = ArrayField(models.JSONField(blank=True, null=True), blank=True, null=True)

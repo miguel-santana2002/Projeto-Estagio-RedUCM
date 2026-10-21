@@ -204,8 +204,8 @@
               </td>
 
               <!-- Nome -->
-              <td (click)="openModalDetails(u)" class="px-5 py-3 text-left truncate" [title]="u.username">
-                <span class="text-base font-semibold text-gray-900 dark:text-white truncate block">{{ u.username }}</span>
+              <td (click)="openModalDetails(u)" class="px-5 py-3 text-left max-w-0 overflow-hidden" [title]="u.username">
+                <span class="text-base font-semibold text-gray-900 dark:text-white truncate block w-full">{{ u.username }}</span>
               </td>
 
               <!-- Role -->
@@ -221,8 +221,8 @@
               </td>
 
               <!-- Email -->
-              <td (click)="openModalDetails(u)" class="px-5 py-3 text-left truncate" [title]="u.email">
-                <span class="text-sm font-medium text-gray-700 dark:text-gray-300 truncate block">{{ u.email }}</span>
+              <td (click)="openModalDetails(u)" class="px-5 py-3 text-left max-w-0 overflow-hidden" [title]="u.email">
+                <span class="text-sm font-medium text-gray-700 dark:text-gray-300 truncate block w-full">{{ u.email }}</span>
               </td>
 
               <!-- Clientes Atribuídos -->

@@ -187,8 +187,8 @@
                 {{ c.pk }}
               </td>
 
-              <td (click)="openDetailsModal(c)" class="px-5 py-3 text-left cursor-pointer truncate" [title]="c.name">
-                <span class="text-base font-semibold text-gray-900 dark:text-white truncate block">{{ c.name }}</span>
+              <td (click)="openDetailsModal(c)" class="px-5 py-3 text-left cursor-pointer max-w-0 overflow-hidden" [title]="c.name">
+                <span class="text-base font-semibold text-gray-900 dark:text-white truncate block w-full">{{ c.name }}</span>
               </td>
 
               <!-- Coluna SIEM na Tabela -->

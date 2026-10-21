@@ -125,13 +125,28 @@ export class CreateUseCaseComponent implements OnInit {
   errorMessage: string = '';
 
   createUseCaseForm = new FormGroup({
-    title: new FormControl('', Validators.required),
-    description: new FormControl('', Validators.required),
-    mitigation: new FormControl('', Validators.required),
+    title: new FormControl('', [
+      Validators.required,
+      Validators.maxLength(255),
+    ]),
+    description: new FormControl('', [
+      Validators.required,
+      Validators.maxLength(5000),
+    ]),
+    mitigation: new FormControl('', [
+      Validators.required,
+      Validators.maxLength(5000),
+    ]),
     mitreTechniques: new FormControl<string[]>([], Validators.required),
     tactics: new FormControl<string[]>([], Validators.required),
-    cncsClass: new FormControl('', Validators.required),
-    cncsType: new FormControl('', Validators.required),
+    cncsClass: new FormControl('', [
+      Validators.required,
+      Validators.maxLength(255),
+    ]),
+    cncsType: new FormControl('', [
+      Validators.required,
+      Validators.maxLength(255),
+    ]),
   });
 
   constructor(
