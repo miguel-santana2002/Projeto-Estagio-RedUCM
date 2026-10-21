@@ -104,7 +104,8 @@
             <span
               *ngIf="selectedLogSources.length > 0 || selectedTypes.length > 0 || selectedSintaxes.length > 0 || selectedStatus.length > 0"
               class="ml-2 px-2 py-0.5 text-[11px] font-semibold rounded-full bg-redshift-red/10 text-redshift-red dark:bg-redshift-red/20 border border-redshift-red/30">
-              {{ selectedLogSources.length + selectedTypes.length + selectedSintaxes.length + selectedStatus.length }} ativo(s)
+              {{ selectedLogSources.length + selectedTypes.length + selectedSintaxes.length + selectedStatus.length }}
+              ativo(s)
             </span>
           </div>
 
@@ -284,8 +285,8 @@
               </td>
 
               <!-- Nome da Regra -->
-              <td class="px-5 py-3 text-left truncate" [title]="u.title || u.ruleModel?.title || 'Sem Título'">
-                <span class="text-sm font-semibold text-gray-900 dark:text-white truncate block">
+              <td class="px-5 py-3 text-left max-w-0 overflow-hidden" [title]="u.title || u.ruleModel?.title || 'Sem Título'">
+                <span class="text-base font-semibold text-gray-900 dark:text-white truncate block w-full">
                   {{ u.title || u.ruleModel?.title || 'Sem Título' }}
                 </span>
                 <div class="flex items-center gap-1.5 mt-1 flex-wrap">
@@ -300,10 +301,12 @@
                     <i class="fas fa-code-fork text-[8px]"></i> Filho (RedRule{{ u.parent?.id ?? u.parent }})
                   </span>
 
-                  <span *ngIf="u.useCaseId || u.ruleModel?.useCaseId" class="text-[11px] font-medium text-redshift-red dark:text-red-400">
+                  <span *ngIf="u.useCaseId || u.ruleModel?.useCaseId"
+                    class="text-[11px] font-medium text-redshift-red dark:text-red-400">
                     RedUC{{ u.useCaseId || u.ruleModel?.useCaseId }}
                   </span>
-                  <span *ngIf="u.client?.name" class="text-[10px] px-1.5 py-0.2 rounded bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 truncate max-w-[120px]">
+                  <span *ngIf="u.client?.name"
+                    class="text-[10px] px-1.5 py-0.2 rounded bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 truncate max-w-[120px]">
                     {{ u.client.name }}
                   </span>
                 </div>
@@ -337,7 +340,8 @@
                     class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300">
                     +{{ getRuleLogSources(u).length - 2 }}
                   </span>
-                  <span *ngIf="getRuleLogSources(u).length === 0" class="text-xs text-gray-400 dark:text-gray-500 italic">
+                  <span *ngIf="getRuleLogSources(u).length === 0"
+                    class="text-xs text-gray-400 dark:text-gray-500 italic">
                     N/A
                   </span>
                 </div>
@@ -359,7 +363,8 @@
               <td class="px-5 py-3 text-center whitespace-nowrap" (click)="$event.stopPropagation()">
                 <div class="flex items-center justify-end space-x-2">
                   <!-- Exportar Regra Sigma com Opções Multi-Formato -->
-                  <div class="relative inline-block text-left" *ngIf="(u.syntax || u.ruleModel?.syntax) === 'Sigma Rule'">
+                  <div class="relative inline-block text-left"
+                    *ngIf="(u.syntax || u.ruleModel?.syntax) === 'Sigma Rule'">
                     <button type="button" (click)="toggleExportMenu($event, u.id)"
                       title="Exportar Regra Sigma (.yml, .json, .xml)"
                       class="bg-blue-600 hover:bg-blue-700 text-white w-7 h-7 rounded shadow transition inline-flex items-center justify-center">
