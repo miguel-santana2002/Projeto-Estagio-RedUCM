@@ -299,15 +299,15 @@
                             </td>
 
                             <!-- Objeto / Modelo -->
-                            <td class="px-4 py-3 truncate" [title]="log.object_repr">
+                            <td class="px-4 py-3 max-w-0 overflow-hidden" [title]="log.object_repr">
                                 <span class="block font-mono text-xs font-bold text-gray-900 dark:text-gray-200">{{
                                     log.model_name }}</span>
                                 <span class="text-xs text-gray-500 dark:text-gray-400 truncate block max-w-xs">{{
                                     log.object_repr }}</span>
                             </td>
 
-                            <!-- Utilizador (Ator) -->
-                            <td class="px-4 py-3 whitespace-nowrap truncate" [title]="log.actor || 'Sistema'">
+                            <!-- Utilizador -->
+                            <td class="px-4 py-3 truncate" [title]="log.actor || 'Sistema'">
                                 <span
                                     class="inline-flex items-center gap-1.5 text-xs font-medium text-gray-800 dark:text-gray-200">
                                     <i class="fas fa-user-circle text-gray-400 text-sm"></i>
