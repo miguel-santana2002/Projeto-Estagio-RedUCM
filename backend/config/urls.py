@@ -32,7 +32,8 @@ urlpatterns = [
     path('api/rules/', include('rules.urls')),
     path('api/sigmaconversions/', include('sigmaconversions.urls')),
     path('api/stats/', include('stats.urls')),
-    path('api/audit/', include('audit.urls')),  # <-- Rota adicionada para o sistema de auditoria
+    path('api/audit/', include('audit.urls')),
+    path('api/feedback/', include('feedback.urls')),  # <-- Rota adicionada para o sistema de auditoria
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
     path('api/docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
     path('api/schema.json', SpectacularJSONAPIView.as_view(), name='schema-json'),

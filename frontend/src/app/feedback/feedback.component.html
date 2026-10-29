@@ -1,0 +1,766 @@
+<app-header></app-header>
+
+<app-titlebanner title="Bugs e Sugestões de Melhoria" image="./assets/bannercover.jpg"></app-titlebanner>
+
+<div class="page-container px-4 py-16">
+
+  <!-- Mensagem de Sucesso Flutuante -->
+  <div *ngIf="successMessage"
+    class="mb-6 p-4 text-sm text-green-800 rounded-lg bg-green-50 dark:bg-gray-800 dark:text-green-400 border border-green-200 dark:border-green-800 flex items-center justify-between shadow-sm animate-fade-in"
+    role="alert">
+    <div class="flex items-center gap-2">
+      <i class="fas fa-check-circle text-base"></i>
+      <span class="font-medium">{{ successMessage }}</span>
+    </div>
+    <button type="button" (click)="successMessage = ''"
+      class="text-green-600 hover:text-green-800 dark:hover:text-green-200">
+      <i class="fas fa-times text-sm"></i>
+    </button>
+  </div>
+
+  <!-- Mensagem de Erro -->
+  <div *ngIf="errorMessage && !isFormModalOpen"
+    class="mb-6 p-4 text-sm text-red-800 rounded-lg bg-red-50 dark:bg-gray-800 dark:text-red-400 border border-red-200 dark:border-red-800 flex items-center justify-between shadow-sm"
+    role="alert">
+    <div class="flex items-center gap-2">
+      <i class="fas fa-exclamation-circle text-base"></i>
+      <span class="font-medium">{{ errorMessage }}</span>
+    </div>
+    <button type="button" (click)="errorMessage = ''" class="text-red-600 hover:text-red-800 dark:hover:text-red-200">
+      <i class="fas fa-times text-sm"></i>
+    </button>
+  </div>
+
+  <div class="overflow-x-auto">
+    <div class="inline-block min-w-full shadow-md p-5 rounded-lg overflow-hidden bg-white dark:bg-gray-800 transition">
+
+      <!-- Barra Superior: Pesquisa, Contador e Botões -->
+      <div class="mb-5 flex flex-col md:flex-row gap-4 items-center justify-between">
+
+        <!-- Campo de Pesquisa -->
+        <div class="relative w-full md:w-96">
+          <i
+            class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-gray-400 dark:text-gray-500 pointer-events-none">
+            <span class="fas fa-search text-sm"></span>
+          </i>
+          <input type="text" id="searchTerm" [(ngModel)]="searchTerm" (ngModelChange)="onSearchChange()"
+            placeholder="Pesquisar por título, descrição, autor, #ID..."
+            class="pl-10 pr-9 px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-redshift-red transition text-sm">
+          <button *ngIf="searchTerm" (click)="searchTerm = ''; onSearchChange()"
+            class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition"
+            title="Limpar pesquisa">
+            <i class="fas fa-times text-sm"></i>
+          </button>
+        </div>
+
+        <div class="flex items-center gap-3 w-full md:w-auto justify-end flex-wrap">
+          <!-- Contador de Registos -->
+          <span class="text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">
+            Mostrando <strong class="text-gray-900 dark:text-white font-semibold">{{ filteredFeedbacks.length
+              }}</strong>
+            de <strong class="text-gray-900 dark:text-white font-semibold">{{ feedbacks.length }}</strong>
+          </span>
+
+          <!-- Botão Submeter Bug / Sugestão -->
+          <button type="button" (click)="openCreateModal()"
+            class="h-10 px-4 bg-redshift-red text-white rounded-lg hover:bg-redshift-hover shadow-md flex items-center justify-center gap-2 transition text-sm font-medium flex-shrink-0 cursor-pointer">
+            <i class="fas fa-plus text-xs"></i>
+            <span>Nova Submissão</span>
+          </button>
+
+          <!-- Botão Filtros -->
+          <button (click)="showFiltersPanel = !showFiltersPanel"
+            [ngClass]="{'ring-2 ring-offset-2 ring-redshift-red': showFiltersPanel}"
+            class="h-10 px-4 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 shadow-sm flex items-center justify-center gap-2 transition text-sm font-medium flex-shrink-0 cursor-pointer"
+            type="button">
+            <i class="fas fa-filter text-xs"></i>
+            <span>Filtros</span>
+            <span
+              *ngIf="selectedTypeFilter !== 'ALL' || selectedStatusFilter !== 'ALL' || selectedPriorityFilter !== 'ALL'"
+              class="w-2 h-2 rounded-full bg-redshift-red animate-pulse"></span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Filtros Rápidos -->
+      <div class="flex items-center gap-2 mb-4 flex-wrap">
+        <span class="text-xs font-semibold text-gray-500 dark:text-gray-400 mr-1">Categoria:</span>
+
+        <button type="button" (click)="setTypeFilter('ALL')"
+          [ngClass]="selectedTypeFilter === 'ALL' ? 'bg-redshift-red text-white shadow-xs' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700'"
+          class="px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 cursor-pointer">
+          <i class="fas fa-list text-[10px]"></i>
+          <span>Todas</span>
+          <span class="px-1.5 py-0.2 rounded-full text-[10px] font-mono"
+            [ngClass]="selectedTypeFilter === 'ALL' ? 'bg-white/20 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'">
+            {{ totalCount }}
+          </span>
+        </button>
+
+        <button type="button" (click)="setTypeFilter('BUG')"
+          [ngClass]="selectedTypeFilter === 'BUG' ? 'bg-red-600 text-white shadow-xs' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700'"
+          class="px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 cursor-pointer">
+          <i class="fas fa-bug text-[10px]"></i>
+          <span>Bugs</span>
+          <span class="px-1.5 py-0.2 rounded-full text-[10px] font-mono"
+            [ngClass]="selectedTypeFilter === 'BUG' ? 'bg-white/20 text-white' : 'bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300'">
+            {{ bugCount }}
+          </span>
+        </button>
+
+        <button type="button" (click)="setTypeFilter('FEATURE')"
+          [ngClass]="selectedTypeFilter === 'FEATURE' ? 'bg-blue-600 text-white shadow-xs' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700'"
+          class="px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 cursor-pointer">
+          <i class="fas fa-lightbulb text-[10px]"></i>
+          <span>Sugestões / Melhorias</span>
+          <span class="px-1.5 py-0.2 rounded-full text-[10px] font-mono"
+            [ngClass]="selectedTypeFilter === 'FEATURE' ? 'bg-white/20 text-white' : 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300'">
+            {{ featureCount }}
+          </span>
+        </button>
+      </div>
+
+      <!-- Painel de Filtros Avançado -->
+      <div *ngIf="showFiltersPanel"
+        class="mb-6 p-5 rounded-xl bg-gray-50 dark:bg-[#1a2234] border border-gray-200 dark:border-gray-700 shadow-sm transition-all duration-200">
+        <div class="flex items-center justify-between pb-3 mb-4 border-b border-gray-200 dark:border-gray-700/60">
+          <div class="flex items-center gap-2">
+            <div class="w-2 h-2 rounded-full bg-redshift-red animate-pulse"></div>
+            <span class="text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-200">
+              Filtrar Submissões
+            </span>
+          </div>
+
+          <button
+            *ngIf="selectedTypeFilter !== 'ALL' || selectedStatusFilter !== 'ALL' || selectedPriorityFilter !== 'ALL' || searchTerm"
+            (click)="clearAllFilters()"
+            class="text-xs text-redshift-red hover:text-redshift-hover font-medium flex items-center gap-1.5 transition cursor-pointer">
+            <i class="fas fa-trash-can text-[11px]"></i>
+            <span>Limpar filtros</span>
+          </button>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+          <!-- Filtro: Tipo -->
+          <div>
+            <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">Tipo</label>
+            <select [(ngModel)]="selectedTypeFilter" (ngModelChange)="applyFilters()"
+              class="w-full py-2 px-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 dark:text-white rounded-lg text-xs focus:ring-2 focus:ring-redshift-red">
+              <option value="ALL">Todos os Tipos</option>
+              <option value="BUG">Bug / Erro</option>
+              <option value="FEATURE">Sugestão / Melhoria</option>
+            </select>
+          </div>
+
+          <!-- Filtro: Estado -->
+          <div>
+            <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">Estado</label>
+            <select [(ngModel)]="selectedStatusFilter" (ngModelChange)="applyFilters()"
+              class="w-full py-2 px-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 dark:text-white rounded-lg text-xs focus:ring-2 focus:ring-redshift-red">
+              <option value="ALL">Todos os Estados</option>
+              <option *ngFor="let opt of statusOptions" [value]="opt.value">{{ opt.label }}</option>
+            </select>
+          </div>
+
+          <!-- Filtro: Prioridade -->
+          <div>
+            <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">Prioridade</label>
+            <select [(ngModel)]="selectedPriorityFilter" (ngModelChange)="applyFilters()"
+              class="w-full py-2 px-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 dark:text-white rounded-lg text-xs focus:ring-2 focus:ring-redshift-red">
+              <option value="ALL">Todas as Prioridades</option>
+              <option *ngFor="let opt of priorityOptions" [value]="opt.value">{{ opt.label }}</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tabela Principal -->
+      <div class="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+        <table class="min-w-full table-fixed divide-y divide-gray-200 dark:divide-gray-700 leading-normal">
+          <thead>
+            <tr>
+              <th (click)="sortTable('id')"
+                class="w-20 px-4 py-3.5 bg-gray-100 dark:bg-gray-700 text-left text-xs font-bold text-gray-700 dark:text-gray-200 uppercase tracking-wider cursor-pointer select-none">
+                #ID
+                <i
+                  [class]="sortColumn === 'id' ? (sortReverse ? 'fas fa-caret-up ml-1' : 'fas fa-caret-down ml-1') : ''"></i>
+              </th>
+
+              <th (click)="sortTable('type')"
+                class="w-32 px-4 py-3.5 bg-gray-100 dark:bg-gray-700 text-left text-xs font-bold text-gray-700 dark:text-gray-200 uppercase tracking-wider cursor-pointer select-none">
+                Tipo
+                <i
+                  [class]="sortColumn === 'type' ? (sortReverse ? 'fas fa-caret-up ml-1' : 'fas fa-caret-down ml-1') : ''"></i>
+              </th>
+
+              <th (click)="sortTable('title')"
+                class="w-72 px-4 py-3.5 bg-gray-100 dark:bg-gray-700 text-left text-xs font-bold text-gray-700 dark:text-gray-200 uppercase tracking-wider cursor-pointer select-none">
+                Título & Descrição
+                <i
+                  [class]="sortColumn === 'title' ? (sortReverse ? 'fas fa-caret-up ml-1' : 'fas fa-caret-down ml-1') : ''"></i>
+              </th>
+
+              <th (click)="sortTable('priority')"
+                class="w-28 px-4 py-3.5 bg-gray-100 dark:bg-gray-700 text-left text-xs font-bold text-gray-700 dark:text-gray-200 uppercase tracking-wider cursor-pointer select-none">
+                Prioridade
+                <i
+                  [class]="sortColumn === 'priority' ? (sortReverse ? 'fas fa-caret-up ml-1' : 'fas fa-caret-down ml-1') : ''"></i>
+              </th>
+
+              <th (click)="sortTable('status')"
+                class="w-32 px-4 py-3.5 bg-gray-100 dark:bg-gray-700 text-left text-xs font-bold text-gray-700 dark:text-gray-200 uppercase tracking-wider cursor-pointer select-none">
+                Estado
+                <i
+                  [class]="sortColumn === 'status' ? (sortReverse ? 'fas fa-caret-up ml-1' : 'fas fa-caret-down ml-1') : ''"></i>
+              </th>
+
+              <th
+                class="w-36 px-4 py-3.5 bg-gray-100 dark:bg-gray-700 text-left text-xs font-bold text-gray-700 dark:text-gray-200 uppercase tracking-wider select-none">
+                Anexos
+              </th>
+
+              <th (click)="sortTable('created_at')"
+                class="w-36 px-4 py-3.5 bg-gray-100 dark:bg-gray-700 text-left text-xs font-bold text-gray-700 dark:text-gray-200 uppercase tracking-wider cursor-pointer select-none">
+                Submetido em
+                <i
+                  [class]="sortColumn === 'created_at' ? (sortReverse ? 'fas fa-caret-up ml-1' : 'fas fa-caret-down ml-1') : ''"></i>
+              </th>
+
+              <th
+                class="w-28 px-4 py-3.5 bg-gray-100 dark:bg-gray-700 text-center text-xs font-bold text-gray-700 dark:text-gray-200 uppercase tracking-wider">
+                Ações
+              </th>
+            </tr>
+          </thead>
+
+          <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+            <tr *ngFor="let item of pagedFeedbacks; let i = index" (click)="openDetailsModal(item)"
+              [ngClass]="i % 2 === 0 ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-900'"
+              class="hover:bg-gray-100 dark:hover:bg-gray-700 transition duration-150 h-16 cursor-pointer">
+
+              <!-- ID -->
+              <td
+                class="px-4 py-3 text-left font-mono text-xs font-bold text-redshift-red dark:text-red-400 whitespace-nowrap">
+                #{{ item.id }}
+              </td>
+
+              <!-- Tipo -->
+              <td class="px-4 py-3 text-left whitespace-nowrap">
+                <span [ngClass]="getTypeBadgeClasses(item.type)"
+                  class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold">
+                  <i [class]="item.type === 'BUG' ? 'fas fa-bug text-[10px]' : 'fas fa-lightbulb text-[10px]'"></i>
+                  <span>{{ item.type === 'BUG' ? 'Bug' : 'Melhoria' }}</span>
+                </span>
+              </td>
+
+              <!-- Título & Descrição -->
+              <td class="px-4 py-3 text-left max-w-0 overflow-hidden" [title]="item.title">
+                <span class="text-sm font-semibold text-gray-900 dark:text-white truncate block w-full">
+                  {{ item.title }}
+                </span>
+                <span class="text-xs text-gray-500 dark:text-gray-400 truncate block w-full mt-0.5">
+                  {{ item.description }}
+                </span>
+              </td>
+
+              <!-- Prioridade -->
+              <td class="px-4 py-3 text-left whitespace-nowrap">
+                <span [ngClass]="getPriorityBadgeClasses(item.priority)"
+                  class="inline-block px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded">
+                  {{ getPriorityLabel(item.priority) }}
+                </span>
+              </td>
+
+              <!-- Estado -->
+              <td class="px-4 py-3 text-left whitespace-nowrap">
+                <span [ngClass]="getStatusBadgeClasses(item.status)"
+                  class="inline-block px-2.5 py-1 text-xs font-semibold rounded-md">
+                  {{ getStatusLabel(item.status) }}
+                </span>
+              </td>
+
+              <!-- Anexos -->
+              <td class="px-4 py-3 text-left whitespace-nowrap">
+                <div *ngIf="item.attachments && item.attachments.length > 0"
+                  class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-600"
+                  [title]="item.attachments.length + ' anexo(s)'">
+                  <i class="fas fa-paperclip text-redshift-red text-[11px]"></i>
+                  <span>{{ item.attachments.length }} anexo(s)</span>
+                </div>
+                <span *ngIf="!item.attachments || item.attachments.length === 0"
+                  class="text-xs text-gray-400 dark:text-gray-500 italic">
+                  Sem anexos
+                </span>
+              </td>
+
+              <!-- Autor & Data -->
+              <td class="px-4 py-3 text-left whitespace-nowrap text-xs text-gray-600 dark:text-gray-400">
+                <span class="font-medium text-gray-900 dark:text-white block truncate max-w-[120px]"
+                  [title]="item.author || 'Anónimo'">
+                  {{ item.author || 'Anónimo' }}
+                </span>
+                <span class="text-[11px] text-gray-400">
+                  {{ item.created_at | date:'dd/MM/yyyy HH:mm' }}
+                </span>
+              </td>
+
+              <!-- Ações -->
+              <td class="px-4 py-3 text-center whitespace-nowrap" (click)="$event.stopPropagation()">
+                <div class="flex items-center justify-center space-x-1.5">
+                  <!-- Ver Detalhes (Permitido a todos) -->
+                  <button type="button" (click)="openDetailsModal(item)" title="Ver Detalhes"
+                    class="bg-gray-500 hover:bg-gray-600 text-white w-7 h-7 rounded shadow transition inline-flex items-center justify-center cursor-pointer">
+                    <i class="fas fa-eye text-[11px]"></i>
+                  </button>
+
+                  <!-- Editar (Apenas Criador ou Admin/Dev) -->
+                  <button *ngIf="canEditOrDelete(item)" type="button" (click)="openEditModal(item, $event)"
+                    title="Editar Submissão"
+                    class="bg-blue-600 hover:bg-blue-700 text-white w-7 h-7 rounded shadow transition inline-flex items-center justify-center cursor-pointer">
+                    <i class="fas fa-pencil-alt text-[11px]"></i>
+                  </button>
+
+                  <!-- Eliminar (Apenas Criador ou Admin/Dev) -->
+                  <button *ngIf="canEditOrDelete(item)" type="button" (click)="openDeleteModal(item, $event)"
+                    title="Eliminar Submissão"
+                    class="bg-red-500 hover:bg-red-600 text-white w-7 h-7 rounded shadow transition inline-flex items-center justify-center cursor-pointer">
+                    <i class="fas fa-trash-alt text-[11px]"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+
+            <!-- Estado Vazio -->
+            <tr *ngIf="filteredFeedbacks.length === 0">
+              <td colspan="8" class="py-12 text-center bg-white dark:bg-gray-800">
+                <div class="flex flex-col items-center justify-center text-gray-400 dark:text-gray-500">
+                  <i class="fas fa-bug text-4xl mb-3 opacity-30 text-redshift-red"></i>
+                  <p class="text-base font-semibold text-gray-700 dark:text-gray-300">Nenhuma submissão encontrada</p>
+                  <p class="text-sm mt-1 max-w-md">
+                    Ainda não existem registos com os critérios selecionados ou ainda não foi reportado nenhum
+                    bug/sugestão.
+                  </p>
+                  <div class="flex items-center gap-3 mt-4">
+                    <button type="button" (click)="openCreateModal()"
+                      class="px-4 py-2 bg-redshift-red text-white text-xs font-semibold rounded-lg hover:bg-redshift-hover transition cursor-pointer">
+                      Submeter Novo Registo
+                    </button>
+                    <button
+                      *ngIf="searchTerm || selectedTypeFilter !== 'ALL' || selectedStatusFilter !== 'ALL' || selectedPriorityFilter !== 'ALL'"
+                      (click)="clearAllFilters()"
+                      class="text-xs text-redshift-red hover:underline font-medium cursor-pointer">
+                      Limpar Filtros
+                    </button>
+                  </div>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Rodapé da Tabela: Paginação -->
+      <div *ngIf="filteredFeedbacks.length > 0"
+        class="flex flex-col sm:flex-row items-center justify-between pt-4 mt-2 gap-3 text-sm text-gray-600 dark:text-gray-400">
+        <div class="flex items-center gap-2.5">
+          <span>Linhas por página:</span>
+          <select [ngModel]="pageSize" (ngModelChange)="onPageSizeChange($event)"
+            class="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-2.5 py-1 text-sm text-gray-900 dark:text-white focus:ring-redshift-red focus:border-redshift-red">
+            <option *ngFor="let size of pageSizeOptions" [value]="size">{{ size }}</option>
+          </select>
+        </div>
+
+        <div class="flex items-center gap-3">
+          <span>Página <strong class="text-gray-900 dark:text-white">{{ page }}</strong> de <strong
+              class="text-gray-900 dark:text-white">{{ totalPages }}</strong></span>
+
+          <div class="inline-flex rounded-lg shadow-sm">
+            <button (click)="setPage(page - 1)" [disabled]="page === 1"
+              class="px-3 py-1.5 text-sm font-medium bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-l-lg hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-40 disabled:cursor-not-allowed transition">
+              <i class="fas fa-chevron-left text-xs"></i>
+            </button>
+            <button (click)="setPage(page + 1)" [disabled]="page === totalPages"
+              class="px-3 py-1.5 text-sm font-medium bg-white dark:bg-gray-700 border-t border-b border-r border-gray-300 dark:border-gray-600 rounded-r-lg hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-40 disabled:cursor-not-allowed transition">
+              <i class="fas fa-chevron-right text-xs"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ================= MODAL: CRIAR / EDITAR SUBMISSÃO ================= -->
+<div *ngIf="isFormModalOpen" class="bg-black/60 backdrop-blur-sm fixed inset-0 z-40 transition-opacity"></div>
+
+<div *ngIf="isFormModalOpen" tabindex="-1" aria-hidden="true"
+  class="overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-full flex p-4">
+  <div class="relative p-4 w-full max-w-2xl max-h-full">
+    <div
+      class="relative bg-white rounded-xl shadow-2xl dark:bg-gray-800 border border-transparent dark:border-gray-700">
+
+      <!-- Cabeçalho do Modal -->
+      <div class="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-700">
+        <div class="flex items-center gap-2.5">
+          <div
+            class="w-8 h-8 rounded-lg bg-red-100 dark:bg-red-900/40 text-redshift-red flex items-center justify-center">
+            <i [class]="formType === 'BUG' ? 'fas fa-bug text-sm' : 'fas fa-lightbulb text-sm'"></i>
+          </div>
+          <div>
+            <h3 class="text-base font-bold text-gray-900 dark:text-white">
+              {{ isEditing ? 'Editar Submissão #' + formId : 'Submeter Novo Bug ou Sugestão' }}
+            </h3>
+            <p class="text-xs text-gray-500 dark:text-gray-400">
+              Descreva em detalhe para que a equipa possa analisar e responder.
+            </p>
+          </div>
+        </div>
+
+        <button type="button" (click)="closeFormModal()"
+          class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 inline-flex justify-center items-center dark:hover:bg-gray-700 dark:hover:text-white transition">
+          <i class="fas fa-times text-base"></i>
+        </button>
+      </div>
+
+      <!-- Corpo do Formulário -->
+      <form (ngSubmit)="submitForm()" class="p-4 md:p-6 space-y-4">
+
+        <!-- Erro no formulário -->
+        <div *ngIf="errorMessage"
+          class="p-3 text-xs text-red-800 rounded-lg bg-red-50 dark:bg-gray-700 dark:text-red-400 border border-red-200 dark:border-red-600 flex items-center gap-2">
+          <i class="fas fa-circle-exclamation text-sm"></i>
+          <span>{{ errorMessage }}</span>
+        </div>
+
+        <!-- 1. Seleção de Tipo -->
+        <div>
+          <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-2">
+            Tipo de Submissão <span class="text-redshift-red">*</span>
+          </label>
+          <div class="grid grid-cols-2 gap-3">
+            <button type="button" (click)="formType = 'BUG'"
+              [ngClass]="formType === 'BUG' ? 'border-red-500 bg-red-50/70 dark:bg-red-950/30 text-red-700 dark:text-red-300 ring-2 ring-red-500' : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-700/60 text-gray-700 dark:text-gray-300 hover:border-gray-300'"
+              class="p-3 rounded-lg border text-left flex items-start gap-3 transition cursor-pointer">
+              <i class="fas fa-bug text-lg text-red-500 mt-0.5"></i>
+              <div>
+                <span class="block text-sm font-bold">Bug / Erro</span>
+                <span class="text-[11px] text-gray-500 dark:text-gray-400">Falha ou comportamento inesperado</span>
+              </div>
+            </button>
+
+            <button type="button" (click)="formType = 'FEATURE'"
+              [ngClass]="formType === 'FEATURE' ? 'border-blue-500 bg-blue-50/70 dark:bg-blue-950/30 text-blue-700 dark:text-blue-300 ring-2 ring-blue-500' : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-700/60 text-gray-700 dark:text-gray-300 hover:border-gray-300'"
+              class="p-3 rounded-lg border text-left flex items-start gap-3 transition cursor-pointer">
+              <i class="fas fa-lightbulb text-lg text-amber-500 mt-0.5"></i>
+              <div>
+                <span class="block text-sm font-bold">Sugestão / Melhoria</span>
+                <span class="text-[11px] text-gray-500 dark:text-gray-400">Nova funcionalidade ou otimização</span>
+              </div>
+            </button>
+          </div>
+        </div>
+
+        <!-- 2. Título -->
+        <div>
+          <label for="formTitle"
+            class="block text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-1.5">
+            Título <span class="text-redshift-red">*</span>
+          </label>
+          <input type="text" id="formTitle" [(ngModel)]="formTitle" name="title" required
+            placeholder="ex: Erro ao exportar regra Sigma ou Sugestão de novo filtro"
+            class="w-full py-2.5 px-3.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white placeholder:text-gray-400 focus:ring-2 focus:ring-redshift-red transition">
+        </div>
+
+        <!-- 3. Prioridade e Estado (Estado visível apenas na Edição) -->
+        <div class="grid gap-4" [ngClass]="isEditing ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1'">
+          <div>
+            <label for="formPriority"
+              class="block text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-1.5">
+              Prioridade
+            </label>
+            <select id="formPriority" [(ngModel)]="formPriority" name="priority"
+              class="w-full py-2.5 px-3 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-redshift-red">
+              <option *ngFor="let opt of priorityOptions" [value]="opt.value">{{ opt.label }}</option>
+            </select>
+          </div>
+
+          <div *ngIf="isEditing">
+            <label for="formStatus"
+              class="block text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-1.5">
+              Estado
+            </label>
+            <select id="formStatus" [(ngModel)]="formStatus" name="status"
+              class="w-full py-2.5 px-3 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-redshift-red">
+              <option *ngFor="let opt of statusOptions" [value]="opt.value">{{ opt.label }}</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- 4. Descrição -->
+        <div>
+          <label for="formDescription"
+            class="block text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-1.5">
+            Descrição Detalhada <span class="text-redshift-red">*</span>
+          </label>
+          <textarea id="formDescription" [(ngModel)]="formDescription" name="description" rows="5" required
+            placeholder="Descreva o problema ou sugestão com o máximo de contexto possível..."
+            class="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white placeholder:text-gray-400 focus:ring-2 focus:ring-redshift-red transition resize-y"></textarea>
+        </div>
+
+        <!-- 5. Anexos -->
+        <div>
+          <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-1.5">
+            Anexos (Imagens, Documentos, Logs)
+          </label>
+
+          <div (dragover)="onDragOver($event)" (dragleave)="onDragLeave($event)" (drop)="onFileDrop($event)"
+            [ngClass]="isDraggingOver ? 'border-redshift-red bg-red-50/50 dark:bg-red-950/20' : 'border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50'"
+            class="border-2 border-dashed rounded-xl p-5 text-center transition cursor-pointer hover:border-redshift-red">
+            <input type="file" multiple id="fileUploadInput" (change)="onFilesSelected($event)" class="hidden">
+            <label for="fileUploadInput" class="cursor-pointer flex flex-col items-center">
+              <i class="fas fa-cloud-arrow-up text-3xl text-gray-400 dark:text-gray-500 mb-2"></i>
+              <span class="text-xs font-medium text-gray-700 dark:text-gray-300">
+                <span class="text-redshift-red font-semibold hover:underline">Clique para selecionar ficheiros</span> ou
+                arraste para aqui
+              </span>
+              <span class="text-[11px] text-gray-400 mt-1">
+                PNG, JPG, PDF, TXT, LOG, JSON, YML, ZIP (máx. 25MB)
+              </span>
+            </label>
+          </div>
+
+          <!-- Anexos Existentes -->
+          <div *ngIf="existingAttachments.length > 0" class="mt-3 space-y-1.5">
+            <span class="text-[11px] font-semibold text-gray-500 dark:text-gray-400 block">Anexos Atuais:</span>
+            <div *ngFor="let att of existingAttachments"
+              class="flex items-center justify-between p-2 rounded-lg bg-gray-100 dark:bg-gray-700/80 border border-gray-200 dark:border-gray-600 text-xs">
+              <div class="flex items-center gap-2 truncate">
+                <i class="fas fa-paperclip text-redshift-red"></i>
+                <span class="truncate font-medium text-gray-800 dark:text-gray-200">{{ att.filename }}</span>
+                <span class="text-[10px] text-gray-400 font-mono">({{ formatBytes(att.file_size) }})</span>
+              </div>
+              <button type="button" (click)="markExistingAttachmentForRemoval(att)" title="Remover este anexo"
+                class="text-red-500 hover:text-red-700 p-1 transition cursor-pointer">
+                <i class="fas fa-trash-alt text-xs"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Novos Ficheiros -->
+          <div *ngIf="selectedNewFiles.length > 0" class="mt-3 space-y-1.5">
+            <span class="text-[11px] font-semibold text-gray-500 dark:text-gray-400 block">Ficheiros a Adicionar:</span>
+            <div *ngFor="let file of selectedNewFiles; let idx = index"
+              class="flex items-center justify-between p-2 rounded-lg bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 text-xs">
+              <div class="flex items-center gap-2 truncate">
+                <i class="fas fa-file-arrow-up text-blue-500"></i>
+                <span class="truncate font-medium text-blue-900 dark:text-blue-200">{{ file.name }}</span>
+                <span class="text-[10px] text-blue-500 font-mono">({{ formatBytes(file.size) }})</span>
+              </div>
+              <button type="button" (click)="removeNewFile(idx)" title="Remover ficheiro da lista"
+                class="text-red-500 hover:text-red-700 p-1 transition cursor-pointer">
+                <i class="fas fa-times text-sm"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Botões de Ação -->
+        <div class="flex items-center justify-end gap-3 pt-3 border-t border-gray-200 dark:border-gray-700">
+          <button type="submit" [disabled]="saving || !formTitle.trim() || !formDescription.trim()"
+            class="px-5 py-2 text-xs font-semibold text-white bg-redshift-red rounded-lg hover:bg-redshift-hover disabled:opacity-50 disabled:cursor-not-allowed shadow transition flex items-center gap-2 cursor-pointer">
+            <i *ngIf="saving" class="fas fa-spinner fa-spin text-xs"></i>
+            <span>{{ isEditing ? 'Guardar Alterações' : 'Submeter' }}</span>
+          </button>
+          <button type="button" (click)="closeFormModal()"
+            class="px-4 py-2 text-xs font-semibold text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition cursor-pointer">
+            Cancelar
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- ================= MODAL: DETALHES DA SUBMISSÃO ================= -->
+<div *ngIf="isDetailsModalOpen" class="bg-black/60 backdrop-blur-sm fixed inset-0 z-40 transition-opacity"></div>
+
+<div *ngIf="isDetailsModalOpen && selectedFeedback" tabindex="-1" aria-hidden="true"
+  class="overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-full flex p-4">
+  <div class="relative p-4 w-full max-w-2xl max-h-full">
+    <div
+      class="relative bg-white rounded-xl shadow-2xl dark:bg-gray-800 border border-transparent dark:border-gray-700">
+
+      <!-- Cabeçalho -->
+      <div class="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-700">
+        <div class="flex items-center gap-2.5">
+          <span [ngClass]="getTypeBadgeClasses(selectedFeedback.type)"
+            class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold">
+            <i [class]="selectedFeedback.type === 'BUG' ? 'fas fa-bug' : 'fas fa-lightbulb'"></i>
+            <span>{{ selectedFeedback.type === 'BUG' ? 'Bug #' + selectedFeedback.id : 'Sugestão #' +
+              selectedFeedback.id }}</span>
+          </span>
+          <span [ngClass]="getStatusBadgeClasses(selectedFeedback.status)"
+            class="inline-block px-2.5 py-0.5 text-xs font-semibold rounded-md">
+            {{ getStatusLabel(selectedFeedback.status) }}
+          </span>
+          <span [ngClass]="getPriorityBadgeClasses(selectedFeedback.priority)"
+            class="inline-block px-2 py-0.5 text-[10px] font-bold uppercase rounded">
+            {{ getPriorityLabel(selectedFeedback.priority) }}
+          </span>
+        </div>
+
+        <button type="button" (click)="closeDetailsModal()"
+          class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 inline-flex justify-center items-center dark:hover:bg-gray-700 dark:hover:text-white transition">
+          <i class="fas fa-times text-base"></i>
+        </button>
+      </div>
+
+      <!-- Conteúdo do Modal -->
+      <div class="p-5 space-y-4 max-h-[75vh] overflow-y-auto">
+
+        <div>
+          <span class="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500 block mb-1">
+            Título
+          </span>
+          <h4 class="text-lg font-bold text-gray-900 dark:text-white">
+            {{ selectedFeedback.title }}
+          </h4>
+        </div>
+
+        <div
+          class="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-400 pb-3 border-b border-gray-100 dark:border-gray-700">
+          <div class="flex items-center gap-1.5">
+            <i class="fas fa-user-circle text-sm text-gray-400"></i>
+            <span>Submetido por: <strong class="text-gray-700 dark:text-gray-200">{{ selectedFeedback.author ||
+                'Anónimo' }}</strong></span>
+          </div>
+          <div>•</div>
+          <div>
+            {{ selectedFeedback.created_at | date:'dd/MM/yyyy HH:mm' }}
+          </div>
+        </div>
+
+        <div>
+          <span class="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500 block mb-1.5">
+            Descrição
+          </span>
+          <div
+            class="p-4 rounded-lg bg-gray-50 dark:bg-gray-900/60 border border-gray-200 dark:border-gray-700 text-sm text-gray-800 dark:text-gray-200 whitespace-pre-wrap leading-relaxed">
+            {{ selectedFeedback.description }}
+          </div>
+        </div>
+
+        <div>
+          <span class="text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500 block mb-2">
+            Anexos ({{ selectedFeedback.attachments.length || 0 }})
+          </span>
+
+          <div *ngIf="selectedFeedback.attachments && selectedFeedback.attachments.length > 0" class="space-y-2">
+            <div *ngFor="let att of selectedFeedback.attachments"
+              class="p-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+
+              <div class="flex items-center gap-3 overflow-hidden">
+                <div
+                  class="w-9 h-9 rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 flex items-center justify-center shrink-0">
+                  <i *ngIf="isImageFile(att.filename)" class="fas fa-image text-sm text-blue-500"></i>
+                  <i *ngIf="!isImageFile(att.filename)" class="fas fa-file text-sm text-redshift-red"></i>
+                </div>
+                <div class="overflow-hidden">
+                  <span class="text-xs font-semibold text-gray-900 dark:text-white truncate block"
+                    [title]="att.filename">
+                    {{ att.filename }}
+                  </span>
+                  <span class="text-[10px] text-gray-400 font-mono">
+                    {{ formatBytes(att.file_size) }} • {{ att.uploaded_at | date:'dd/MM/yyyy HH:mm' }}
+                  </span>
+                </div>
+              </div>
+
+              <div class="flex items-center gap-2 shrink-0">
+                <a [href]="att.file_url || att.file" target="_blank" rel="noopener noreferrer"
+                  class="px-3 py-1.5 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition flex items-center gap-1.5">
+                  <i class="fas fa-arrow-down text-[10px]"></i>
+                  <span>Abrir / Descarregar</span>
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <p *ngIf="!selectedFeedback.attachments || selectedFeedback.attachments.length === 0"
+            class="text-xs text-gray-400 dark:text-gray-500 italic">
+            Nenhum anexo associado a esta submissão.
+          </p>
+        </div>
+
+      </div>
+
+      <!-- Rodapé com Ações -->
+      <div class="flex items-center justify-between p-4 md:p-5 border-t border-gray-200 dark:border-gray-700">
+        <button *ngIf="canEditOrDelete(selectedFeedback)" type="button" (click)="openDeleteModal(selectedFeedback)"
+          class="px-3 py-2 text-xs font-semibold text-red-600 hover:text-white hover:bg-red-600 rounded-lg transition border border-red-200 dark:border-red-900 flex items-center gap-1.5 cursor-pointer">
+          <i class="fas fa-trash-alt text-xs"></i>
+          <span>Eliminar</span>
+        </button>
+
+        <div class="flex items-center gap-2 ml-auto">
+          <button *ngIf="canEditOrDelete(selectedFeedback)" type="button" (click)="openEditModal(selectedFeedback)"
+            class="px-4 py-2 text-xs font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition flex items-center gap-1.5 cursor-pointer">
+            <i class="fas fa-pencil-alt text-xs"></i>
+            <span>Editar</span>
+          </button>
+          <button type="button" (click)="closeDetailsModal()"
+            class="px-4 py-2 text-xs font-semibold text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition cursor-pointer">
+            Fechar
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ================= MODAL: ELIMINAR SUBMISSÃO ================= -->
+<div *ngIf="isDeleteModalOpen" class="bg-black/60 backdrop-blur-sm fixed inset-0 z-50 transition-opacity"></div>
+
+<div *ngIf="isDeleteModalOpen && feedbackToDelete" tabindex="-1" aria-hidden="true"
+  class="overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-full flex p-4">
+  <div class="relative p-4 w-full max-w-md h-full md:h-auto">
+    <div
+      class="relative p-5 text-center bg-white rounded-xl shadow-2xl dark:bg-gray-800 border border-transparent dark:border-gray-700">
+
+      <button type="button" (click)="closeDeleteModal()"
+        class="text-gray-400 absolute top-2.5 right-2.5 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center dark:hover:bg-gray-700 dark:hover:text-white transition">
+        <i class="fas fa-times text-base"></i>
+      </button>
+
+      <div
+        class="w-12 h-12 mb-3 mx-auto flex items-center justify-center text-red-500 bg-red-100 dark:bg-red-900/40 rounded-full">
+        <i class="fas fa-trash-alt text-xl"></i>
+      </div>
+
+      <h3 class="mb-2 text-base font-bold text-gray-900 dark:text-white">
+        Eliminar Submissão #{{ feedbackToDelete.id }}?
+      </h3>
+
+      <p class="mb-4 text-xs text-gray-500 dark:text-gray-300">
+        Tem a certeza que deseja eliminar "{{ feedbackToDelete.title }}"? Esta ação removerá os dados e todos os anexos
+        de forma permanente.
+      </p>
+
+      <div class="flex justify-center items-center space-x-3">
+        <button (click)="closeDeleteModal()" type="button"
+          class="py-2 px-4 text-xs font-semibold text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition cursor-pointer">
+          Não, cancelar
+        </button>
+        <button (click)="confirmDelete()" [disabled]="saving" type="button"
+          class="py-2 px-4 text-xs font-semibold text-center text-white bg-red-600 rounded-lg hover:bg-red-700 disabled:opacity-50 transition flex items-center gap-1.5 cursor-pointer">
+          <i *ngIf="saving" class="fas fa-spinner fa-spin text-xs"></i>
+          <span>Sim, tenho a certeza</span>
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>
