@@ -48,25 +48,30 @@
 
         <!-- Coluna 2: Plataforma -->
         <div>
-          <h3 class="text-xs font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500 mb-3">Plataforma</h3>
+          <h3 class="text-xs font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500 mb-3">Plataforma
+          </h3>
           <ul class="space-y-2 text-sm">
             <li>
-              <a routerLink="/home" class="text-gray-600 dark:text-gray-400 hover:text-redshift-red dark:hover:text-redshift-red transition">
+              <a routerLink="/home"
+                class="text-gray-600 dark:text-gray-400 hover:text-redshift-red dark:hover:text-redshift-red transition">
                 Home
               </a>
             </li>
             <li>
-              <a routerLink="/manage-usecases" class="text-gray-600 dark:text-gray-400 hover:text-redshift-red dark:hover:text-redshift-red transition">
+              <a routerLink="/manage-usecases"
+                class="text-gray-600 dark:text-gray-400 hover:text-redshift-red dark:hover:text-redshift-red transition">
                 Use Cases
               </a>
             </li>
             <li>
-              <a routerLink="/manage-rules" class="text-gray-600 dark:text-gray-400 hover:text-redshift-red dark:hover:text-redshift-red transition">
+              <a routerLink="/manage-rules"
+                class="text-gray-600 dark:text-gray-400 hover:text-redshift-red dark:hover:text-redshift-red transition">
                 Regras
               </a>
             </li>
             <li>
-              <a routerLink="/manage-clients" class="text-gray-600 dark:text-gray-400 hover:text-redshift-red dark:hover:text-redshift-red transition">
+              <a routerLink="/manage-clients"
+                class="text-gray-600 dark:text-gray-400 hover:text-redshift-red dark:hover:text-redshift-red transition">
                 Clientes
               </a>
             </li>
@@ -75,26 +80,37 @@
 
         <!-- Coluna 3: Ferramentas / Administração -->
         <div>
-          <h3 class="text-xs font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500 mb-3">Ferramentas</h3>
+          <h3 class="text-xs font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500 mb-3">Ferramentas
+          </h3>
           <ul class="space-y-2 text-sm">
             <li>
-              <a routerLink="/statistics" class="text-gray-600 dark:text-gray-400 hover:text-redshift-red dark:hover:text-redshift-red transition">
+              <a routerLink="/statistics"
+                class="text-gray-600 dark:text-gray-400 hover:text-redshift-red dark:hover:text-redshift-red transition">
                 Estatísticas
               </a>
             </li>
             <li *ngIf="isAdmin">
-              <a routerLink="/audit" class="text-gray-600 dark:text-gray-400 hover:text-redshift-red dark:hover:text-redshift-red transition">
+              <a routerLink="/audit"
+                class="text-gray-600 dark:text-gray-400 hover:text-redshift-red dark:hover:text-redshift-red transition">
                 Auditoria
               </a>
             </li>
             <li *ngIf="isAdmin">
-              <a routerLink="/manage-users" class="text-gray-600 dark:text-gray-400 hover:text-redshift-red dark:hover:text-redshift-red transition">
+              <a routerLink="/manage-users"
+                class="text-gray-600 dark:text-gray-400 hover:text-redshift-red dark:hover:text-redshift-red transition">
                 Utilizadores
               </a>
             </li>
             <li>
-              <a routerLink="/manage-logsources" class="text-gray-600 dark:text-gray-400 hover:text-redshift-red dark:hover:text-redshift-red transition">
+              <a routerLink="/manage-logsources"
+                class="text-gray-600 dark:text-gray-400 hover:text-redshift-red dark:hover:text-redshift-red transition">
                 Log Sources
+              </a>
+            </li>
+            <li>
+              <a routerLink="/feedback"
+                class="text-gray-600 dark:text-gray-400 hover:text-redshift-red dark:hover:text-redshift-red transition">
+                Reportar Bug / Sugestão
               </a>
             </li>
           </ul>
@@ -122,7 +138,8 @@
       </div>
 
       <!-- Linha inferior: Divider + Copyright -->
-      <div class="border-t border-gray-100 dark:border-gray-800 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3">
+      <div
+        class="border-t border-gray-100 dark:border-gray-800 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3">
         <p class="text-xs text-gray-500 dark:text-gray-500">
           © 2024 – {{ currentYear }}
           <a href="https://redshift.global/" target="_blank" rel="noopener noreferrer"

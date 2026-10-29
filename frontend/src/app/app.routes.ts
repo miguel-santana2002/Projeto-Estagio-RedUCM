@@ -28,6 +28,7 @@ import { AuditListComponent } from './audit/audit-list.component';
 import { EditRuleComponent } from './rules/instances/edit-rule/edit-rule.component';
 import { CreateRuleComponent } from './rules/instances/create-rule/create-rule.component';
 import { EditLogsourceComponent } from './rules/edit-logsource/edit-logsource.component';
+import { FeedbackComponent } from './feedback/feedback.component';
 
 export const routes: Routes = [
   { path: '', component: LandingpageComponent, pathMatch: 'full' },
@@ -128,6 +129,11 @@ export const routes: Routes = [
     path: 'edit-logsource/:id',
     component: EditLogsourceComponent,
     canActivate: [authGuard, numericIdGuard],
+  },
+  {
+    path: 'feedback',
+    component: FeedbackComponent,
+    canActivate: [authGuard],
   },
   {
     path: 'page-not-found',

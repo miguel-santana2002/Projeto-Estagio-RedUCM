@@ -66,6 +66,7 @@ INSTALLED_APPS = [
     "rules",
     "sigmaconversions",
     "audit",
+    "feedback",
 ]
 
 MIDDLEWARE = [
