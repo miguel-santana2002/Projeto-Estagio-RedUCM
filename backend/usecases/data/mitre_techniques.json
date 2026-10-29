@@ -2555,40 +2555,5 @@
     "tactics": [
       "Lateral Movement"
     ]
-  },
-  {
-    "id": "T1696",
-    "name": "Anti-Automation Evasion",
-    "tactics": [
-      "Stealth"
-    ]
-  },
-  {
-    "id": "T1697",
-    "name": "Steal Application Specific Passwords",
-    "tactics": [
-      "Credential Access"
-    ]
-  },
-  {
-    "id": "T1698",
-    "name": "Indirect Prompt Injection",
-    "tactics": [
-      "Execution"
-    ]
-  },
-  {
-    "id": "T1699",
-    "name": "Direct Prompt Injection",
-    "tactics": [
-      "Execution"
-    ]
-  },
-  {
-    "id": "T1700",
-    "name": "AI-Enabled Exfiltration",
-    "tactics": [
-      "Exfiltration"
-    ]
   }
 ]
