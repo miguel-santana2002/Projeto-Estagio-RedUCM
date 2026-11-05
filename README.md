@@ -26,13 +26,3 @@ A arquitetura do projeto foi desenhada para garantir modularidade e escalabilida
 * **Backend (Django / Python):** Responsável pela API REST. Escolhido pela sua robustez, eficiência do padrão MVT e facilidade de integração com bibliotecas de automação e segurança em Python.
 * **Frontend (Angular / TypeScript):** Construção de uma *Single-Page Application* (SPA) modular, garantindo uma navegação fluida e reutilização de componentes na interface.
 * **Base de Dados (PostgreSQL):** Armazenamento híbrido, suportando tanto o modelo relacional tradicional como entradas JSON dinâmicas necessárias para configurações de segurança.
-
----
-
-## 🚀 Como Executar (Recomendado via Docker)
-
-**Pré-requisitos:** Ter o [Docker](https://www.docker.com/) e o Docker Compose instalados no sistema.
-
-1. Configura as variáveis de ambiente (os valores por omissão funcionam para testes locais):
-   ```bash
-   cp .env.example .env
