@@ -1,86 +1,38 @@
-# Use Case Manager (RedUCM)
+# 🛡️ RedUCM (Redshift Use Case Manager)
 
-## Introdução
+![Django](https://img.shields.io/badge/Backend-Django-092E20?style=for-the-badge&logo=django)
+![Angular](https://img.shields.io/badge/Frontend-Angular-DD0031?style=for-the-badge&logo=angular)
+![PostgreSQL](https://img.shields.io/badge/Database-PostgreSQL-4169E1?style=for-the-badge&logo=postgresql)
+![Docker](https://img.shields.io/badge/Deploy-Docker-2496ED?style=for-the-badge&logo=docker)
 
-O Use Case Manager (RedUCM) é uma aplicação web desenvolvida para centralizar e gerir os casos de uso e regras de deteção utilizados pela RedShift nos seus clientes. Este projeto visa solucionar a problemática da fragmentação de processos de gestão de segurança, proporcionando uma plataforma unificada para armazenamento, consulta e extração de informações relacionadas com a cibersegurança.
+## 📖 Contexto do Projeto
 
-## Funcionalidades
+O **Use Case Manager (RedUCM)** é uma aplicação web desenvolvida durante um estágio curricular de 3 meses em Cibersegurança na **Redshift Consulting**. 
 
-- **Autenticação de Utilizadores:** Sistema de login para garantir que apenas utilizadores autorizados acedem à plataforma.
-- **Gestão de Casos de Uso:** Armazenamento e organização dos diferentes casos de uso de acordo com várias taxonomias (MITRE ATT&CK, classificação interna do Centro Nacional de Cibersegurança, entre outros).
-- **Regras de Deteção:** Associações de regras específicas a cada caso de uso, permitindo a sua extração e consulta.
-- **Consulta e Pesquisa:** Interface intuitiva para a pesquisa e visualização de casos de uso e respetivas regras.
-- **Exportação de Dados:** Funcionalidade para exportar informações em formatos utilizáveis para outras ferramentas e relatórios.
+O projeto nasceu para solucionar a problemática da fragmentação de processos na gestão de segurança. A plataforma atua como um repositório centralizado e unificado, permitindo gerir, armazenar, consultar e extrair casos de uso e regras de deteção aplicadas aos clientes da Redshift, otimizando o fluxo de trabalho das equipas de segurança e operações (SOC).
 
-## Tecnologias Utilizadas
+## ✨ Funcionalidades Principais
 
-### Desenvolvimento de Software
+- 🔐 **Autenticação Segura:** Sistema de login com suporte nativo a MFA/TOTP (Time-Based One-Time Password) para garantir o acesso exclusivo a utilizadores autorizados.
+- 📂 **Gestão de Casos de Uso:** Organização estruturada de casos de uso com mapeamento para taxonomias de referência do setor (ex: matriz **MITRE ATT&CK**, classificação interna do CNCS).
+- 🎯 **Regras de Deteção e Correlação:** Associação direta de regras específicas a cada caso de uso, facilitando fluxos de deteção SIEM e extração de dados.
+- 🔍 **Consulta Inteligente:** Interface intuitiva (SPA) desenhada para pesquisa rápida, filtragem e visualização de casos de uso.
+- 📊 **Exportação de Dados:** Geração de relatórios e exportação de informações em formatos compatíveis com outras ferramentas do ecossistema de cibersegurança.
 
-- **Backend - Django:**
-  - Framework Python especializada no desenvolvimento web utilizando o padrão MVT (Model-View-Template).
-  - Utilizada para criar a API REST que comunica com o frontend.
-  - Escolhida pela sua eficiência e pela necessidade de bibliotecas específicas em Python.
+## 🛠️ Tecnologias Utilizadas
 
-- **Frontend - Angular:**
-  - Plataforma de desenvolvimento baseada em TypeScript, focada em Single-Page Applications (SPA).
-  - Escolhida pela modularidade e capacidade de reutilização de código.
+A arquitetura do projeto foi desenhada para garantir modularidade e escalabilidade:
 
-- **SGBD - Postgres:**
-  - Sistema de gestão de base de dados open-source, reconhecido pela sua performance e escalabilidade.
-  - Capacidade de armazenamento híbrido (relacional e não-relacional) através de entradas JSON.
+* **Backend (Django / Python):** Responsável pela API REST. Escolhido pela sua robustez, eficiência do padrão MVT e facilidade de integração com bibliotecas de automação e segurança em Python.
+* **Frontend (Angular / TypeScript):** Construção de uma *Single-Page Application* (SPA) modular, garantindo uma navegação fluida e reutilização de componentes na interface.
+* **Base de Dados (PostgreSQL):** Armazenamento híbrido, suportando tanto o modelo relacional tradicional como entradas JSON dinâmicas necessárias para configurações de segurança.
 
-## Como executar (Docker, recomendado)
+---
 
-Pré-requisitos: Docker e Docker Compose instalados.
+## 🚀 Como Executar (Recomendado via Docker)
 
-```bash
-cp .env.example .env      # valores por omissão já funcionam localmente
-docker compose up --build
-```
+**Pré-requisitos:** Ter o [Docker](https://www.docker.com/) e o Docker Compose instalados no sistema.
 
-Isto arranca 3 containers:
-
-- `postgres` — base de dados, vazia (só o schema, via migrations automáticas).
-- `django` — API, em http://localhost:8000. Ao arrancar corre `migrate` e cria
-  automaticamente **uma conta de demonstração** (definida em `.env`, por
-  omissão `admin@example.com` / `ChangeMe123!`) e uma "Demo Company" fictícia,
-  para haver algo para testar. Não há dados reais de clientes/utilizadores.
-- `angular` — frontend, em http://localhost:8080.
-
-### Primeiro login
-
-O login usa TOTP (código de 6 dígitos tipo Google Authenticator) — não é
-preciso configurar email/SMTP. No primeiro login com a conta de demonstração,
-a app mostra um QR code: digitaliza com uma app de autenticação (Google
-Authenticator, Authy, etc.) e usa o código gerado para entrar.
-
-### Repor a base de dados
-
-```bash
-docker compose down -v   # apaga o volume da BD; próximo "up" recria tudo limpo
-```
-
-### Configuração
-
-Todas as variáveis (secret key, credenciais da BD, conta de demo, SMTP
-opcional) estão no `.env` — ver comentários em `.env.example`. Por omissão os
-emails de OTP são apenas impressos na consola do container `django`
-(`docker compose logs django`); para usar SMTP real, muda `EMAIL_BACKEND` e
-preenche `EMAIL_HOST_USER`/`EMAIL_HOST_PASSWORD` no `.env`.
-
-## Como executar (sem Docker)
-
-```bash
-# backend
-cd backend
-pip install -r requirements.txt
-cp ../.env.example ../.env   # ajusta POSTGRES_HOST=localhost se a BD não estiver em Docker
-python manage.py migrate
-python manage.py seed_demo_data
-python manage.py runserver
-
-# frontend (noutro terminal)
-cd frontend
-npm install
-ng serve
-```
+1. Configura as variáveis de ambiente (os valores por omissão funcionam para testes locais):
+   ```bash
+   cp .env.example .env
